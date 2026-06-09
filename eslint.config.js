@@ -1,7 +1,10 @@
 import js from '@eslint/js';
 import prettierConfig from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 import promise from 'eslint-plugin-promise';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
 import unicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -90,6 +93,32 @@ export default tseslint.config(
     languageOptions: {
       globals: { ...globals.node },
     },
+  },
+
+  // apps/web — Next.js React app. Browser globals + React rule sets.
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    plugins: {
+      react,
+      'react-hooks': reactHooks,
+      'jsx-a11y': jsxA11y,
+    },
+    languageOptions: {
+      globals: { ...globals.browser, process: 'readonly' },
+    },
+    settings: { react: { version: 'detect' } },
+    rules: {
+      ...react.configs.flat.recommended.rules,
+      ...react.configs.flat['jsx-runtime'].rules,
+      ...reactHooks.configs.recommended.rules,
+      ...jsxA11y.flatConfigs.recommended.rules,
+    },
+  },
+
+  // Next.js requires a default export from app/ route files and config files.
+  {
+    files: ['apps/web/app/**/*.{ts,tsx}', 'apps/web/*.{ts,mjs}'],
+    rules: { 'unicorn/filename-case': 'off' },
   },
 
   // Config files: relax filename-case (dotted config names).
