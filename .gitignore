@@ -1,0 +1,13 @@
+# Internal reference only — NEVER commit. Contains scraped/private research material.
+docs/temp/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+.next/
+*.log
