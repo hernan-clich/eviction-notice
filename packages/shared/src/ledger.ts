@@ -55,18 +55,20 @@ export const agentStateSchema = z.object({
 export type AgentState = z.infer<typeof agentStateSchema>;
 
 /**
- * USD amounts are summed in integer micro-dollars to avoid binary-float drift
- * (e.g. 0.1 + 0.2). The authoritative balance is still `SUM(amount)` in
- * Postgres; this mirrors it for in-memory state and crash rehydration.
+ * USD amounts are summed in integer nano-dollars (1e-9) to avoid binary-float
+ * drift (e.g. 0.1 + 0.2) while still preserving sub-cent / sub-micro x402
+ * micropayments. The authoritative balance is `SUM(amount)` in Postgres; this
+ * mirrors it for in-memory state and crash rehydration. Nano-dollar resolution
+ * keeps integer math safe (a $1M balance is 1e15 nano, within MAX_SAFE_INTEGER).
  */
-const MONEY_SCALE = 1_000_000;
+const MONEY_SCALE = 1_000_000_000;
 
 export function computeBalance(transactions: readonly Pick<Transaction, 'amount'>[]): number {
-  let micro = 0;
+  let nano = 0;
   for (const tx of transactions) {
-    micro += Math.round(tx.amount * MONEY_SCALE);
+    nano += Math.round(tx.amount * MONEY_SCALE);
   }
-  return micro / MONEY_SCALE;
+  return nano / MONEY_SCALE;
 }
 
 /** Alive iff the lifecycle is 'alive' AND the ledger balance is strictly positive. */

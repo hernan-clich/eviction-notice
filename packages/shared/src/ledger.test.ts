@@ -17,6 +17,11 @@ describe('computeBalance', () => {
   it('returns 0 for an empty ledger', () => {
     expect(computeBalance([])).toBe(0);
   });
+
+  it('preserves sub-micro-dollar (x402-scale) amounts', () => {
+    // Each is finer than a micro-dollar; nano-dollar resolution must not lose them.
+    expect(computeBalance([{ amount: 0.000_000_1 }, { amount: 0.000_000_2 }])).toBe(0.000_000_3);
+  });
 });
 
 describe('isAlive', () => {
