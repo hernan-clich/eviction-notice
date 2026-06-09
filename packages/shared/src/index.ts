@@ -1,9 +1,7 @@
 /**
- * Shared library for Eviction Notice.
- *
- * The append-only ledger types + balance/alive helpers (#2), the eligible-token
- * universe (#24), and the zod schemas land here as the build progresses. For now
- * this is the workspace seam every other package imports through.
+ * Shared library for Eviction Notice — the workspace seam every package imports
+ * through. The append-only ledger (the source of truth: balance = SUM(amount))
+ * lives here; the eligible-token universe (#24) and further schemas follow.
  */
 
-export const SHARED_PACKAGE_NAME = 'eviction-notice/shared';
+export * from './ledger.ts';

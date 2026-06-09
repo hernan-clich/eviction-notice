@@ -118,7 +118,7 @@ The agent's hardest decision isn't buy/sell — it's *"I have $X left and I'm bu
 **TypeScript end to end.** No Python needed — Trust Wallet's Agent Kit speaks REST + MCP, and CMC's MCP is just an endpoint. (Python only if you go deep on the BNB APEX/ERC-8004 agent-economy layer, which this agent doesn't require.)
 
 **Three things you deploy:**
-- **Agent worker** — Node daemon on Railway (or Render/Fly). Persistent, always-on. Holds the loop, the TWAK signer, the CMC + skill calls.
+- **Agent worker** — Node daemon on Render (a Background Worker; or Railway/Fly). Persistent, always-on. Holds the loop, the TWAK signer, the CMC + skill calls.
 - **Database** — Supabase (Postgres + Realtime). Source of truth and the realtime push to the UI.
 - **Frontend** — Next.js on Vercel. Almost entirely read-only.
 
@@ -200,7 +200,7 @@ Vibe: hospital vital-signs monitor crossed with a Twitch stream.
 
 - **Mainnet, not testnet.** Testnet is useless for a *trading* agent (no real market, fake prices). Validate strategy in **simulation** (paper-trade against live CMC data into the virtual ledger); validate the **plumbing** (TWAK signs → swap submits → confirms) with a couple of trivial transactions before funding the real run.
 - **Burner wallet:** generate a fresh key that holds **only** the ~$20. Never the agent's signer touch a personal wallet. Worst case (bug, bad loop, key leak from a hosted worker) is bounded at $20.
-- **Key handling:** signing key in the worker's environment / Railway secret — never in the repo.
+- **Key handling:** signing key in the worker's environment / Render secret — never in the repo.
 - **Liquid pairs only:** $20 trades into thin pools get eaten by slippage and possibly sandwiched. Stick to deep pools (e.g. BNB/USDT, major pairs).
 - **Live gas:** the agent should read current gas and fold it into the skip-rule — refuse trades when friction exceeds expected edge.
 - **Real vs simulated burn:** build simulated first (virtual ledger). Upgrade data calls to **real x402** once the loop is stable — that's the flex that wins the x402/CMC narrative (nothing faked).

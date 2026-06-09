@@ -14,6 +14,7 @@ export default tseslint.config(
       '**/coverage/**',
       '**/node_modules/**',
       '**/.next/**',
+      '**/migrations/**',
       'docs/temp/**',
     ],
   },
@@ -83,7 +84,7 @@ export default tseslint.config(
   },
 
   // Node runtime packages: the worker daemon, the skill endpoint, and shared libs
-  // all run on Node (Railway / Vercel functions), so Node globals are available.
+  // all run on Node (Render / Vercel functions), so Node globals are available.
   {
     files: ['apps/**/*.ts', 'packages/**/*.ts'],
     languageOptions: {
