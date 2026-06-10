@@ -7,7 +7,8 @@ import { createSkillApp } from './server.ts';
  * own these payment requirements. Price/asset/payTo are env-driven so #14 can
  * pin the real BSC stablecoin + treasury address without code changes.
  */
-const port = Number(process.env['SKILL_PORT'] ?? '8788');
+// Render (and most PaaS) inject the port via PORT; SKILL_PORT is the local default.
+const port = Number(process.env['PORT'] ?? process.env['SKILL_PORT'] ?? '8788');
 
 const app = createSkillApp({
   network: process.env['X402_NETWORK'] ?? 'bsc',
