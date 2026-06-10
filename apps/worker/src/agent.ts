@@ -16,6 +16,7 @@ import {
   type AppSupabaseClient,
   type OpenPosition,
 } from './supabase.ts';
+import { callSizingSkill } from './x402-client.ts';
 
 const getQuotesInput = z.object({ symbols: z.array(z.string()).min(1).max(10) });
 const sizePositionInput = z.object({
@@ -167,12 +168,12 @@ export async function runInnerTick(
       return JSON.stringify(quotes);
     },
 
-    size_position: (input) => {
+    size_position: async (input) => {
       const parsed = sizePositionInput.safeParse(input);
       if (!parsed.success) {
-        return Promise.resolve(`Invalid input: ${parsed.error.message}`);
+        return `Invalid input: ${parsed.error.message}`;
       }
-      const decision = decideSizing({
+      const sizingInput = {
         balanceUsd: deps.balanceUsd,
         peakBalanceUsd: Math.max(deps.balanceUsd, deps.config.SEED_USD),
         burnRatePerHourUsd: deps.config.RENT_PER_HOUR_USD,
@@ -180,8 +181,34 @@ export async function runInnerTick(
         volatility: parsed.data.volatility,
         gasPerSwapUsd: deps.config.GAS_PER_SWAP_USD,
         mustTrade: deps.mustTrade,
-      });
-      return Promise.resolve(JSON.stringify(decision));
+      };
+
+      // Pay-to-think: when the x402 skill is configured, the agent buys its own
+      // sizing decision over x402 (an `x402_fee` ledger expense) instead of
+      // sizing in-process. Unset → in-process (tests, backtest).
+      if (deps.config.SKILL_URL) {
+        const { decision, receipt } = await callSizingSkill(sizingInput, {
+          url: deps.config.SKILL_URL,
+          payer: deps.config.X402_PAYER,
+        });
+        const cost = deps.config.SKILL_CALL_COST_USD;
+        await insertTransaction(deps.supabase, {
+          agentId,
+          kind: 'expense',
+          amount: -cost,
+          reason: 'x402_fee',
+          reasoning: `Paid the Solvency-Aware Sizing skill to think ($${cost.toFixed(2)} via x402).`,
+          meta: {
+            skill: 'solvency-aware-sizing',
+            txHash: receipt.transaction,
+            network: deps.config.BSC_NETWORK,
+            simulated: receipt.simulated,
+          },
+        });
+        return JSON.stringify(decision);
+      }
+
+      return JSON.stringify(decideSizing(sizingInput));
     },
 
     open_position: async (input) => {

@@ -31,6 +31,12 @@ const envSchema = z.object({
   TRADE_FLOOR_MS: z.coerce.number().int().nonnegative().default(86_400_000),
   // Chain for explorer links on trades (BscScan). Real tx hashes land with #13.
   BSC_NETWORK: z.enum(['mainnet', 'testnet']).default('mainnet'),
+  // x402-gated sizing skill (#10). Unset → the worker sizes in-process (tests, backtest).
+  // When set, the agent pays its own skill to think (an `x402_fee` ledger expense).
+  SKILL_URL: z.string().url().optional(),
+  SKILL_CALL_COST_USD: z.coerce.number().nonnegative().default(0.01),
+  // Payer address for x402 settlement. Placeholder until #14 funds the BSC wallet.
+  X402_PAYER: z.string().min(1).default('0x0000000000000000000000000000000000000000'),
 });
 
 export type WorkerConfig = z.infer<typeof envSchema>;

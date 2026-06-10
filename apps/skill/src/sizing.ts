@@ -49,12 +49,13 @@ export const sizingInputSchema = z.object({
 
 export type SizingInput = z.input<typeof sizingInputSchema>;
 
-export interface SizingDecision {
-  decision: 'trade' | 'skip';
-  sizeUsd: number;
-  roundTripFrictionFraction: number;
-  reason: string;
-}
+export const sizingDecisionSchema = z.object({
+  decision: z.enum(['trade', 'skip']),
+  sizeUsd: z.number(),
+  roundTripFrictionFraction: z.number(),
+  reason: z.string(),
+});
+export type SizingDecision = z.infer<typeof sizingDecisionSchema>;
 
 interface FrictionParams {
   gasPerSwapUsd: number;
