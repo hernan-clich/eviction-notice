@@ -1,0 +1,69 @@
+# Render Blueprint — Eviction Notice.
+#
+# Two services in Oregon (next to the Supabase primary, us-west-2):
+#   - skill : the x402-gated Solvency-Aware Sizing endpoint (free web service).
+#   - worker: the always-on agent loop (paid — Render has no free always-on worker;
+#             free web services sleep after 15 min, which would starve the rent loop).
+#
+# Secrets (sync: false) are set in the Render dashboard, never committed. See docs/deploy.md.
+services:
+  - type: web
+    name: eviction-notice-skill
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    startCommand: pnpm --filter skill start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: X402_NETWORK
+        value: bsc
+      - key: X402_ASSET
+        value: USDT-BSC
+      - key: X402_PRICE_ATOMIC
+        value: '10000000000000000' # $0.01 at 18 decimals
+      - key: X402_PAY_TO
+        sync: false # treasury address; pinned for real in #14
+
+  - type: worker
+    name: eviction-notice-worker
+    runtime: node
+    plan: starter # always-on; background workers require a paid plan
+    region: oregon
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    startCommand: pnpm --filter worker start
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: AGENT_ID
+        value: agent-0
+      - key: SEED_USD
+        value: '20'
+      - key: RENT_PER_HOUR_USD
+        value: '0.07'
+      - key: TICK_INTERVAL_MS
+        value: '1800000' # 30 min
+      - key: MAX_TICKS
+        value: '0' # run forever
+      - key: BSC_NETWORK
+        value: mainnet
+      - key: CMC_DATA_COST_USD
+        value: '0.01'
+      - key: SKILL_CALL_COST_USD
+        value: '0.01'
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: CMC_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SKILL_URL
+        sync: false # the deployed skill's URL, e.g. https://eviction-notice-skill.onrender.com
+      - key: X402_PAYER
+        sync: false
