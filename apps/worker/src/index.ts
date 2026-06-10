@@ -20,6 +20,7 @@ import {
   fetchBalance,
   fetchStatus,
   insertTransaction,
+  lastTradeAtMs,
   markDead,
 } from './supabase.ts';
 
@@ -109,11 +110,18 @@ async function main(): Promise<void> {
     // (model/network) must not evict the agent — log and keep the heartbeat.
     if (llm) {
       try {
+        // ≥1-trade/day floor: force a trade if none opened within the window.
+        let mustTrade = false;
+        if (config.TRADE_FLOOR_MS > 0) {
+          const last = await lastTradeAtMs(client, config.AGENT_ID);
+          mustTrade = last === null || Date.now() - last > config.TRADE_FLOOR_MS;
+        }
         const decision = await runInnerTick({
           llm,
           supabase: client,
           config,
           balanceUsd: balanceAfterRent,
+          mustTrade,
         });
         log.info('decided', {
           tick: ticks,

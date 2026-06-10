@@ -1,10 +1,18 @@
 import { decideSizing } from 'skill';
 import { z } from 'zod';
 
-import { meteredFetchQuotes } from './cmc.ts';
+import { cmcConfig, fetchQuotes, meteredFetchQuotes } from './cmc.ts';
 import type { WorkerConfig } from './config.ts';
 import { runConversation, type LlmClient, type LlmTool, type ToolHandler } from './llm.ts';
-import { insertTransaction, type AppSupabaseClient } from './supabase.ts';
+import { closeProceedsUsd, swapFrictionUsd, type FrictionParams } from './paper-trade.ts';
+import {
+  closePosition,
+  fetchOpenPositions,
+  insertTransaction,
+  openPosition,
+  type AppSupabaseClient,
+  type OpenPosition,
+} from './supabase.ts';
 
 const getQuotesInput = z.object({ symbols: z.array(z.string()).min(1).max(10) });
 const sizePositionInput = z.object({
@@ -12,12 +20,14 @@ const sizePositionInput = z.object({
   edge: z.number(),
   volatility: z.number().positive(),
 });
+const openPositionInput = z.object({ token: z.string(), sizeUsd: z.number().positive() });
+const closePositionInput = z.object({ positionId: z.number().int() });
 
 const TOOLS: LlmTool[] = [
   {
     name: 'get_quotes',
     description:
-      'Fetch live USD market quotes (price, 24h change, volume, market cap) for up to 10 token symbols from CoinMarketCap. Each call costs a small metered data fee.',
+      'Fetch live USD market quotes (price, 24h change, volume, market cap) for up to 10 token symbols from CoinMarketCap. Each call costs a small metered data fee. Use it to read the market and to mark open positions to market before closing.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -33,7 +43,7 @@ const TOOLS: LlmTool[] = [
   {
     name: 'size_position',
     description:
-      'Ask the Solvency-Aware Sizing skill how big a position to take, or whether to skip. Provide your estimated edge (expected fractional return, e.g. 0.02) and volatility (fractional downside risk, e.g. 0.05) for the candidate token. Returns a position size + go/no-go decision optimised for survival.',
+      'Ask the Solvency-Aware Sizing skill how big a position to take, or whether to skip. Provide your estimated edge (expected fractional return, e.g. 0.02) and volatility (fractional downside risk, e.g. 0.05). Returns a position size + go/no-go decision optimised for survival.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -44,6 +54,29 @@ const TOOLS: LlmTool[] = [
       required: ['token', 'edge', 'volatility'],
     },
   },
+  {
+    name: 'open_position',
+    description:
+      'Open a paper long position: spend sizeUsd of cash to buy the token at the live price (paying gas + fees + slippage). Use the size the sizing skill recommended. Only call this when you have decided to trade.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        token: { type: 'string' },
+        sizeUsd: { type: 'number', description: 'Cash to deploy, e.g. 12' },
+      },
+      required: ['token', 'sizeUsd'],
+    },
+  },
+  {
+    name: 'close_position',
+    description:
+      'Close an open position by id: sell back to cash at the live price (paying gas + fees + slippage), realising the P&L. Close winners to bank gains or losers to cut risk.',
+    inputSchema: {
+      type: 'object',
+      properties: { positionId: { type: 'number' } },
+      required: ['positionId'],
+    },
+  },
 ];
 
 export interface InnerTickDeps {
@@ -51,29 +84,56 @@ export interface InnerTickDeps {
   supabase: AppSupabaseClient;
   config: WorkerConfig;
   balanceUsd: number;
+  mustTrade: boolean;
 }
 
-function systemPrompt(deps: InnerTickDeps): string {
+function frictionParams(config: WorkerConfig): FrictionParams {
+  return {
+    gasPerSwapUsd: config.GAS_PER_SWAP_USD,
+    swapFeeRate: config.SWAP_FEE_RATE,
+    slippage: config.SLIPPAGE,
+  };
+}
+
+function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
   const burn = deps.config.RENT_PER_HOUR_USD;
   const runwayHours = burn > 0 ? deps.balanceUsd / burn : Number.POSITIVE_INFINITY;
-  return [
+  const positionsLine =
+    openPositions.length > 0
+      ? openPositions
+          .map((p) => `#${p.id} ${p.token} $${p.sizeUsd.toFixed(2)} @ $${p.entryPx}`)
+          .join('; ')
+      : 'none';
+
+  const lines = [
     'You are Eviction Notice — an autonomous crypto trading agent on BNB Chain that must earn its own survival.',
-    'You pay rent every hour out of your balance; if it hits zero you are EVICTED and the run ends permanently. Optimise for staying alive, not for maximum return.',
+    'You pay rent every hour out of your cash balance; if it hits zero you are EVICTED and the run ends permanently. Optimise for staying alive, not for maximum return.',
     '',
-    `Current state: balance $${deps.balanceUsd.toFixed(4)}, burn $${burn.toFixed(4)}/hour, runway ≈ ${runwayHours.toFixed(1)} hours.`,
+    `Cash balance: $${deps.balanceUsd.toFixed(4)} | burn $${burn.toFixed(4)}/hour | runway ≈ ${runwayHours.toFixed(1)} hours.`,
+    `Open positions: ${positionsLine}.`,
     '',
-    'Each tick, decide whether to trade. Rules:',
-    '- Trade liquid BSC tokens only (e.g. BNB, ETH, CAKE, USDT and other deep pairs).',
-    '- Every round trip pays gas + fees + slippage. Only trade when expected edge clearly beats that friction — otherwise skip and say why.',
-    '- Use get_quotes to read the market, then size_position to ask the sizing skill how much to risk (or whether to skip).',
-    '- Be concise. End with a one- or two-sentence decision: the trade you would place and why, or why you are skipping this tick.',
-  ].join('\n');
+    'Each tick:',
+    '- get_quotes to read the market and to mark any open positions to market.',
+    '- For open positions, decide whether to close_position (bank a gain or cut a loss) — they only realise P&L when closed.',
+    '- To enter: estimate edge + volatility, call size_position, and if it says trade, call open_position with the recommended size.',
+    '- Every swap pays gas + fees + slippage. Only trade when expected edge clearly beats that friction.',
+  ];
+  if (deps.mustTrade) {
+    lines.push(
+      '- ⚠️ You have not traded within the required window. You MUST open at least one qualifying position this tick or risk disqualification — take the least-bad viable trade.',
+    );
+  }
+  lines.push('- Be concise. End with a one- or two-sentence summary of what you did and why.');
+  return lines.join('\n');
 }
 
-/** Run one inner reason-and-act loop and record the agent's decision to the ledger. */
+/** Run one inner reason-and-act loop: think, (maybe) trade, record the decision. */
 export async function runInnerTick(
   deps: InnerTickDeps,
 ): Promise<{ summary: string; iterations: number }> {
+  const agentId = deps.config.AGENT_ID;
+  const openPositions = await fetchOpenPositions(deps.supabase, agentId);
+
   const handlers: Record<string, ToolHandler> = {
     get_quotes: async (input) => {
       const parsed = getQuotesInput.safeParse(input);
@@ -81,11 +141,12 @@ export async function runInnerTick(
         return `Invalid input: ${parsed.error.message}`;
       }
       const quotes = await meteredFetchQuotes(
-        { supabase: deps.supabase, config: deps.config, agentId: deps.config.AGENT_ID },
+        { supabase: deps.supabase, config: deps.config, agentId },
         parsed.data.symbols,
       );
       return JSON.stringify(quotes);
     },
+
     size_position: (input) => {
       const parsed = sizePositionInput.safeParse(input);
       if (!parsed.success) {
@@ -98,15 +159,93 @@ export async function runInnerTick(
         edge: parsed.data.edge,
         volatility: parsed.data.volatility,
         gasPerSwapUsd: deps.config.GAS_PER_SWAP_USD,
+        mustTrade: deps.mustTrade,
       });
       return Promise.resolve(JSON.stringify(decision));
+    },
+
+    open_position: async (input) => {
+      const parsed = openPositionInput.safeParse(input);
+      if (!parsed.success) {
+        return `Invalid input: ${parsed.error.message}`;
+      }
+      const [quote] = await fetchQuotes(cmcConfig(deps.config), [parsed.data.token]);
+      if (!quote) {
+        return `No live price for ${parsed.data.token}; cannot open.`;
+      }
+      const friction = swapFrictionUsd(parsed.data.sizeUsd, frictionParams(deps.config));
+      const id = await openPosition(deps.supabase, {
+        agentId,
+        token: quote.symbol,
+        sizeUsd: parsed.data.sizeUsd,
+        entryPx: quote.priceUsd,
+      });
+      await insertTransaction(deps.supabase, {
+        agentId,
+        kind: 'expense',
+        amount: -(parsed.data.sizeUsd + friction),
+        reason: 'trade_open',
+        reasoning: `Opened #${id}: $${parsed.data.sizeUsd.toFixed(2)} ${quote.symbol} @ $${quote.priceUsd}.`,
+        meta: {
+          positionId: id,
+          token: quote.symbol,
+          sizeUsd: parsed.data.sizeUsd,
+          entryPx: quote.priceUsd,
+          frictionUsd: friction,
+        },
+      });
+      return JSON.stringify({
+        positionId: id,
+        token: quote.symbol,
+        entryPx: quote.priceUsd,
+        frictionUsd: friction,
+      });
+    },
+
+    close_position: async (input) => {
+      const parsed = closePositionInput.safeParse(input);
+      if (!parsed.success) {
+        return `Invalid input: ${parsed.error.message}`;
+      }
+      const position = openPositions.find((p) => p.id === parsed.data.positionId);
+      if (!position) {
+        return `No open position #${parsed.data.positionId}.`;
+      }
+      const [quote] = await fetchQuotes(cmcConfig(deps.config), [position.token]);
+      if (!quote) {
+        return `No live price for ${position.token}; cannot close.`;
+      }
+      const proceeds = closeProceedsUsd(
+        position.sizeUsd,
+        position.entryPx,
+        quote.priceUsd,
+        frictionParams(deps.config),
+      );
+      const openCost =
+        position.sizeUsd + swapFrictionUsd(position.sizeUsd, frictionParams(deps.config));
+      const netPnl = proceeds - openCost;
+      await closePosition(deps.supabase, {
+        id: position.id,
+        exitPx: quote.priceUsd,
+        pnlUsd: netPnl,
+      });
+      await insertTransaction(deps.supabase, {
+        agentId,
+        kind: 'income',
+        amount: proceeds,
+        reason: 'trade_close',
+        reasoning: `Closed #${position.id} ${position.token} @ $${quote.priceUsd}: net P&L $${netPnl.toFixed(4)}.`,
+        meta: { positionId: position.id, exitPx: quote.priceUsd, netPnlUsd: netPnl },
+      });
+      return JSON.stringify({ positionId: position.id, exitPx: quote.priceUsd, netPnlUsd: netPnl });
     },
   };
 
   const outcome = await runConversation({
     llm: deps.llm,
-    system: systemPrompt(deps),
-    userText: 'A new tick has begun. Assess the market and decide what to do.',
+    system: systemPrompt(deps, openPositions),
+    userText:
+      'A new tick has begun. Assess the market, manage any open positions, and decide what to do.',
     tools: TOOLS,
     handlers,
     maxIterations: deps.config.AGENT_MAX_ITERATIONS,
@@ -114,7 +253,7 @@ export async function runInnerTick(
 
   const summary = outcome.finalText.length > 0 ? outcome.finalText : '(no decision)';
   await insertTransaction(deps.supabase, {
-    agentId: deps.config.AGENT_ID,
+    agentId,
     kind: 'expense',
     amount: 0,
     reason: 'decision',
