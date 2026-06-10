@@ -37,6 +37,13 @@ const envSchema = z.object({
   SKILL_CALL_COST_USD: z.coerce.number().nonnegative().default(0.01),
   // Payer address for x402 settlement. Placeholder until #14 funds the BSC wallet.
   X402_PAYER: z.string().min(1).default('0x0000000000000000000000000000000000000000'),
+  // Swap execution (#13). 'paper' = simulated tx hashes (default). 'live' = real
+  // spot swaps via the TWAK CLI — needs a funded burner (#14) + TWAK_WALLET_PASSWORD.
+  EXECUTION_MODE: z.enum(['paper', 'live']).default('paper'),
+  TWAK_CHAIN: z.string().min(1).default('bsc'),
+  TWAK_BASE_TOKEN: z.string().min(1).default('USDT'),
+  // TWAK reads this to sign headlessly; never passed on the command line.
+  TWAK_WALLET_PASSWORD: z.string().min(1).optional(),
 });
 
 export type WorkerConfig = z.infer<typeof envSchema>;

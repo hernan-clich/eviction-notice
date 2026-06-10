@@ -1,11 +1,10 @@
-import { randomBytes } from 'node:crypto';
-
 import { isEligibleToken, LIQUID_TOKENS } from 'shared';
 import { decideSizing } from 'skill';
 import { z } from 'zod';
 
 import { cmcConfig, fetchQuotes, meteredFetchQuotes } from './cmc.ts';
 import type { WorkerConfig } from './config.ts';
+import { executeSwap } from './execution.ts';
 import { runConversation, type LlmClient, type LlmTool, type ToolHandler } from './llm.ts';
 import { closeProceedsUsd, swapFrictionUsd, type FrictionParams } from './paper-trade.ts';
 import {
@@ -97,15 +96,6 @@ function frictionParams(config: WorkerConfig): FrictionParams {
     swapFeeRate: config.SWAP_FEE_RATE,
     slippage: config.SLIPPAGE,
   };
-}
-
-/**
- * A swap is never recorded without a tx reference. Paper swaps get a flagged
- * simulated hash so the dashboard can always link to the explorer; #13 replaces
- * this with the real on-chain hash returned by the TWAK swap.
- */
-function simulatedTxHash(): string {
-  return `0x${randomBytes(32).toString('hex')}`;
 }
 
 /** Human-readable price: 2 decimals for dollar-scale tokens, more precision for sub-dollar. */
@@ -224,7 +214,12 @@ export async function runInnerTick(
         return `No live price for ${parsed.data.token}; cannot open.`;
       }
       const friction = swapFrictionUsd(parsed.data.sizeUsd, frictionParams(deps.config));
-      const txHash = simulatedTxHash();
+      // Execute (or simulate) the swap first — a live failure must not leave a
+      // phantom position. baseAmount = USDT spent ≈ sizeUsd.
+      const swap = await executeSwap(
+        { config: deps.config },
+        { side: 'open', token: quote.symbol, baseAmount: parsed.data.sizeUsd },
+      );
       const id = await openPosition(deps.supabase, {
         agentId,
         token: quote.symbol,
@@ -243,9 +238,9 @@ export async function runInnerTick(
           sizeUsd: parsed.data.sizeUsd,
           entryPx: quote.priceUsd,
           frictionUsd: friction,
-          txHash,
+          txHash: swap.txHash,
           network: deps.config.BSC_NETWORK,
-          simulated: true,
+          simulated: swap.simulated,
         },
       });
       return JSON.stringify({
@@ -278,7 +273,11 @@ export async function runInnerTick(
       const openCost =
         position.sizeUsd + swapFrictionUsd(position.sizeUsd, frictionParams(deps.config));
       const netPnl = proceeds - openCost;
-      const txHash = simulatedTxHash();
+      // Sell the held token quantity back to the base. baseAmount = tokens held.
+      const swap = await executeSwap(
+        { config: deps.config },
+        { side: 'close', token: position.token, baseAmount: position.sizeUsd / position.entryPx },
+      );
       await closePosition(deps.supabase, {
         id: position.id,
         exitPx: quote.priceUsd,
@@ -294,9 +293,9 @@ export async function runInnerTick(
           positionId: position.id,
           exitPx: quote.priceUsd,
           netPnlUsd: netPnl,
-          txHash,
+          txHash: swap.txHash,
           network: deps.config.BSC_NETWORK,
-          simulated: true,
+          simulated: swap.simulated,
         },
       });
       return JSON.stringify({ positionId: position.id, exitPx: quote.priceUsd, netPnlUsd: netPnl });
