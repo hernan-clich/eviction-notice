@@ -91,34 +91,34 @@
 }
 
 /*
- * Feed scroll container. Desktop-only so it never clips content on mobile, where
- * the page scrolls as one. The raw browser scrollbar is replaced with a thin
- * hover-revealed thumb on a transparent track.
+ * Independently-scrolling desktop panes (vitals rail + live feed). Desktop-only so
+ * it never clips content on mobile, where the page scrolls as one. The raw browser
+ * scrollbar is replaced with a thin hover-revealed thumb on a transparent track.
  */
 @media (min-width: 768px) {
-  .feed-scroll {
+  .pane-scroll {
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
   }
-  .feed-scroll:hover {
+  .pane-scroll:hover {
     scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
   }
-  .feed-scroll::-webkit-scrollbar {
+  .pane-scroll::-webkit-scrollbar {
     width: 6px;
   }
-  .feed-scroll::-webkit-scrollbar-track {
+  .pane-scroll::-webkit-scrollbar-track {
     background: transparent;
   }
-  .feed-scroll::-webkit-scrollbar-thumb {
+  .pane-scroll::-webkit-scrollbar-thumb {
     background: transparent;
     border-radius: 3px;
     transition: background 0.2s ease;
   }
-  .feed-scroll:hover::-webkit-scrollbar-thumb {
+  .pane-scroll:hover::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
   }
-  .feed-scroll::-webkit-scrollbar-thumb:hover {
+  .pane-scroll::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.28);
   }
 }
