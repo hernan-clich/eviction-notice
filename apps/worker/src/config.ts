@@ -17,6 +17,13 @@ const envSchema = z.object({
   CMC_API_KEY: z.string().min(1).optional(),
   CMC_API_BASE: z.string().url().default('https://pro-api.coinmarketcap.com'),
   CMC_DATA_COST_USD: z.coerce.number().nonnegative().default(0.01),
+  // Anthropic — optional so the heartbeat boots without it; the inner loop needs it.
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  ANTHROPIC_MODEL: z.string().min(1).default('claude-haiku-4-5'),
+  // Max model turns per tick (tool-use loop guard).
+  AGENT_MAX_ITERATIONS: z.coerce.number().int().positive().default(6),
+  // Gas estimate (USD/swap) fed to the sizing skill until live gas reads land (#14).
+  GAS_PER_SWAP_USD: z.coerce.number().nonnegative().default(0.15),
 });
 
 export type WorkerConfig = z.infer<typeof envSchema>;
