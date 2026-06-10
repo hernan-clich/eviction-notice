@@ -2,14 +2,16 @@
  * Eviction Notice — agent worker.
  *
  * A persistent, always-on Node daemon (Render Background Worker). The outer
- * heartbeat ticks forever: accrue rent → recompute balance → check alive → sleep.
- * When the ledger balance hits zero the agent is EVICTED and the loop halts
- * permanently — no revivals. Trading (the inner reason-and-act loop) lands later.
+ * heartbeat ticks forever: accrue rent → recompute balance → check alive →
+ * think (inner reason-and-act loop) → sleep. When the ledger balance hits zero
+ * the agent is EVICTED and the loop halts permanently — no revivals.
  */
 
 import { isAlive } from 'shared';
 
+import { runInnerTick } from './agent.ts';
 import { loadConfig } from './config.ts';
+import { createAnthropicClient } from './llm.ts';
 import { log } from './log.ts';
 import { rentForInterval } from './rent.ts';
 import {
@@ -30,6 +32,9 @@ try {
 
 const config = loadConfig();
 const client = createClient(config);
+// The inner reason-and-act loop is optional: without an Anthropic key the
+// heartbeat still accrues rent and tracks survival, it just doesn't think yet.
+const llm = config.ANTHROPIC_API_KEY ? createAnthropicClient(config) : null;
 
 let running = true;
 let wake: (() => void) | null = null;
@@ -98,6 +103,29 @@ async function main(): Promise<void> {
       await markDead(client, config.AGENT_ID);
       log.error('EVICTED', { balance: balanceAfterRent, ticks });
       break;
+    }
+
+    // Think: gather data, consult the sizing skill, decide. A failure here
+    // (model/network) must not evict the agent — log and keep the heartbeat.
+    if (llm) {
+      try {
+        const decision = await runInnerTick({
+          llm,
+          supabase: client,
+          config,
+          balanceUsd: balanceAfterRent,
+        });
+        log.info('decided', {
+          tick: ticks,
+          iterations: decision.iterations,
+          summary: decision.summary,
+        });
+      } catch (error: unknown) {
+        log.error('inner loop failed', {
+          tick: ticks,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
 
     if (config.MAX_TICKS > 0 && ticks >= config.MAX_TICKS) {
