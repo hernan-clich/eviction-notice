@@ -1,27 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { computeBalance, type AgentState, type Transaction } from 'shared';
+import { computeVitals, type AgentState, type Transaction } from 'shared';
 
+import { EvictedScreen } from '@/components/evicted-screen';
+import { Feed } from '@/components/feed';
+import { Sparkline } from '@/components/sparkline';
+import { CompactVitals, SecondaryVitals, VitalSigns } from '@/components/vital-signs';
 import { realtimeLedgerSource } from '@/lib/ledger-source';
+import { vitality } from '@/lib/ui';
 
 const AGENT_ID = 'agent-0';
-
-function formatUsd(value: number): string {
-  const sign = value < 0 ? '-' : '+';
-  const abs = Math.abs(value);
-  const decimals = abs > 0 && abs < 0.01 ? 6 : 2;
-  return `${sign}$${abs.toFixed(decimals)}`;
-}
-
-function amountClass(kind: Transaction['kind']): string {
-  return kind === 'income' ? 'text-green-400' : 'text-red-400';
-}
 
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [agentState, setAgentState] = useState<AgentState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
     let active = true;
@@ -47,66 +42,77 @@ export default function Dashboard() {
       },
     });
 
+    const ticker = setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+
     return () => {
       active = false;
       unsubscribe();
+      clearInterval(ticker);
     };
   }, []);
 
-  const balance = computeBalance(transactions);
-  const alive = agentState?.status === 'alive' && balance > 0;
-  const feed = [...transactions].reverse();
+  const vitals = computeVitals(transactions, agentState, nowMs);
+  const bornMs = agentState?.born_at ? Date.parse(agentState.born_at) : null;
+
+  if (agentState?.status === 'dead') {
+    return (
+      <div className="crt">
+        <EvictedScreen vitals={vitals} />
+      </div>
+    );
+  }
+
+  const sparklineColor = vitality(vitals.balanceUsd, vitals.seedUsd).hex;
+  const chart = (
+    <div>
+      <div className="font-display text-muted mb-3 text-[10px] tracking-[0.25em] uppercase">
+        Balance · lifetime
+      </div>
+      <Sparkline series={vitals.series} color={sparklineColor} seedUsd={vitals.seedUsd} />
+    </div>
+  );
+  const feedLabel = (
+    <div className="font-display text-muted text-[10px] tracking-[0.25em] uppercase">Live feed</div>
+  );
+  const errorBanner = loadError ? (
+    <p className="border-alarm/40 bg-alarm/10 text-alarm rounded border px-3 py-2 text-sm">
+      {loadError}
+    </p>
+  ) : null;
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-8 px-6 py-12">
-      <header className="flex items-baseline justify-between">
-        <h1 className="text-xl font-bold tracking-tight">EVICTION NOTICE</h1>
-        <span className="flex items-center gap-2 text-sm">
-          <span
-            className={`inline-block h-2 w-2 rounded-full ${alive ? 'animate-pulse bg-green-400' : 'bg-red-500'}`}
-          />
-          {agentState ? (alive ? 'ALIVE' : 'EVICTED') : '—'}
-        </span>
-      </header>
-
-      <section>
-        <div className="text-xs tracking-widest text-neutral-500 uppercase">Balance</div>
-        <div
-          className={`text-5xl font-bold tabular-nums ${alive ? 'text-neutral-100' : 'text-red-400'}`}
-        >
-          ${balance.toFixed(4)}
+    <div className="crt">
+      {/* Mobile: pinned compact vitals, feed as the scrolling body, detail demoted below it. */}
+      <div className="flex min-h-screen flex-col md:hidden">
+        <CompactVitals vitals={vitals} />
+        <section className="flex flex-col gap-3 px-5 py-6">
+          {feedLabel}
+          <Feed transactions={transactions} bornMs={bornMs} />
+        </section>
+        <div className="border-line flex flex-col gap-6 border-t px-5 py-7">
+          <SecondaryVitals vitals={vitals} />
+          {chart}
+          {errorBanner}
         </div>
-      </section>
+      </div>
 
-      {loadError ? (
-        <p className="rounded border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">
-          {loadError}
-        </p>
-      ) : null}
+      {/* Desktop: vitals rail beside a full-height, independently-scrolling feed. */}
+      <div className="mx-auto hidden max-w-7xl md:grid md:h-screen md:grid-cols-[minmax(340px,440px)_1fr] md:overflow-hidden">
+        <aside className="border-line flex animate-[reveal_0.5s_ease-out] flex-col gap-7 px-7 py-8 md:overflow-y-auto md:border-r">
+          <VitalSigns vitals={vitals} />
+          {chart}
+          {errorBanner}
+        </aside>
 
-      <section className="flex flex-col gap-1">
-        <div className="mb-2 text-xs tracking-widest text-neutral-500 uppercase">Live feed</div>
-        {feed.length === 0 ? (
-          <p className="text-sm text-neutral-500">Waiting for the agent to do something…</p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-neutral-900">
-            {feed.map((tx) => (
-              <li key={tx.id} className="flex items-baseline gap-3 py-2 text-sm">
-                <time className="w-20 shrink-0 text-neutral-600" dateTime={tx.ts}>
-                  {new Date(tx.ts).toLocaleTimeString()}
-                </time>
-                <span className="w-24 shrink-0 text-neutral-400">{tx.reason}</span>
-                <span className={`w-28 shrink-0 tabular-nums ${amountClass(tx.kind)}`}>
-                  {formatUsd(tx.amount)}
-                </span>
-                {tx.reasoning ? (
-                  <span className="truncate text-neutral-500 italic">{tx.reasoning}</span>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </main>
+        <section className="flex min-h-0 flex-col px-7 py-8 md:overflow-hidden">
+          <div className="border-line shrink-0 border-b pb-3 md:pr-4">{feedLabel}</div>
+          <div className="feed-scroll md:min-h-0 md:flex-1 md:overflow-y-auto md:pr-4">
+            <Feed transactions={transactions} bornMs={bornMs} />
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }

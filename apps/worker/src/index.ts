@@ -94,7 +94,7 @@ async function main(): Promise<void> {
       kind: 'rent',
       amount: -rent,
       reason: 'rent',
-      reasoning: `Rent accrued for ${config.TICK_INTERVAL_MS} ms of being alive.`,
+      reasoning: `Life-support rent @ $${config.RENT_PER_HOUR_USD.toFixed(2)}/h.`,
     });
 
     const balanceAfterRent = await fetchBalance(client, config.AGENT_ID);

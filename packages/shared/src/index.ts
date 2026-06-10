@@ -5,4 +5,6 @@
  */
 
 export * from './eligible-tokens.ts';
+export * from './explorer.ts';
 export * from './ledger.ts';
+export * from './vitals.ts';

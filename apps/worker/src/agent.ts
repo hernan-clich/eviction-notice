@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 import { isEligibleToken, LIQUID_TOKENS } from 'shared';
 import { decideSizing } from 'skill';
 import { z } from 'zod';
@@ -96,6 +98,22 @@ function frictionParams(config: WorkerConfig): FrictionParams {
   };
 }
 
+/**
+ * A swap is never recorded without a tx reference. Paper swaps get a flagged
+ * simulated hash so the dashboard can always link to the explorer; #13 replaces
+ * this with the real on-chain hash returned by the TWAK swap.
+ */
+function simulatedTxHash(): string {
+  return `0x${randomBytes(32).toString('hex')}`;
+}
+
+/** Human-readable price: 2 decimals for dollar-scale tokens, more precision for sub-dollar. */
+function fmtPrice(price: number): string {
+  if (price >= 1) return price.toFixed(2);
+  if (price >= 0.01) return price.toFixed(4);
+  return price.toPrecision(3);
+}
+
 function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
   const burn = deps.config.RENT_PER_HOUR_USD;
   const runwayHours = burn > 0 ? deps.balanceUsd / burn : Number.POSITIVE_INFINITY;
@@ -179,6 +197,7 @@ export async function runInnerTick(
         return `No live price for ${parsed.data.token}; cannot open.`;
       }
       const friction = swapFrictionUsd(parsed.data.sizeUsd, frictionParams(deps.config));
+      const txHash = simulatedTxHash();
       const id = await openPosition(deps.supabase, {
         agentId,
         token: quote.symbol,
@@ -190,13 +209,16 @@ export async function runInnerTick(
         kind: 'expense',
         amount: -(parsed.data.sizeUsd + friction),
         reason: 'trade_open',
-        reasoning: `Opened #${id}: $${parsed.data.sizeUsd.toFixed(2)} ${quote.symbol} @ $${quote.priceUsd}.`,
+        reasoning: `Opened #${id}: $${parsed.data.sizeUsd.toFixed(2)} ${quote.symbol} @ $${fmtPrice(quote.priceUsd)}.`,
         meta: {
           positionId: id,
           token: quote.symbol,
           sizeUsd: parsed.data.sizeUsd,
           entryPx: quote.priceUsd,
           frictionUsd: friction,
+          txHash,
+          network: deps.config.BSC_NETWORK,
+          simulated: true,
         },
       });
       return JSON.stringify({
@@ -229,6 +251,7 @@ export async function runInnerTick(
       const openCost =
         position.sizeUsd + swapFrictionUsd(position.sizeUsd, frictionParams(deps.config));
       const netPnl = proceeds - openCost;
+      const txHash = simulatedTxHash();
       await closePosition(deps.supabase, {
         id: position.id,
         exitPx: quote.priceUsd,
@@ -239,8 +262,15 @@ export async function runInnerTick(
         kind: 'income',
         amount: proceeds,
         reason: 'trade_close',
-        reasoning: `Closed #${position.id} ${position.token} @ $${quote.priceUsd}: net P&L $${netPnl.toFixed(4)}.`,
-        meta: { positionId: position.id, exitPx: quote.priceUsd, netPnlUsd: netPnl },
+        reasoning: `Closed #${position.id} ${position.token} @ $${fmtPrice(quote.priceUsd)}: net P&L $${netPnl.toFixed(2)}.`,
+        meta: {
+          positionId: position.id,
+          exitPx: quote.priceUsd,
+          netPnlUsd: netPnl,
+          txHash,
+          network: deps.config.BSC_NETWORK,
+          simulated: true,
+        },
       });
       return JSON.stringify({ positionId: position.id, exitPx: quote.priceUsd, netPnlUsd: netPnl });
     },

@@ -17,6 +17,7 @@ export default tseslint.config(
       '**/coverage/**',
       '**/node_modules/**',
       '**/.next/**',
+      '**/next-env.d.ts',
       '**/migrations/**',
       'docs/temp/**',
     ],
