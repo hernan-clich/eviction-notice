@@ -124,3 +124,96 @@ export async function markDead(client: AppSupabaseClient, agentId: string): Prom
     throw new Error(`mark dead: ${error.message}`);
   }
 }
+
+export interface OpenPosition {
+  id: number;
+  token: string;
+  sizeUsd: number;
+  entryPx: number;
+  openedAt: string;
+}
+
+const openPositionRowSchema = z.object({
+  id: z.coerce.number().int(),
+  token: z.string(),
+  size_usd: z.coerce.number(),
+  entry_px: z.coerce.number(),
+  opened_at: z.string(),
+});
+
+export async function openPosition(
+  client: AppSupabaseClient,
+  args: { agentId: string; token: string; sizeUsd: number; entryPx: number },
+): Promise<number> {
+  const { data, error } = await client
+    .from('positions')
+    .insert({
+      agent_id: args.agentId,
+      token: args.token,
+      size_usd: args.sizeUsd,
+      entry_px: args.entryPx,
+    })
+    .select('id')
+    .single();
+  if (error) {
+    throw new Error(`open position: ${error.message}`);
+  }
+  return z.object({ id: z.coerce.number().int() }).parse(data).id;
+}
+
+export async function fetchOpenPositions(
+  client: AppSupabaseClient,
+  agentId: string,
+): Promise<OpenPosition[]> {
+  const { data, error } = await client
+    .from('positions')
+    .select('id, token, size_usd, entry_px, opened_at')
+    .eq('agent_id', agentId)
+    .is('closed_at', null)
+    .order('id', { ascending: true });
+  if (error) {
+    throw new Error(`fetch open positions: ${error.message}`);
+  }
+  return z
+    .array(openPositionRowSchema)
+    .parse(data ?? [])
+    .map((row) => ({
+      id: row.id,
+      token: row.token,
+      sizeUsd: row.size_usd,
+      entryPx: row.entry_px,
+      openedAt: row.opened_at,
+    }));
+}
+
+export async function closePosition(
+  client: AppSupabaseClient,
+  args: { id: number; exitPx: number; pnlUsd: number },
+): Promise<void> {
+  const { error } = await client
+    .from('positions')
+    .update({ closed_at: new Date().toISOString(), exit_px: args.exitPx, pnl_usd: args.pnlUsd })
+    .eq('id', args.id);
+  if (error) {
+    throw new Error(`close position: ${error.message}`);
+  }
+}
+
+/** Epoch ms of the most recent opened trade, or null if the agent has never traded. */
+export async function lastTradeAtMs(
+  client: AppSupabaseClient,
+  agentId: string,
+): Promise<number | null> {
+  const { data, error } = await client
+    .from('transactions')
+    .select('ts')
+    .eq('agent_id', agentId)
+    .eq('reason', 'trade_open')
+    .order('ts', { ascending: false })
+    .limit(1);
+  if (error) {
+    throw new Error(`last trade lookup: ${error.message}`);
+  }
+  const rows = z.array(z.object({ ts: z.string() })).parse(data ?? []);
+  return rows[0] ? Date.parse(rows[0].ts) : null;
+}

@@ -24,6 +24,11 @@ const envSchema = z.object({
   AGENT_MAX_ITERATIONS: z.coerce.number().int().positive().default(6),
   // Gas estimate (USD/swap) fed to the sizing skill until live gas reads land (#14).
   GAS_PER_SWAP_USD: z.coerce.number().nonnegative().default(0.15),
+  // Paper-trade friction: PancakeSwap V2 fee per side + expected slippage per swap.
+  SWAP_FEE_RATE: z.coerce.number().nonnegative().default(0.0025),
+  SLIPPAGE: z.coerce.number().nonnegative().default(0.001),
+  // ≥1-trade/day floor: force a trade if none opened within this window. 0 disables.
+  TRADE_FLOOR_MS: z.coerce.number().int().nonnegative().default(86_400_000),
 });
 
 export type WorkerConfig = z.infer<typeof envSchema>;
