@@ -1,3 +1,4 @@
+import { isEligibleToken, LIQUID_TOKENS } from 'shared';
 import { decideSizing } from 'skill';
 import { z } from 'zod';
 
@@ -117,6 +118,7 @@ function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): strin
     '- For open positions, decide whether to close_position (bank a gain or cut a loss) — they only realise P&L when closed.',
     '- To enter: estimate edge + volatility, call size_position, and if it says trade, call open_position with the recommended size.',
     '- Every swap pays gas + fees + slippage. Only trade when expected edge clearly beats that friction.',
+    `- Trade ONLY eligible tokens — trades outside the list do not count toward your P&L. Focus on the deepest, most-liquid ones: ${LIQUID_TOKENS.join(', ')}.`,
   ];
   if (deps.mustTrade) {
     lines.push(
@@ -168,6 +170,9 @@ export async function runInnerTick(
       const parsed = openPositionInput.safeParse(input);
       if (!parsed.success) {
         return `Invalid input: ${parsed.error.message}`;
+      }
+      if (!isEligibleToken(parsed.data.token)) {
+        return `${parsed.data.token} is not in the eligible universe — trades outside it don't count toward P&L. Choose an eligible token.`;
       }
       const [quote] = await fetchQuotes(cmcConfig(deps.config), [parsed.data.token]);
       if (!quote) {
