@@ -4,4 +4,5 @@
  * lives here; the eligible-token universe (#24) and further schemas follow.
  */
 
+export * from './eligible-tokens.ts';
 export * from './ledger.ts';
