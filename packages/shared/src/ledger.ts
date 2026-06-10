@@ -46,6 +46,33 @@ export const positionSchema = z.object({
 });
 export type Position = z.infer<typeof positionSchema>;
 
+/** One open position marked to current price, as stored in a snapshot's `positions`. */
+export const snapshotPositionSchema = z.object({
+  token: z.string(),
+  sizeUsd: z.number(),
+  entryPx: z.number(),
+  markPx: z.number(),
+  valueUsd: z.number(),
+});
+export type SnapshotPosition = z.infer<typeof snapshotPositionSchema>;
+
+/**
+ * Per-tick marked balance sheet. `cash` is liquidity (SUM ledger), `position_value`
+ * marks open positions to current price, and `net_worth = cash + position_value` is
+ * the life force + death line. The dashboard can't mark positions itself, so the
+ * worker writes these each tick.
+ */
+export const snapshotSchema = z.object({
+  id: z.coerce.number().int(),
+  agent_id: z.string(),
+  ts: z.string(),
+  cash_usd: z.coerce.number(),
+  position_value_usd: z.coerce.number(),
+  net_worth_usd: z.coerce.number(),
+  positions: z.array(snapshotPositionSchema).nullable(),
+});
+export type Snapshot = z.infer<typeof snapshotSchema>;
+
 export const agentStateSchema = z.object({
   agent_id: z.string(),
   born_at: z.string().nullable(),

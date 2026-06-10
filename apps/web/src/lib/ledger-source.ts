@@ -1,38 +1,48 @@
-import { agentStateSchema, transactionSchema, type AgentState, type Transaction } from 'shared';
+import {
+  agentStateSchema,
+  snapshotSchema,
+  transactionSchema,
+  type AgentState,
+  type Snapshot,
+  type Transaction,
+} from 'shared';
 
 import { getSupabase } from './supabase-client';
 
-export interface LedgerSnapshot {
+export interface LedgerData {
   transactions: Transaction[];
   agentState: AgentState | null;
+  snapshots: Snapshot[];
 }
 
 export interface LedgerHandlers {
   onTransaction: (tx: Transaction) => void;
   onAgentState: (state: AgentState) => void;
+  onSnapshot: (snap: Snapshot) => void;
 }
 
 /**
  * Abstracts where ledger data comes from, so the same UI serves both live and
  * replay. The live dashboard uses `realtimeLedgerSource` (Supabase Realtime);
- * the Phase 6 portfolio afterlife will add a snapshot source that plays a static
- * JSON on a compressed clock — no component changes required.
+ * the Phase 6 portfolio afterlife will add a source that plays a static JSON on a
+ * compressed clock — no component changes required.
  */
 export interface LedgerSource {
-  load: (agentId: string) => Promise<LedgerSnapshot>;
+  load: (agentId: string) => Promise<LedgerData>;
   subscribe: (agentId: string, handlers: LedgerHandlers) => () => void;
 }
 
 export const realtimeLedgerSource: LedgerSource = {
   async load(agentId) {
     const supabase = getSupabase();
-    const [txRes, stateRes] = await Promise.all([
-      supabase
-        .from('transactions')
-        .select('*')
-        .eq('agent_id', agentId)
-        .order('id', { ascending: true }),
+    const [txRes, stateRes, snapRes] = await Promise.all([
+      supabase.from('transactions').select('*').eq('agent_id', agentId).order('id', {
+        ascending: true,
+      }),
       supabase.from('agent_state').select('*').eq('agent_id', agentId).maybeSingle(),
+      supabase.from('snapshots').select('*').eq('agent_id', agentId).order('id', {
+        ascending: true,
+      }),
     ]);
     if (txRes.error) {
       throw new Error(`load transactions: ${txRes.error.message}`);
@@ -40,9 +50,13 @@ export const realtimeLedgerSource: LedgerSource = {
     if (stateRes.error) {
       throw new Error(`load agent_state: ${stateRes.error.message}`);
     }
+    if (snapRes.error) {
+      throw new Error(`load snapshots: ${snapRes.error.message}`);
+    }
     return {
       transactions: (txRes.data ?? []).map((row) => transactionSchema.parse(row)),
       agentState: stateRes.data ? agentStateSchema.parse(stateRes.data) : null,
+      snapshots: (snapRes.data ?? []).map((row) => snapshotSchema.parse(row)),
     };
   },
 
@@ -67,6 +81,18 @@ export const realtimeLedgerSource: LedgerSource = {
         { event: '*', schema: 'public', table: 'agent_state', filter: `agent_id=eq.${agentId}` },
         (payload) => {
           handlers.onAgentState(agentStateSchema.parse(payload.new));
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'snapshots',
+          filter: `agent_id=eq.${agentId}`,
+        },
+        (payload) => {
+          handlers.onSnapshot(snapshotSchema.parse(payload.new));
         },
       )
       .subscribe();

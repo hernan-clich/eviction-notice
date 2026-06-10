@@ -31,7 +31,7 @@ export function EvictedScreen({ vitals }: { vitals: Vitals }) {
 
       <div className="bg-line grid w-full max-w-md grid-cols-2 gap-px">
         <FinalStat label="Days survived" value={vitals.daysSurvived.toFixed(2)} />
-        <FinalStat label="Peak balance" value={formatUsd(vitals.peakUsd)} />
+        <FinalStat label="Peak net worth" value={formatUsd(vitals.peakUsd)} />
         <FinalStat label="Final P&L" value={formatSignedUsd(vitals.netPnlUsd)} />
         <FinalStat label="Trades" value={String(vitals.tradeCount)} />
       </div>
