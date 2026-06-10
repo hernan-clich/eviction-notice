@@ -32,6 +32,7 @@ services:
       - key: X402_PAY_TO
         sync: false # treasury address; pinned for real in #14
 
+
   # --- Go-live worker (PAID — Render Starter, always-on). Uncomment at #19/#20, or
   #     prefer the $0 tick-on-cron route in docs/deploy.md. Adding this to the active
   #     Blueprint forces a card on file, so it stays commented until go-live. ---
