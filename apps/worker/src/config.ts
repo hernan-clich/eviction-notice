@@ -29,6 +29,8 @@ const envSchema = z.object({
   SLIPPAGE: z.coerce.number().nonnegative().default(0.001),
   // ≥1-trade/day floor: force a trade if none opened within this window. 0 disables.
   TRADE_FLOOR_MS: z.coerce.number().int().nonnegative().default(86_400_000),
+  // Chain for explorer links on trades (BscScan). Real tx hashes land with #13.
+  BSC_NETWORK: z.enum(['mainnet', 'testnet']).default('mainnet'),
 });
 
 export type WorkerConfig = z.infer<typeof envSchema>;
