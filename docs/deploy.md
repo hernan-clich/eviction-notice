@@ -15,7 +15,8 @@ Two deployables (`render.yaml` Blueprint): the **skill** (x402 sizing endpoint) 
 
 ## A. Deploy the skill (free web service)
 
-1. Render → **New → Blueprint** → connect this repo. Render reads `render.yaml`.
+1. Render → **New → Blueprint** → connect this repo. Render reads `render.yaml` — the active
+   Blueprint is the **skill only** (free tier), so **no card is required**.
 2. For **eviction-notice-skill**, set `X402_PAY_TO` (placeholder `0x0000000000000000000000000000000000000000` for now).
 3. Deploy. Confirm `GET https://eviction-notice-skill.onrender.com/healthz` → `{"ok":true}`.
    - Free web services sleep after 15 min idle and cold-start on the next request — fine for the skill.
@@ -43,11 +44,17 @@ pnpm --filter worker start
 Watch the dashboard (Supabase Realtime). You should see `data_call`, `x402_fee` (skill payment),
 `decision`, and paper `trade_open`/`trade_close` rows. Set `MAX_TICKS=0` for a continuous run.
 
-## C. Always-on worker (go-live, paid)
+## C. Always-on worker (go-live)
 
-The permadeath loop must run 24/7, so the worker is a **paid** Render service (`plan: starter`).
-In the Blueprint, set the worker's secrets + `SKILL_URL` to the deployed skill, then deploy.
-Lower `TICK_INTERVAL_MS` back to `1800000` (30 min) for production cadence.
+The permadeath loop must run 24/7. Render has no free always-on worker, so two options:
+
+- **Paid (simplest):** uncomment the `worker` block in `render.yaml` (a `starter` instance,
+  ~$7/mo prorated). Set its secrets + `SKILL_URL`, deploy, and reset `TICK_INTERVAL_MS` to
+  `1800000` (30 min). Adding it puts a card on file — that's the only reason a card is needed.
+- **$0 tick-on-cron:** keep the worker off Render; a free scheduler (GitHub Actions cron or
+  cron-job.org) triggers one tick per call. Needs a one-tick mode + rent accrued from real
+  elapsed wall-time (robust to irregular intervals). Fits the "earns its keep" premise; trade-off
+  is ≥5-min cron granularity and occasional delay.
 
 ## D. Web dashboard (Vercel)
 
