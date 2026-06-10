@@ -12,6 +12,11 @@ const envSchema = z.object({
   TICK_INTERVAL_MS: z.coerce.number().int().positive().default(1_800_000),
   // 0 = run forever. > 0 stops after N ticks (local verification).
   MAX_TICKS: z.coerce.number().int().nonnegative().default(0),
+  // CoinMarketCap — optional so the heartbeat boots without it; the data client
+  // requires it at point of use. Cost is the simulated per-call data burn ($/think).
+  CMC_API_KEY: z.string().min(1).optional(),
+  CMC_API_BASE: z.string().url().default('https://pro-api.coinmarketcap.com'),
+  CMC_DATA_COST_USD: z.coerce.number().nonnegative().default(0.01),
 });
 
 export type WorkerConfig = z.infer<typeof envSchema>;
