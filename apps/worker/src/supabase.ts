@@ -199,6 +199,37 @@ export async function closePosition(
   }
 }
 
+export interface SnapshotInput {
+  agentId: string;
+  cashUsd: number;
+  positionValueUsd: number;
+  netWorthUsd: number;
+  positions: {
+    token: string;
+    sizeUsd: number;
+    entryPx: number;
+    markPx: number;
+    valueUsd: number;
+  }[];
+}
+
+/** Append a per-tick marked balance sheet (cash + position value = net worth). */
+export async function insertSnapshot(
+  client: AppSupabaseClient,
+  snap: SnapshotInput,
+): Promise<void> {
+  const { error } = await client.from('snapshots').insert({
+    agent_id: snap.agentId,
+    cash_usd: snap.cashUsd,
+    position_value_usd: snap.positionValueUsd,
+    net_worth_usd: snap.netWorthUsd,
+    positions: snap.positions,
+  });
+  if (error) {
+    throw new Error(`insert snapshot: ${error.message}`);
+  }
+}
+
 /** Epoch ms of the most recent opened trade, or null if the agent has never traded. */
 export async function lastTradeAtMs(
   client: AppSupabaseClient,

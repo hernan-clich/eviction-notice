@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { computeVitals, type AgentState, type Transaction } from 'shared';
+import { computeVitals, type AgentState, type Snapshot, type Transaction } from 'shared';
 
 import { EvictedScreen } from '@/components/evicted-screen';
 import { Feed } from '@/components/feed';
@@ -15,6 +15,7 @@ const AGENT_ID = 'agent-0';
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [agentState, setAgentState] = useState<AgentState | null>(null);
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -23,10 +24,11 @@ export default function Dashboard() {
 
     const load = async () => {
       try {
-        const snapshot = await realtimeLedgerSource.load(AGENT_ID);
+        const data = await realtimeLedgerSource.load(AGENT_ID);
         if (!active) return;
-        setTransactions(snapshot.transactions);
-        setAgentState(snapshot.agentState);
+        setTransactions(data.transactions);
+        setAgentState(data.agentState);
+        setSnapshots(data.snapshots);
       } catch (error) {
         if (active) setLoadError(error instanceof Error ? error.message : String(error));
       }
@@ -39,6 +41,9 @@ export default function Dashboard() {
       },
       onAgentState: (state) => {
         setAgentState(state);
+      },
+      onSnapshot: (snap) => {
+        setSnapshots((prev) => (prev.some((s) => s.id === snap.id) ? prev : [...prev, snap]));
       },
     });
 
@@ -53,7 +58,7 @@ export default function Dashboard() {
     };
   }, []);
 
-  const vitals = computeVitals(transactions, agentState, nowMs);
+  const vitals = computeVitals(transactions, agentState, nowMs, snapshots);
   const bornMs = agentState?.born_at ? Date.parse(agentState.born_at) : null;
 
   if (agentState?.status === 'dead') {
@@ -64,11 +69,11 @@ export default function Dashboard() {
     );
   }
 
-  const sparklineColor = vitality(vitals.balanceUsd, vitals.seedUsd).hex;
+  const sparklineColor = vitality(vitals).hex;
   const chart = (
     <div>
       <div className="font-display text-muted mb-3 text-[10px] tracking-[0.25em] uppercase">
-        Balance · lifetime
+        Net worth · lifetime
       </div>
       <Sparkline series={vitals.series} color={sparklineColor} seedUsd={vitals.seedUsd} />
     </div>

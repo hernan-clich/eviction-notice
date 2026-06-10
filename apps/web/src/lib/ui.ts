@@ -22,16 +22,43 @@ export interface Vitality {
   label: string;
 }
 
+interface Tier extends Vitality {
+  rank: number; // higher = worse
+}
+
+const STABLE: Tier = { hex: '#4ef0a0', label: 'STABLE', rank: 0 };
+const STRAINED: Tier = { hex: '#f5c451', label: 'STRAINED', rank: 1 };
+const FINAL_NOTICE: Tier = { hex: '#ff5468', label: 'FINAL NOTICE', rank: 2 };
+
+/** Net-worth depletion — how much life force is left as a fraction of the seed. */
+function netWorthTier(netWorthUsd: number, seedUsd: number): Tier {
+  const fraction = seedUsd > 0 ? netWorthUsd / seedUsd : 0;
+  if (fraction >= 0.6) return STABLE;
+  if (fraction >= 0.3) return STRAINED;
+  return FINAL_NOTICE;
+}
+
+/** Cash-runway pressure — hours of liquidity before the agent is forced to sell. */
+function cashTier(cashRunwayHours: number): Tier {
+  if (!Number.isFinite(cashRunwayHours) || cashRunwayHours >= 72) return STABLE;
+  if (cashRunwayHours >= 24) return STRAINED;
+  return FINAL_NOTICE;
+}
+
 /**
- * Vital-sign colour, driven by capital remaining — not idle burn. This agent is
- * killed by trading losses, not the rent clock, so "running out of money" is the
- * honest danger signal: how much life force is left as a fraction of its seed.
+ * Status tracks whichever truth is worse: net-worth depletion (it's genuinely
+ * losing) or cash runway (it's about to be forced to liquidate to make rent). So a
+ * cash crunch can push it to FINAL NOTICE even while net worth still looks healthy.
  */
-export function vitality(balanceUsd: number, seedUsd: number): Vitality {
-  const fraction = seedUsd > 0 ? balanceUsd / seedUsd : 0;
-  if (fraction >= 0.6) return { hex: '#4ef0a0', label: 'STABLE' };
-  if (fraction >= 0.3) return { hex: '#f5c451', label: 'STRAINED' };
-  return { hex: '#ff5468', label: 'FINAL NOTICE' };
+export function vitality(vitals: {
+  netWorthUsd: number;
+  seedUsd: number;
+  cashRunwayHours: number;
+}): Vitality {
+  const nw = netWorthTier(vitals.netWorthUsd, vitals.seedUsd);
+  const cash = cashTier(vitals.cashRunwayHours);
+  const worst = cash.rank > nw.rank ? cash : nw;
+  return { hex: worst.hex, label: worst.label };
 }
 
 const HOUR_MS = 3_600_000;

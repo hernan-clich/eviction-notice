@@ -10,6 +10,7 @@
 import { isAlive } from 'shared';
 
 import { runInnerTick } from './agent.ts';
+import { cmcConfig, fetchQuotes } from './cmc.ts';
 import { loadConfig } from './config.ts';
 import { createAnthropicClient } from './llm.ts';
 import { log } from './log.ts';
@@ -18,7 +19,9 @@ import {
   createClient,
   ensureBorn,
   fetchBalance,
+  fetchOpenPositions,
   fetchStatus,
+  insertSnapshot,
   insertTransaction,
   lastTradeAtMs,
   markDead,
@@ -66,6 +69,64 @@ function sleep(ms: number): Promise<void> {
       resolve();
     };
   });
+}
+
+/**
+ * Per-tick marked balance sheet: cash (SUM ledger) + open positions marked to
+ * current price = net worth. The dashboard can't mark positions itself, so the
+ * worker records it. Marking uses an unmetered quote (no extra data burn); if it
+ * fails or there's no CMC key, positions fall back to cost basis. Never throws —
+ * a snapshot failure must not disturb the heartbeat.
+ */
+async function recordSnapshot(): Promise<void> {
+  try {
+    const cashUsd = await fetchBalance(client, config.AGENT_ID);
+    const positions = await fetchOpenPositions(client, config.AGENT_ID);
+
+    const marks = new Map<string, number>();
+    if (positions.length > 0 && config.CMC_API_KEY) {
+      try {
+        const quotes = await fetchQuotes(
+          cmcConfig(config),
+          positions.map((p) => p.token),
+        );
+        for (const quote of quotes) {
+          marks.set(quote.symbol.toUpperCase(), quote.priceUsd);
+        }
+      } catch (error: unknown) {
+        log.warn('snapshot mark failed — using cost basis', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    const marked = positions.map((p) => {
+      const markPx = marks.get(p.token.toUpperCase()) ?? p.entryPx;
+      return {
+        token: p.token,
+        sizeUsd: p.sizeUsd,
+        entryPx: p.entryPx,
+        markPx,
+        valueUsd: p.sizeUsd * (markPx / p.entryPx),
+      };
+    });
+    let positionValueUsd = 0;
+    for (const m of marked) {
+      positionValueUsd += m.valueUsd;
+    }
+
+    await insertSnapshot(client, {
+      agentId: config.AGENT_ID,
+      cashUsd,
+      positionValueUsd,
+      netWorthUsd: cashUsd + positionValueUsd,
+      positions: marked,
+    });
+  } catch (error: unknown) {
+    log.error('snapshot failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
 
 async function main(): Promise<void> {
@@ -135,6 +196,9 @@ async function main(): Promise<void> {
         });
       }
     }
+
+    // Mark the balance sheet after this tick's actions (cash + positions = net worth).
+    await recordSnapshot();
 
     if (config.MAX_TICKS > 0 && ticks >= config.MAX_TICKS) {
       log.info('reached MAX_TICKS — stopping', { ticks });
