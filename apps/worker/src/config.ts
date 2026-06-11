@@ -46,6 +46,13 @@ const envSchema = z.object({
   SKILL_CALL_COST_USD: z.coerce.number().nonnegative().default(0.01),
   // Payer address for x402 settlement. Placeholder until #14 funds the BSC wallet.
   X402_PAYER: z.string().min(1).default('0x0000000000000000000000000000000000000000'),
+  // x402 settlement path. 'simulated' (default): a fabricated on-chain reference,
+  // no funds move (#10). 'permit2': the agent really pays the skill over x402 via
+  // the TWAK CLI (`twak x402 request`), settled on BSC by the skill (#15).
+  X402_SETTLEMENT: z.enum(['simulated', 'permit2']).default('simulated'),
+  // Max the agent will auto-approve per x402 call, in atomic units of the payment
+  // token ($0.01 USDT @ 18dp). Must be ≥ the skill's price; caps run-away spend.
+  X402_MAX_PAYMENT_ATOMIC: z.string().min(1).default('10000000000000000'),
   // Swap execution (#13). 'paper' = simulated tx hashes (default). 'live' = real
   // spot swaps via the TWAK CLI — needs a funded burner (#14) + TWAK_WALLET_PASSWORD.
   EXECUTION_MODE: z.enum(['paper', 'live']).default('paper'),

@@ -183,6 +183,9 @@ export async function runInnerTick(
         const { decision, receipt } = await callSizingSkill(sizingInput, {
           url: deps.config.SKILL_URL,
           payer: deps.config.X402_PAYER,
+          settlement: deps.config.X402_SETTLEMENT,
+          maxPaymentAtomic: deps.config.X402_MAX_PAYMENT_ATOMIC,
+          preferNetwork: deps.config.TWAK_CHAIN,
         });
         const cost = deps.config.SKILL_CALL_COST_USD;
         await insertTransaction(deps.supabase, {

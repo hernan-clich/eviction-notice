@@ -27,14 +27,22 @@ services:
     envVars:
       - key: NODE_VERSION
         value: '22'
-      - key: X402_NETWORK
-        value: bsc
+      # Real x402: the skill self-settles Permit2 payments on BSC (#15). Network is
+      # forced to eip155:56 in code; asset must be the real token contract.
+      - key: X402_SETTLEMENT
+        value: permit2
       - key: X402_ASSET
-        value: USDT-BSC
+        value: '0x55d398326f99059fF775485246999027B3197955' # BSC-USDT (18dp)
       - key: X402_PRICE_ATOMIC
         value: '10000000000000000' # $0.01 at 18 decimals
       - key: X402_PAY_TO
-        sync: false # treasury address; pinned for real in #14
+        value: '0x733231Ccb41C7eCFeaBcd33F4461ae07A005Aa67' # treasury = settler wallet
+      - key: BSC_RPC_URL
+        value: https://bsc-dataseed.binance.org
+      # Settler wallet private key — signs proxy.settle() txs (holds BNB for gas).
+      # Set in the dashboard BEFORE deploying in permit2 mode (else the skill won't boot).
+      - key: SETTLER_PRIVATE_KEY
+        sync: false
 
   - type: worker
     name: eviction-notice-worker
@@ -73,6 +81,12 @@ services:
         value: mainnet
       - key: TWAK_SLIPPAGE_PCT
         value: '1'
+      # Real x402: the agent pays the skill over x402 via `twak x402 request`,
+      # settled on BSC (#15). The burner is already Permit2-approved.
+      - key: X402_SETTLEMENT
+        value: permit2
+      - key: X402_PAYER
+        value: '0xEdf33971BEed3Ede63D85B7ae3dDE8D18d21BE4b' # the funded burner
       # Secrets — set in the Render dashboard (never committed):
       - key: SUPABASE_URL
         sync: false
@@ -84,8 +98,6 @@ services:
         sync: false
       - key: SKILL_URL
         sync: false # the deployed skill's URL
-      - key: X402_PAYER
-        sync: false
       - key: TWAK_WALLET_PASSWORD
         sync: false
       - key: TWAK_WALLET_JSON_B64

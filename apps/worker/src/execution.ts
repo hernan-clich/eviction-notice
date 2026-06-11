@@ -44,7 +44,7 @@ export function parseLegAmount(raw: unknown, key: 'input' | 'output'): number | 
 /** Injectable command runner (default = real execFile) so tests never spawn `twak`. */
 export type CommandRunner = (cmd: string, args: string[]) => Promise<string>;
 
-const defaultRunner: CommandRunner = async (cmd, args) => {
+export const defaultRunner: CommandRunner = async (cmd, args) => {
   try {
     // 5-min ceiling: a swap that needs a token approval first does approve → confirm
     // → swap, which can take a while on-chain.
