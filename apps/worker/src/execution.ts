@@ -45,8 +45,26 @@ export function parseLegAmount(raw: unknown, key: 'input' | 'output'): number | 
 export type CommandRunner = (cmd: string, args: string[]) => Promise<string>;
 
 const defaultRunner: CommandRunner = async (cmd, args) => {
-  const { stdout } = await execFileAsync(cmd, args, { timeout: 120_000 });
-  return stdout;
+  try {
+    // 5-min ceiling: a swap that needs a token approval first does approve → confirm
+    // → swap, which can take a while on-chain.
+    const { stdout } = await execFileAsync(cmd, args, {
+      timeout: 300_000,
+      maxBuffer: 10 * 1024 * 1024,
+    });
+    return stdout;
+  } catch (error: unknown) {
+    // twak prints the real failure reason to stderr — surface it so a failed swap is
+    // diagnosable instead of a truncated stdout ending at "Approval tx: …".
+    if (error && typeof error === 'object' && 'stderr' in error) {
+      const { stderr } = error as { stderr?: unknown };
+      if (typeof stderr === 'string' && stderr.trim()) {
+        const message = error instanceof Error ? error.message : 'twak command failed';
+        throw new Error(`${message}\nstderr: ${stderr.trim()}`);
+      }
+    }
+    throw error;
+  }
 };
 
 function simulatedTxHash(): string {
