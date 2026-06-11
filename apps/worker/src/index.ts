@@ -78,7 +78,7 @@ function sleep(ms: number): Promise<void> {
  * fails or there's no CMC key, positions fall back to cost basis. Never throws —
  * a snapshot failure must not disturb the heartbeat.
  */
-async function recordSnapshot(): Promise<void> {
+async function recordSnapshot(): Promise<number | null> {
   try {
     const cashUsd = await fetchBalance(client, config.AGENT_ID);
     const positions = await fetchOpenPositions(client, config.AGENT_ID);
@@ -115,17 +115,20 @@ async function recordSnapshot(): Promise<void> {
       positionValueUsd += m.valueUsd;
     }
 
+    const netWorthUsd = cashUsd + positionValueUsd;
     await insertSnapshot(client, {
       agentId: config.AGENT_ID,
       cashUsd,
       positionValueUsd,
-      netWorthUsd: cashUsd + positionValueUsd,
+      netWorthUsd,
       positions: marked,
     });
+    return netWorthUsd;
   } catch (error: unknown) {
     log.error('snapshot failed', {
       error: error instanceof Error ? error.message : String(error),
     });
+    return null;
   }
 }
 
@@ -159,13 +162,7 @@ async function main(): Promise<void> {
     });
 
     const balanceAfterRent = await fetchBalance(client, config.AGENT_ID);
-    log.info('tick', { tick: ticks, rent: -rent, balance: balanceAfterRent });
-
-    if (!isAlive({ balance: balanceAfterRent, status: 'alive' })) {
-      await markDead(client, config.AGENT_ID);
-      log.error('EVICTED', { balance: balanceAfterRent, ticks });
-      break;
-    }
+    log.info('tick', { tick: ticks, rent: -rent, cash: balanceAfterRent });
 
     // Think: gather data, consult the sizing skill, decide. A failure here
     // (model/network) must not evict the agent — log and keep the heartbeat.
@@ -198,7 +195,14 @@ async function main(): Promise<void> {
     }
 
     // Mark the balance sheet after this tick's actions (cash + positions = net worth).
-    await recordSnapshot();
+    // Eviction is on NET WORTH, not cash: an agent fully deployed in a token isn't
+    // broke — it can liquidate to pay rent. It's only evicted when total worth ≤ 0.
+    const netWorth = await recordSnapshot();
+    if (netWorth !== null && !isAlive({ balance: netWorth, status: 'alive' })) {
+      await markDead(client, config.AGENT_ID);
+      log.error('EVICTED', { netWorth, ticks });
+      break;
+    }
 
     if (config.MAX_TICKS > 0 && ticks >= config.MAX_TICKS) {
       log.info('reached MAX_TICKS — stopping', { ticks });

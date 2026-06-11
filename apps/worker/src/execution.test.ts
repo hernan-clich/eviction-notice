@@ -4,6 +4,7 @@ import { loadConfig } from './config.ts';
 import {
   executeSwap,
   extractTxHash,
+  parseLegAmount,
   resetBscTokenCache,
   resolveBscToken,
   twakSwap,
@@ -48,7 +49,9 @@ function mockTwak(opts: { quoteHasRoute?: boolean } = {}): {
         ),
       );
     }
-    return Promise.resolve(JSON.stringify({ txHash: '0xrealhash', output: '3.05 AAVE' }));
+    return Promise.resolve(
+      JSON.stringify({ txHash: '0xrealhash', input: '4 USDT', output: '3.05 AAVE' }),
+    );
   };
   return { run, calls };
 }
@@ -72,6 +75,15 @@ describe('extractTxHash', () => {
     expect(extractTxHash({ status: 'ok' })).toBeNull();
     expect(extractTxHash({ txHash: 'not-hex' })).toBeNull();
     expect(extractTxHash(null)).toBeNull();
+  });
+});
+
+describe('parseLegAmount', () => {
+  it('parses the number off a "<amount> <SYMBOL>" leg, else null', () => {
+    expect(parseLegAmount({ input: '5 USDT' }, 'input')).toBe(5);
+    expect(parseLegAmount({ output: '2.543021879315129031 ATOM' }, 'output')).toBeCloseTo(2.543, 3);
+    expect(parseLegAmount({ output: 'x ATOM' }, 'output')).toBeNull();
+    expect(parseLegAmount(null, 'input')).toBeNull();
   });
 });
 
@@ -117,7 +129,7 @@ describe('executeSwap', () => {
       { config: cfg({ EXECUTION_MODE: 'live', TWAK_WALLET_PASSWORD: 'pw' }), run },
       { side: 'open', token: 'AAVE', baseAmount: 4 },
     );
-    expect(res).toEqual({ txHash: '0xrealhash', simulated: false });
+    expect(res).toEqual({ txHash: '0xrealhash', simulated: false, inAmount: 4, outAmount: 3.05 });
     expect(calls.some((c) => c.includes('--quote-only'))).toBe(true); // preflight ran
     const exec = calls.find((c) => c[1] === 'swap' && !c.includes('--quote-only'));
     expect(exec?.slice(2, 5)).toEqual(['4', ADDR['USDT'], ADDR['AAVE']]); // base → token, by address
