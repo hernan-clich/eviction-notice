@@ -102,8 +102,11 @@ export function computeVitals(
     : (cashSeries[0]?.tsMs ?? nowMs);
   const endMs = agentState?.died_at ? Date.parse(agentState.died_at) : nowMs;
   const elapsedMs = Math.max(endMs - bornMs, 0);
-  const hoursElapsed = elapsedMs / HOUR_MS;
-  const burnPerHourUsd = hoursElapsed > 0 ? burnUsd / hoursElapsed : 0;
+  // Burn rate over at least a 1-hour window, so a newborn's first few cents of rent
+  // aren't annualized into a huge $/h (which would falsely crater the cash runway).
+  // It converges to the true rate as the agent ages past the window.
+  const burnHours = Math.max(elapsedMs, HOUR_MS) / HOUR_MS;
+  const burnPerHourUsd = burnUsd / burnHours;
   const runway = (value: number): number =>
     burnPerHourUsd > 0 ? value / burnPerHourUsd : Number.POSITIVE_INFINITY;
 
