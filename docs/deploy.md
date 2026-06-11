@@ -13,13 +13,13 @@ Two deployables (`render.yaml` Blueprint): the **skill** (x402 sizing endpoint) 
 | `ANTHROPIC_API_KEY` | console.anthropic.com → API Keys |
 | `X402_PAYER` / `X402_PAY_TO` | BSC wallet addresses (placeholder `0x000…0` until #14) |
 
-## A. Deploy the skill (free web service)
+## A. Deploy the skill (Starter web service)
 
-1. Render → **New → Blueprint** → connect this repo. Render reads `render.yaml` — the active
-   Blueprint is the **skill only** (free tier), so **no card is required**.
+1. Render → **New → Blueprint** → connect this repo. Render reads `render.yaml`.
 2. For **eviction-notice-skill**, set `X402_PAY_TO` (placeholder `0x0000000000000000000000000000000000000000` for now).
 3. Deploy. Confirm `GET https://eviction-notice-skill.onrender.com/healthz` → `{"ok":true}`.
-   - Free web services sleep after 15 min idle and cold-start on the next request — fine for the skill.
+   - Runs on a paid Starter instance (always-on) so the worker's pay-to-think x402 calls
+     never hit a free-tier cold start. (Free tier works too, but spins down after 15 min idle.)
 
 ## B. Operational validation run (no paid hosting)
 
