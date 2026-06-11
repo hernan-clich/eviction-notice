@@ -160,8 +160,11 @@ describe('x402 sizing skill — permit2 self-settle', () => {
     const res = await postTo(app, { 'X-PAYMENT': permit2Header() }, validInput);
     expect(res.status).toBe(200);
     expect(spy).toHaveBeenCalledOnce();
-    const decision = sizingDecisionSchema.parse(await res.json());
+    const raw = (await res.json()) as Record<string, unknown>;
+    const decision = sizingDecisionSchema.parse(raw);
     expect(['trade', 'skip']).toContain(decision.decision);
+    // The settle tx is echoed in the body (so the TWAK client / worker can read it).
+    expect(raw['transactionHash']).toBe(txHash);
     const receipt = decodeSettlementHeader(res.headers.get('X-PAYMENT-RESPONSE') ?? '');
     expect(receipt.success).toBe(true);
     expect(receipt.transaction).toBe(txHash);
