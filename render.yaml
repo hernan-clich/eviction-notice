@@ -17,6 +17,13 @@ services:
     buildCommand: corepack enable && pnpm install --frozen-lockfile
     startCommand: pnpm --filter skill start
     healthCheckPath: /healthz
+    # Only redeploy when the skill (or shared) code changes — not on web/docs merges.
+    buildFilter:
+      paths:
+        - apps/skill/**
+        - packages/shared/**
+        - pnpm-lock.yaml
+        - render.yaml
     envVars:
       - key: NODE_VERSION
         value: '22'
@@ -39,6 +46,14 @@ services:
     buildCommand: corepack enable && pnpm install --frozen-lockfile && npm install -g @trustwallet/cli
     # Provision ~/.twak from secrets, then run the loop.
     startCommand: bash apps/worker/render-start.sh
+    # Only redeploy when worker (or shared) code changes — a dashboard merge must not
+    # restart the live trading loop (each restart costs a tick's rent + re-evaluates).
+    buildFilter:
+      paths:
+        - apps/worker/**
+        - packages/shared/**
+        - pnpm-lock.yaml
+        - render.yaml
     envVars:
       - key: NODE_VERSION
         value: '22'
