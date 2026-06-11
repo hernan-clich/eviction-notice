@@ -1,6 +1,7 @@
 # Render Blueprint — Eviction Notice.
 #
-#   - skill  : x402-gated Solvency-Aware Sizing endpoint (free web tier).
+#   - skill  : x402-gated Solvency-Aware Sizing endpoint (paid Starter, always-on
+#              so the worker's pay-to-think calls never hit a cold start).
 #   - worker : the always-on agent loop (paid Starter). EXECUTION_MODE=live → it
 #              signs real BSC swaps via TWAK; render-start.sh provisions the wallet
 #              from secrets on boot. Only ONE worker may run per agent_id at a time.
@@ -10,7 +11,7 @@ services:
   - type: web
     name: eviction-notice-skill
     runtime: node
-    plan: free
+    plan: starter # always-on (no spin-down) so x402 calls never cold-start
     region: oregon
     rootDir: .
     buildCommand: corepack enable && pnpm install --frozen-lockfile
