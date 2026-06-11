@@ -67,6 +67,24 @@ function cleanReasoning(text: string): string {
 }
 
 function TxLink({ link }: { link: TxRef }) {
+  // Simulated txs aren't on-chain — render the hash as non-clickable so it never
+  // dead-links to a 404 explorer page. Only real txs get a clickable BscScan link.
+  if (link.simulated) {
+    return (
+      <span
+        className="text-muted ml-2 inline-flex items-center gap-1.5 align-baseline text-xs not-italic"
+        title="Simulated — no on-chain transaction (real tx lands with live execution)"
+      >
+        <span
+          className="font-display text-muted/80 rounded-sm border-current px-1 text-[9px] tracking-widest uppercase"
+          style={{ border: '1px solid currentColor' }}
+        >
+          sim
+        </span>
+        <span>{link.short}</span>
+      </span>
+    );
+  }
   return (
     <a
       href={link.url}
@@ -74,20 +92,8 @@ function TxLink({ link }: { link: TxRef }) {
       rel="noreferrer"
       className="ml-2 inline-flex items-center gap-1.5 align-baseline text-xs not-italic"
       style={{ color: '#7cc7ff' }}
-      title={
-        link.simulated
-          ? 'Simulated transaction — the real on-chain tx lands with live execution'
-          : 'View transaction on BscScan'
-      }
+      title="View transaction on BscScan"
     >
-      {link.simulated ? (
-        <span
-          className="font-display rounded-sm px-1 text-[9px] tracking-widest uppercase"
-          style={{ border: '1px solid #7cc7ff66' }}
-        >
-          sim
-        </span>
-      ) : null}
       <span className="underline decoration-dotted underline-offset-4">{link.short}</span>
       <span aria-hidden="true">↗</span>
     </a>
