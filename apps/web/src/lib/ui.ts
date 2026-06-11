@@ -22,48 +22,23 @@ export interface Vitality {
   label: string;
 }
 
-interface Tier extends Vitality {
-  rank: number; // higher = worse
-}
+const STABLE: Vitality = { hex: '#4ef0a0', label: 'STABLE' };
+const STRAINED: Vitality = { hex: '#f5c451', label: 'STRAINED' };
+const FINAL_NOTICE: Vitality = { hex: '#ff5468', label: 'FINAL NOTICE' };
 
-const STABLE: Tier = { hex: '#4ef0a0', label: 'STABLE', rank: 0 };
-const STRAINED: Tier = { hex: '#f5c451', label: 'STRAINED', rank: 1 };
-const FINAL_NOTICE: Tier = { hex: '#ff5468', label: 'FINAL NOTICE', rank: 2 };
-
-/** Net-worth depletion — how much life force is left as a fraction of the seed. */
-function netWorthTier(netWorthUsd: number, seedUsd: number): Tier {
-  const fraction = seedUsd > 0 ? netWorthUsd / seedUsd : 0;
+/**
+ * Status is the ONE life-or-death axis: net worth as a fraction of seed. Cash never
+ * kills the agent directly — it can always liquidate to make rent — so cash pressure
+ * is surfaced separately (the amber asset-rich/cash-poor warning + the cash-runway
+ * stat), NOT promoted onto this death ladder. A 97%-net-worth agent is STABLE, even
+ * if illiquid; it only trips FINAL NOTICE when net worth itself erodes (e.g. forced
+ * sells whose friction eats it). One death axis, fed indirectly by the cash crunch.
+ */
+export function vitality(vitals: { netWorthUsd: number; seedUsd: number }): Vitality {
+  const fraction = vitals.seedUsd > 0 ? vitals.netWorthUsd / vitals.seedUsd : 0;
   if (fraction >= 0.6) return STABLE;
   if (fraction >= 0.3) return STRAINED;
   return FINAL_NOTICE;
-}
-
-/**
- * Cash-runway pressure — hours of liquidity before a forced sale. Tuned so red
- * means real danger on a tight economy: a deployed agent with a few hours' buffer
- * reads STRAINED (watch it), and FINAL NOTICE is reserved for an imminent forced
- * liquidation (< 8h) — otherwise it would sit red the whole time it holds a position.
- */
-function cashTier(cashRunwayHours: number): Tier {
-  if (!Number.isFinite(cashRunwayHours) || cashRunwayHours >= 24) return STABLE;
-  if (cashRunwayHours >= 8) return STRAINED;
-  return FINAL_NOTICE;
-}
-
-/**
- * Status tracks whichever truth is worse: net-worth depletion (it's genuinely
- * losing) or cash runway (it's about to be forced to liquidate to make rent). So a
- * cash crunch can push it to FINAL NOTICE even while net worth still looks healthy.
- */
-export function vitality(vitals: {
-  netWorthUsd: number;
-  seedUsd: number;
-  cashRunwayHours: number;
-}): Vitality {
-  const nw = netWorthTier(vitals.netWorthUsd, vitals.seedUsd);
-  const cash = cashTier(vitals.cashRunwayHours);
-  const worst = cash.rank > nw.rank ? cash : nw;
-  return { hex: worst.hex, label: worst.label };
 }
 
 const HOUR_MS = 3_600_000;
