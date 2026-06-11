@@ -167,7 +167,10 @@ export function createSkillApp(config: SkillServerConfig): Hono {
         simulated: false,
       };
       c.header('X-PAYMENT-RESPONSE', encodeSettlementHeader(receipt));
-      return c.json(decideSizing(parsed.data));
+      // The TWAK client surfaces only the response body (not headers), so echo the
+      // settle tx in the body too — the worker reads `transactionHash` to link the
+      // on-chain proof in the feed. The decision schema ignores the extra field.
+      return c.json({ ...decideSizing(parsed.data), transactionHash: result.txHash });
     }
 
     // simulated mode

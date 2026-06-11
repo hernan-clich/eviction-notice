@@ -24,10 +24,12 @@ const stubRunner =
 
 describe('callSizingSkill — permit2 (twak) path', () => {
   it('invokes `twak x402 request` and returns the decision + a real receipt', async () => {
+    // The skill echoes the settle tx in the body (top-level transactionHash).
+    const txHash = `0x${'cd'.repeat(32)}`;
     let captured: { cmd: string; args: string[] } | undefined;
     const run: CommandRunner = (cmd, args) => {
       captured = { cmd, args };
-      return Promise.resolve(JSON.stringify(decision));
+      return Promise.resolve(JSON.stringify({ ...decision, transactionHash: txHash }));
     };
 
     const result = await callSizingSkill(input, {
@@ -41,6 +43,7 @@ describe('callSizingSkill — permit2 (twak) path', () => {
 
     expect(result.decision).toEqual(decision);
     expect(result.receipt.simulated).toBe(false);
+    expect(result.receipt.transaction).toBe(txHash);
     expect(result.receipt.payer).toBe('0xEdf33971BEed3Ede63D85B7ae3dDE8D18d21BE4b');
 
     expect(captured?.cmd).toBe('twak');
