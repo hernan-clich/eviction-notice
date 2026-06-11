@@ -171,6 +171,8 @@ export async function runInnerTick(
         edge: parsed.data.edge,
         volatility: parsed.data.volatility,
         gasPerSwapUsd: deps.config.GAS_PER_SWAP_USD,
+        minPositionUsd: deps.config.MIN_POSITION_USD,
+        cashReserveHours: deps.config.CASH_RESERVE_HOURS,
         mustTrade: deps.mustTrade,
       };
 

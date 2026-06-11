@@ -41,6 +41,8 @@ export const sizingInputSchema = z.object({
   maxPositionFraction: z.number().positive().max(1).default(0.75),
   /** Smallest viable position (gas makes anything smaller pure friction). */
   minPositionUsd: z.number().positive().default(5),
+  /** Cash to keep unspent for rent/data — this many hours of burn. Prevents all-in. */
+  cashReserveHours: z.number().nonnegative().default(0),
   /** Required margin of edge over friction before trading (fractional). */
   edgeMargin: z.number().nonnegative().default(0.005),
   /** Daily-floor override: force the least-harmful qualifying trade (≥1 trade/day rule). */
@@ -95,10 +97,13 @@ export function decideSizing(input: SizingInput): SizingDecision {
   }
 
   // Largest survival-safe size: a volatility-sized loss stays within the drawdown
-  // budget, and never more than maxPositionFraction of balance.
+  // budget, never more than maxPositionFraction of balance, and never so much that
+  // it spends the cash reserve kept back for rent/data (prevents going all-in).
+  const cashReserveUsd = cfg.burnRatePerHourUsd * cfg.cashReserveHours;
   const drawdownCappedSize = allowedLossUsd / cfg.volatility;
   const balanceCappedSize = cfg.balanceUsd * cfg.maxPositionFraction;
-  const size = Math.min(drawdownCappedSize, balanceCappedSize);
+  const liquidityCappedSize = Math.max(0, cfg.balanceUsd - cashReserveUsd);
+  const size = Math.min(drawdownCappedSize, balanceCappedSize, liquidityCappedSize);
 
   // Not enough risk budget for a viable (>= min) position.
   if (size < cfg.minPositionUsd) {

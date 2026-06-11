@@ -22,8 +22,14 @@ const envSchema = z.object({
   ANTHROPIC_MODEL: z.string().min(1).default('claude-haiku-4-5'),
   // Max model turns per tick (tool-use loop guard).
   AGENT_MAX_ITERATIONS: z.coerce.number().int().positive().default(6),
-  // Gas estimate (USD/swap) fed to the sizing skill until live gas reads land (#14).
-  GAS_PER_SWAP_USD: z.coerce.number().nonnegative().default(0.15),
+  // Gas (USD/swap). Real BSC gas is ~0.1 Gwei ≈ $0.009/swap (observed live, #15) —
+  // far below the old $0.15 estimate, so small trades are viable.
+  GAS_PER_SWAP_USD: z.coerce.number().nonnegative().default(0.01),
+  // Smallest viable position (#16). With cheap gas a $1 trade isn't pure friction.
+  MIN_POSITION_USD: z.coerce.number().positive().default(1),
+  // Cash the sizer keeps unspent to pay rent/data — this many hours of burn. Stops
+  // the agent going all-in and starving its own metabolism (#16).
+  CASH_RESERVE_HOURS: z.coerce.number().nonnegative().default(24),
   // Paper-trade friction: PancakeSwap V2 fee per side + expected slippage per swap.
   SWAP_FEE_RATE: z.coerce.number().nonnegative().default(0.0025),
   SLIPPAGE: z.coerce.number().nonnegative().default(0.001),
@@ -31,6 +37,9 @@ const envSchema = z.object({
   TRADE_FLOOR_MS: z.coerce.number().int().nonnegative().default(86_400_000),
   // Chain for explorer links on trades (BscScan). Real tx hashes land with #13.
   BSC_NETWORK: z.enum(['mainnet', 'testnet']).default('mainnet'),
+  // BSC RPC for the live gas-tank (BNB) check, and the warn threshold in BNB (#16).
+  BSC_RPC_URL: z.string().url().default('https://bsc-dataseed.binance.org'),
+  MIN_BNB_GAS: z.coerce.number().nonnegative().default(0.0005),
   // x402-gated sizing skill (#10). Unset → the worker sizes in-process (tests, backtest).
   // When set, the agent pays its own skill to think (an `x402_fee` ledger expense).
   SKILL_URL: z.string().url().optional(),
