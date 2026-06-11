@@ -132,6 +132,43 @@ async function recordSnapshot(): Promise<number | null> {
   }
 }
 
+/**
+ * Gas-tank watch (live only): BNB is the agent's out-of-economy fuel — if it runs
+ * dry, swaps fail. Warn so an operator can top it up. Best-effort; never throws.
+ */
+async function checkGasTank(): Promise<void> {
+  if (config.EXECUTION_MODE !== 'live') return;
+  try {
+    const res = await fetch(config.BSC_RPC_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'eth_getBalance',
+        params: [config.X402_PAYER, 'latest'],
+        id: 1,
+      }),
+    });
+    const json: unknown = await res.json();
+    const result =
+      typeof json === 'object' && json !== null && 'result' in json
+        ? (json as Record<string, unknown>)['result']
+        : null;
+    const bnb = typeof result === 'string' ? Number(BigInt(result)) / 1e18 : 0;
+    if (bnb < config.MIN_BNB_GAS) {
+      log.warn('low gas tank — top up BNB or live swaps will fail', {
+        bnb,
+        threshold: config.MIN_BNB_GAS,
+        address: config.X402_PAYER,
+      });
+    }
+  } catch (error: unknown) {
+    log.warn('gas-tank check failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 async function main(): Promise<void> {
   const { seeded } = await ensureBorn(client, config);
   const balance = await fetchBalance(client, config.AGENT_ID);
@@ -203,6 +240,7 @@ async function main(): Promise<void> {
       log.error('EVICTED', { netWorth, ticks });
       break;
     }
+    await checkGasTank();
 
     if (config.MAX_TICKS > 0 && ticks >= config.MAX_TICKS) {
       log.info('reached MAX_TICKS — stopping', { ticks });

@@ -44,6 +44,20 @@ describe('decideSizing', () => {
     expect(d.reason).toMatch(/doesn't beat/);
   });
 
+  it('keeps a cash reserve — never deploys the rent buffer', () => {
+    // $5 balance, $0.07/h burn, 24h reserve → keep $1.68, deploy at most $3.32.
+    const d = decideSizing({
+      ...base,
+      balanceUsd: 5,
+      peakBalanceUsd: 5,
+      gasPerSwapUsd: 0.01,
+      minPositionUsd: 1,
+      cashReserveHours: 24,
+    });
+    expect(d.decision).toBe('trade');
+    expect(d.sizeUsd).toBeCloseTo(3.32, 2); // 5 − (0.07 × 24)
+  });
+
   it('sizes down so a volatility-sized loss stays within the drawdown budget', () => {
     // allowedLoss = $6; volatility 60% → max safe size $10 (< the $15 balance cap)
     const d = decideSizing({ ...base, volatility: 0.6 });
