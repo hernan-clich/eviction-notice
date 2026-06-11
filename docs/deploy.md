@@ -44,22 +44,31 @@ pnpm --filter worker start
 Watch the dashboard (Supabase Realtime). You should see `data_call`, `x402_fee` (skill payment),
 `decision`, and paper `trade_open`/`trade_close` rows. Set `MAX_TICKS=0` for a continuous run.
 
-## C. Always-on worker (go-live)
+## C. Always-on worker (paid Starter, live)
 
-The permadeath loop must run 24/7. Render has no free always-on worker, so two options:
+The permadeath loop runs 24/7 as a paid Render `worker` (in `render.yaml`). It signs
+real BSC swaps via TWAK, so `render-start.sh` provisions the wallet on boot from
+secrets. **Only one worker may run per `agent_id`** — don't also run it locally.
 
-- **Paid (simplest):** uncomment the `worker` block in `render.yaml` (a `starter` instance,
-  ~$7/mo prorated). Set its secrets + `SKILL_URL`, deploy, and reset `TICK_INTERVAL_MS` to
-  `1800000` (30 min). Adding it puts a card on file — that's the only reason a card is needed.
-- **$0 tick-on-cron:** keep the worker off Render; a free scheduler (GitHub Actions cron or
-  cron-job.org) triggers one tick per call. Needs a one-tick mode + rent accrued from real
-  elapsed wall-time (robust to irregular intervals). Fits the "earns its keep" premise; trade-off
-  is ≥5-min cron granularity and occasional delay.
+1. **Provision the wallet secrets** — on your machine:
+   ```
+   base64 -i ~/.twak/wallet.json        # → TWAK_WALLET_JSON_B64
+   base64 -i ~/.twak/credentials.json   # → TWAK_CREDENTIALS_JSON_B64
+   ```
+   `wallet.json` is AES-encrypted (only usable with `TWAK_WALLET_PASSWORD`).
+2. Render Blueprint → set the worker's `sync: false` secrets: `SUPABASE_URL`,
+   `SUPABASE_SECRET_KEY`, `CMC_API_KEY`, `ANTHROPIC_API_KEY`, `SKILL_URL`, `X402_PAYER`,
+   `TWAK_WALLET_PASSWORD`, `TWAK_WALLET_JSON_B64`, `TWAK_CREDENTIALS_JSON_B64`.
+3. Deploy. It re-seeds `SEED_USD` on first boot and ticks every 30 min. Watch logs for
+   `live swap executed`; a low-BNB warning means top up the gas tank.
+
+For a $0 alternative (tick-on-cron) see the git history — paid Starter is the launch path.
 
 ## D. Web dashboard (Vercel)
 
 `apps/web` → Vercel project, root `apps/web`, env `NEXT_PUBLIC_SUPABASE_URL` +
 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (publishable `sb_publishable_…`, read-only via RLS).
+Pre-launch: set `BASIC_AUTH_USER` + `BASIC_AUTH_PASSWORD` to gate the site; unset at go-live.
 
 ## Real on-chain run (after #13/#14)
 
