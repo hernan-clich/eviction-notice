@@ -1,14 +1,29 @@
 import { z } from 'zod';
 
 /**
- * Minimal x402 wire format (protocol v1) shared by the skill server and the
- * worker client. The handshake is real — 402 → `X-PAYMENT` → 200 with an
- * `X-PAYMENT-RESPONSE` settlement receipt — but #10 settles with a *simulated*
- * on-chain reference (mirroring our simulated swap hashes). #15 swaps the
- * settlement seam for real USDC-on-BSC settlement via an x402 facilitator;
- * the wire format does not change.
+ * x402 wire formats shared by the skill server and worker client. Two modes
+ * behind one HTTP handshake (402 → `X-PAYMENT` → 200 + `X-PAYMENT-RESPONSE`):
+ *
+ *   - simulated (`X402_SETTLEMENT=simulated`, the default): a well-formed but
+ *     *simulated* payment whose declared network + amount satisfy the skill, with
+ *     a fabricated on-chain reference. The home-grown shape below (#10).
+ *   - permit2 (`X402_SETTLEMENT=permit2`): the **canonical** x402 format that the
+ *     TWAK CLI speaks — CAIP-2 network, `extra.assetTransferMethod`, and a Permit2
+ *     witness authorization the skill self-settles on BSC by calling the canonical
+ *     `x402ExactPermit2Proxy.settle(...)`. The `Canonical*` schemas below mirror,
+ *     field-for-field, what `twak x402 request` actually emits (verified live).
+ *
+ * Both modes keep the same outer handshake; only the payload shape + settlement
+ * differ. The simulated path stays so the live paper run never breaks.
  */
 export const X402_VERSION = 1;
+
+/** CAIP-2 chain id for BNB Smart Chain (canonical x402 `network`). */
+export const CAIP2_BSC = 'eip155:56';
+/** Canonical Permit2 contract (same address on every chain it's deployed to). */
+export const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
+/** Canonical x402 Permit2 settlement proxy — the authorized `spender` TWAK signs for. */
+export const X402_EXACT_PERMIT2_PROXY = '0x402085c248EeA27D92E8b30b2C58ed07f9E20001';
 
 /** What the server demands before it will serve the resource. */
 export const paymentRequirementsSchema = z.object({
@@ -82,4 +97,82 @@ export function encodeSettlementHeader(receipt: SettlementReceipt): string {
 
 export function decodeSettlementHeader(header: string): SettlementReceipt {
   return settlementReceiptSchema.parse(fromBase64(header));
+}
+
+// ---------------------------------------------------------------------------
+// Canonical x402 (permit2 mode) — what the TWAK CLI speaks. Shapes verified
+// against a live `twak x402 quote`/`request` capture.
+// ---------------------------------------------------------------------------
+
+export const ASSET_TRANSFER_METHODS = ['eip3009', 'permit2', 'erc7710'] as const;
+
+/**
+ * A canonical PaymentRequirements entry (one item in a 402's `accepts`). We emit
+ * both `amount` (V2) and `maxAmountRequired` (V1) so either client generation
+ * resolves a route; TWAK reads `amount`.
+ */
+export const canonicalPaymentRequirementsSchema = z.object({
+  scheme: z.literal('exact'),
+  /** CAIP-2, e.g. `eip155:56`. */
+  network: z.string(),
+  /** Price in atomic units of `asset` (V2 name). */
+  amount: z.string(),
+  /** V1 alias for `amount`; optional on parse, emitted for compatibility. */
+  maxAmountRequired: z.string().optional(),
+  /** Token contract address. */
+  asset: z.string(),
+  /** Address the witness pins the payment to. */
+  payTo: z.string(),
+  maxTimeoutSeconds: z.number().int().positive(),
+  resource: z.string().optional(),
+  description: z.string().optional(),
+  mimeType: z.string().optional(),
+  extra: z.object({
+    assetTransferMethod: z.enum(ASSET_TRANSFER_METHODS),
+    name: z.string().optional(),
+    version: z.string().optional(),
+  }),
+});
+export type CanonicalPaymentRequirements = z.infer<typeof canonicalPaymentRequirementsSchema>;
+
+export const canonicalPaymentRequiredBodySchema = z.object({
+  x402Version: z.literal(X402_VERSION),
+  error: z.string().optional(),
+  accepts: z.array(canonicalPaymentRequirementsSchema).min(1),
+});
+export type CanonicalPaymentRequiredBody = z.infer<typeof canonicalPaymentRequiredBodySchema>;
+
+/**
+ * The Permit2 witness authorization the payer signs. `spender` is the
+ * x402ExactPermit2Proxy; `witness.to` is the payee. Numeric fields are decimal
+ * strings (they hold uint256 — `nonce` exceeds Number.MAX_SAFE_INTEGER).
+ */
+export const permit2AuthorizationSchema = z.object({
+  permitted: z.object({ token: z.string(), amount: z.string() }),
+  from: z.string(),
+  spender: z.string(),
+  nonce: z.string(),
+  deadline: z.string(),
+  witness: z.object({ to: z.string(), validAfter: z.string() }),
+});
+export type Permit2Authorization = z.infer<typeof permit2AuthorizationSchema>;
+
+/** Decoded canonical `X-PAYMENT` header (permit2 variant). */
+export const canonicalPaymentPayloadSchema = z.object({
+  x402Version: z.literal(X402_VERSION),
+  scheme: z.literal('exact'),
+  network: z.string(),
+  payload: z.object({
+    signature: z.string(),
+    permit2Authorization: permit2AuthorizationSchema,
+  }),
+});
+export type CanonicalPaymentPayload = z.infer<typeof canonicalPaymentPayloadSchema>;
+
+export function decodeCanonicalPaymentHeader(header: string): CanonicalPaymentPayload {
+  return canonicalPaymentPayloadSchema.parse(fromBase64(header));
+}
+
+export function encodeCanonicalPaymentHeader(payload: CanonicalPaymentPayload): string {
+  return toBase64(payload);
 }
