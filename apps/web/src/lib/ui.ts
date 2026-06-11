@@ -38,10 +38,15 @@ function netWorthTier(netWorthUsd: number, seedUsd: number): Tier {
   return FINAL_NOTICE;
 }
 
-/** Cash-runway pressure — hours of liquidity before the agent is forced to sell. */
+/**
+ * Cash-runway pressure — hours of liquidity before a forced sale. Tuned so red
+ * means real danger on a tight economy: a deployed agent with a few hours' buffer
+ * reads STRAINED (watch it), and FINAL NOTICE is reserved for an imminent forced
+ * liquidation (< 8h) — otherwise it would sit red the whole time it holds a position.
+ */
 function cashTier(cashRunwayHours: number): Tier {
-  if (!Number.isFinite(cashRunwayHours) || cashRunwayHours >= 72) return STABLE;
-  if (cashRunwayHours >= 24) return STRAINED;
+  if (!Number.isFinite(cashRunwayHours) || cashRunwayHours >= 24) return STABLE;
+  if (cashRunwayHours >= 8) return STRAINED;
   return FINAL_NOTICE;
 }
 
