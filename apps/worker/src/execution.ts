@@ -190,7 +190,7 @@ export async function executeSwap(
     from: from.address,
     to: to.address,
     chain: deps.config.TWAK_CHAIN,
-    slippagePct: deps.config.SLIPPAGE * 100,
+    slippagePct: deps.config.TWAK_SLIPPAGE_PCT,
   };
 
   // Preflight: a quote must return a route before we spend anything.

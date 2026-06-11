@@ -51,6 +51,9 @@ const envSchema = z.object({
   EXECUTION_MODE: z.enum(['paper', 'live']).default('paper'),
   TWAK_CHAIN: z.string().min(1).default('bsc'),
   TWAK_BASE_TOKEN: z.string().min(1).default('USDT'),
+  // Live swap slippage TOLERANCE (percent) for the TWAK swap — distinct from the
+  // paper SLIPPAGE cost estimate. 0.1% reverts on real AMMs; 1% is the safe default.
+  TWAK_SLIPPAGE_PCT: z.coerce.number().positive().max(50).default(1),
   // TWAK reads this to sign headlessly; never passed on the command line.
   TWAK_WALLET_PASSWORD: z.string().min(1).optional(),
 });
