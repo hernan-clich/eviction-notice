@@ -117,9 +117,10 @@ function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): strin
 
   const lines = [
     'You are Eviction Notice — an autonomous crypto trading agent on BNB Chain that must earn its own survival.',
-    'You pay rent every hour out of your cash balance; if it hits zero you are EVICTED and the run ends permanently. Optimise for staying alive, not for maximum return.',
+    'Your NET WORTH — cash plus open positions marked to market — is your life force; if it hits zero you are EVICTED permanently. Optimise for survival, not maximum return.',
+    'Rent, data, and trades are paid from CASH. Deploying cash into a position does NOT lose it (net worth is unchanged) — but it cuts liquidity. Keep enough cash to cover rent, or you may be forced to liquidate at a bad price.',
     '',
-    `Cash balance: $${deps.balanceUsd.toFixed(4)} | burn $${burn.toFixed(4)}/hour | runway ≈ ${runwayHours.toFixed(1)} hours.`,
+    `Cash (liquidity): $${deps.balanceUsd.toFixed(4)} | burn $${burn.toFixed(4)}/hour | cash runway ≈ ${runwayHours.toFixed(1)} hours.`,
     `Open positions: ${positionsLine}.`,
     '',
     'Each tick:',
@@ -213,30 +214,43 @@ export async function runInnerTick(
       if (!quote) {
         return `No live price for ${parsed.data.token}; cannot open.`;
       }
-      const friction = swapFrictionUsd(parsed.data.sizeUsd, frictionParams(deps.config));
       // Execute (or simulate) the swap first — a live failure must not leave a
       // phantom position. baseAmount = USDT spent ≈ sizeUsd.
       const swap = await executeSwap(
         { config: deps.config },
         { side: 'open', token: quote.symbol, baseAmount: parsed.data.sizeUsd },
       );
+      // Live: reconcile against what actually happened on-chain — real USDT spent,
+      // real token received → effective entry price (slippage is in the price, not
+      // a separate USDT fee; gas is paid in BNB, outside this economy). Paper: the
+      // requested size at the quote price with a modeled friction.
+      // `fill` carries the real on-chain numbers (non-null by construction) or is
+      // null in paper mode — no assertions, the narrowing is genuine.
+      const fill =
+        !swap.simulated && swap.outAmount !== null && swap.outAmount > 0
+          ? { usdtSpent: swap.inAmount ?? parsed.data.sizeUsd, tokenQty: swap.outAmount }
+          : null;
+      const usdtSpent = fill ? fill.usdtSpent : parsed.data.sizeUsd;
+      const entryPx = fill ? fill.usdtSpent / fill.tokenQty : quote.priceUsd;
+      const friction = fill ? 0 : swapFrictionUsd(parsed.data.sizeUsd, frictionParams(deps.config));
+      const cashOut = fill ? fill.usdtSpent : parsed.data.sizeUsd + friction;
       const id = await openPosition(deps.supabase, {
         agentId,
         token: quote.symbol,
-        sizeUsd: parsed.data.sizeUsd,
-        entryPx: quote.priceUsd,
+        sizeUsd: usdtSpent,
+        entryPx,
       });
       await insertTransaction(deps.supabase, {
         agentId,
         kind: 'expense',
-        amount: -(parsed.data.sizeUsd + friction),
+        amount: -cashOut,
         reason: 'trade_open',
-        reasoning: `Opened #${id}: $${parsed.data.sizeUsd.toFixed(2)} ${quote.symbol} @ $${fmtPrice(quote.priceUsd)}.`,
+        reasoning: `Opened #${id}: $${usdtSpent.toFixed(2)} ${quote.symbol} @ $${fmtPrice(entryPx)}.`,
         meta: {
           positionId: id,
           token: quote.symbol,
-          sizeUsd: parsed.data.sizeUsd,
-          entryPx: quote.priceUsd,
+          sizeUsd: usdtSpent,
+          entryPx,
           frictionUsd: friction,
           txHash: swap.txHash,
           network: deps.config.BSC_NETWORK,
@@ -246,7 +260,7 @@ export async function runInnerTick(
       return JSON.stringify({
         positionId: id,
         token: quote.symbol,
-        entryPx: quote.priceUsd,
+        entryPx,
         frictionUsd: friction,
       });
     },
@@ -264,23 +278,36 @@ export async function runInnerTick(
       if (!quote) {
         return `No live price for ${position.token}; cannot close.`;
       }
-      const proceeds = closeProceedsUsd(
-        position.sizeUsd,
-        position.entryPx,
-        quote.priceUsd,
-        frictionParams(deps.config),
-      );
-      const openCost =
-        position.sizeUsd + swapFrictionUsd(position.sizeUsd, frictionParams(deps.config));
-      const netPnl = proceeds - openCost;
-      // Sell the held token quantity back to the base. baseAmount = tokens held.
+      // Sell the held token quantity back to the base. baseAmount = tokens held;
+      // with an effective entry price this equals exactly what we received on open.
+      const tokensHeld = position.sizeUsd / position.entryPx;
       const swap = await executeSwap(
         { config: deps.config },
-        { side: 'close', token: position.token, baseAmount: position.sizeUsd / position.entryPx },
+        { side: 'close', token: position.token, baseAmount: tokensHeld },
       );
+      // Live: real USDT proceeds from the swap; P&L vs the USDT actually spent to
+      // open (no modeled friction). Paper: the modeled proceeds at the quote price.
+      // Real USDT proceeds from the swap (null in paper mode → modeled proceeds).
+      // `?? ` and `!== null` narrow it — no assertions. (`??` not `||`, so a real $0 stands.)
+      const realProceeds = swap.simulated ? null : swap.outAmount;
+      const proceeds =
+        realProceeds ??
+        closeProceedsUsd(
+          position.sizeUsd,
+          position.entryPx,
+          quote.priceUsd,
+          frictionParams(deps.config),
+        );
+      const openCost =
+        realProceeds === null
+          ? position.sizeUsd + swapFrictionUsd(position.sizeUsd, frictionParams(deps.config))
+          : position.sizeUsd;
+      const netPnl = proceeds - openCost;
+      const exitPx =
+        realProceeds !== null && tokensHeld > 0 ? realProceeds / tokensHeld : quote.priceUsd;
       await closePosition(deps.supabase, {
         id: position.id,
-        exitPx: quote.priceUsd,
+        exitPx,
         pnlUsd: netPnl,
       });
       await insertTransaction(deps.supabase, {
@@ -288,17 +315,17 @@ export async function runInnerTick(
         kind: 'income',
         amount: proceeds,
         reason: 'trade_close',
-        reasoning: `Closed #${position.id} ${position.token} @ $${fmtPrice(quote.priceUsd)}: net P&L $${netPnl.toFixed(2)}.`,
+        reasoning: `Closed #${position.id} ${position.token} @ $${fmtPrice(exitPx)}: net P&L $${netPnl.toFixed(2)}.`,
         meta: {
           positionId: position.id,
-          exitPx: quote.priceUsd,
+          exitPx,
           netPnlUsd: netPnl,
           txHash: swap.txHash,
           network: deps.config.BSC_NETWORK,
           simulated: swap.simulated,
         },
       });
-      return JSON.stringify({ positionId: position.id, exitPx: quote.priceUsd, netPnlUsd: netPnl });
+      return JSON.stringify({ positionId: position.id, exitPx, netPnlUsd: netPnl });
     },
   };
 

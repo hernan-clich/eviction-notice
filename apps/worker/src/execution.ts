@@ -25,6 +25,20 @@ const execFileAsync = promisify(execFile);
 export interface SwapResult {
   txHash: string;
   simulated: boolean;
+  /** Amount of the `from` token actually spent (live only; null in paper mode). */
+  inAmount: number | null;
+  /** Amount of the `to` token actually received (live only; null in paper mode). */
+  outAmount: number | null;
+}
+
+/** Parse a `twak` leg like "2.543021879315129031 ATOM" or "5 USDT" → the number. */
+export function parseLegAmount(raw: unknown, key: 'input' | 'output'): number | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const value = (raw as Record<string, unknown>)[key];
+  if (typeof value !== 'string') return null;
+  const [head] = value.trim().split(/\s+/);
+  const n = Number(head);
+  return Number.isFinite(n) ? n : null;
 }
 
 /** Injectable command runner (default = real execFile) so tests never spawn `twak`. */
@@ -158,7 +172,7 @@ export async function executeSwap(
   args: { side: 'open' | 'close'; token: string; baseAmount: number },
 ): Promise<SwapResult> {
   if (deps.config.EXECUTION_MODE !== 'live') {
-    return { txHash: simulatedTxHash(), simulated: true };
+    return { txHash: simulatedTxHash(), simulated: true, inAmount: null, outAmount: null };
   }
   if (!deps.config.TWAK_WALLET_PASSWORD) {
     throw new Error('EXECUTION_MODE=live requires TWAK_WALLET_PASSWORD to sign swaps.');
@@ -191,5 +205,10 @@ export async function executeSwap(
   if (!exec.txHash) {
     throw new Error(`twak swap returned no tx hash: ${JSON.stringify(exec.raw)}`);
   }
-  return { txHash: exec.txHash, simulated: false };
+  return {
+    txHash: exec.txHash,
+    simulated: false,
+    inAmount: parseLegAmount(exec.raw, 'input'),
+    outAmount: parseLegAmount(exec.raw, 'output'),
+  };
 }
