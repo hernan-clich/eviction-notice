@@ -25,13 +25,16 @@ const ADDR: Record<string, string> = {
 };
 
 /** A `twak` mock that answers search/quote/swap from in-memory data. */
-function mockTwak(opts: { quoteHasRoute?: boolean } = {}): {
+function mockTwak(opts: { quoteHasRoute?: boolean; heldBalance?: number } = {}): {
   run: CommandRunner;
   calls: string[][];
 } {
   const calls: string[][] = [];
   const run: CommandRunner = (cmd, args) => {
     calls.push([cmd, ...args]);
+    if (args[0] === 'balance') {
+      return Promise.resolve(JSON.stringify({ available: String(opts.heldBalance ?? 1000) }));
+    }
     if (args[0] === 'search') {
       const sym = (args[1] ?? '').toUpperCase();
       return Promise.resolve(
@@ -143,6 +146,30 @@ describe('executeSwap', () => {
     );
     const exec = calls.find((c) => c[1] === 'swap' && !c.includes('--quote-only'));
     expect(exec?.slice(2, 5)).toEqual(['3', ADDR['AAVE'], ADDR['USDT']]);
+  });
+
+  it('caps a close at the on-chain balance — never tries to over-sell', async () => {
+    // Recorded position is 43.51 (theoretical), but the wallet only holds 43.39.
+    const { run, calls } = mockTwak({ heldBalance: 43.39 });
+    await executeSwap(
+      { config: cfg({ EXECUTION_MODE: 'live', TWAK_WALLET_PASSWORD: 'pw' }), run },
+      { side: 'close', token: 'AAVE', baseAmount: 43.51 },
+    );
+    expect(calls.some((c) => c[1] === 'balance')).toBe(true); // checked the real balance
+    const exec = calls.find((c) => c[1] === 'swap' && !c.includes('--quote-only'));
+    const amount = Number(exec?.[2]);
+    expect(amount).toBeLessThanOrEqual(43.39); // never more than held
+    expect(amount).toBeCloseTo(43.39 * 0.999, 4); // capped to ~99.9% of the real balance
+  });
+
+  it('throws on a close when nothing is held on-chain', async () => {
+    const { run } = mockTwak({ heldBalance: 0 });
+    await expect(
+      executeSwap(
+        { config: cfg({ EXECUTION_MODE: 'live', TWAK_WALLET_PASSWORD: 'pw' }), run },
+        { side: 'close', token: 'AAVE', baseAmount: 5 },
+      ),
+    ).rejects.toThrow(/no on-chain balance/);
   });
 
   it('aborts when the preflight quote has no route', async () => {
