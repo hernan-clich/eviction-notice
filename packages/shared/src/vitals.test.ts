@@ -80,6 +80,28 @@ describe('computeVitals', () => {
     expect(v.series.at(-1)?.balanceUsd).toBe(21);
   });
 
+  it('does not annualize a newborn’s burn into a tiny runway', () => {
+    const justBorn: AgentState = {
+      agent_id: 'agent-0',
+      born_at: '2026-06-22T00:00:00Z',
+      died_at: null,
+      status: 'alive',
+    };
+    const oneMinuteOld = Date.parse('2026-06-22T00:01:00Z');
+    const v = computeVitals(
+      [
+        tx({ kind: 'income', amount: 5, reason: 'seed', ts: '2026-06-22T00:00:00Z' }),
+        tx({ kind: 'rent', amount: -0.035, reason: 'rent', ts: '2026-06-22T00:00:30Z' }),
+        tx({ kind: 'expense', amount: -0.01, reason: 'data_call', ts: '2026-06-22T00:00:40Z' }),
+      ],
+      justBorn,
+      oneMinuteOld,
+    );
+    // burn $0.045 over a floored 1h window = $0.045/h — not $0.045 / (1min) ≈ $2.7/h.
+    expect(v.burnPerHourUsd).toBeCloseTo(0.045, 6);
+    expect(v.cashRunwayHours).toBeGreaterThan(100); // ~$4.955 / 0.045 ≈ 110h, not ~2h
+  });
+
   it('reports dead when status is dead, freezing days-survived at died_at', () => {
     const dead: AgentState = {
       agent_id: 'agent-0',
