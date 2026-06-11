@@ -131,6 +131,31 @@ export async function resolveBscToken(
   return resolved;
 }
 
+/** Read a token's on-chain balance (human-readable units) for `owner` via `twak balance`. */
+export async function readTokenBalance(
+  args: { token: string; owner: string; chain: string },
+  run: CommandRunner = defaultRunner,
+): Promise<number> {
+  const stdout = await run('twak', [
+    'balance',
+    '--address',
+    args.owner,
+    '--chain',
+    args.chain,
+    '--token',
+    args.token,
+    '--json',
+  ]);
+  let json: unknown;
+  try {
+    json = JSON.parse(stdout);
+  } catch {
+    throw new Error(`twak balance: non-JSON output: ${stdout.slice(0, 120)}`);
+  }
+  const available = Number((json as { available?: unknown }).available);
+  return Number.isFinite(available) && available > 0 ? available : 0;
+}
+
 export interface TwakSwapArgs {
   amount: number;
   from: string;
@@ -203,8 +228,28 @@ export async function executeSwap(
   const from = await resolveBscToken(fromSym, deps.run);
   const to = await resolveBscToken(toSym, deps.run);
 
+  // The recorded position size is theoretical (sizeUsd / entryPx); after buy
+  // slippage the wallet holds slightly less. Selling more than we hold reverts,
+  // which would make positions permanently unsellable — so on a close, cap the
+  // amount to (just under) the real on-chain balance.
+  let amount = args.baseAmount;
+  if (args.side === 'close') {
+    const held = await readTokenBalance(
+      { token: from.address, owner: deps.config.X402_PAYER, chain: deps.config.TWAK_CHAIN },
+      deps.run,
+    );
+    if (held <= 0) {
+      throw new Error(`close ${args.token}: no on-chain balance to sell.`);
+    }
+    const capped = Math.min(amount, held * 0.999); // 0.1% headroom vs float/rounding drift
+    if (capped < amount) {
+      log.info('close capped to on-chain balance', { token: args.token, requested: amount, held });
+    }
+    amount = capped;
+  }
+
   const swapArgs: TwakSwapArgs = {
-    amount: args.baseAmount,
+    amount,
     from: from.address,
     to: to.address,
     chain: deps.config.TWAK_CHAIN,
