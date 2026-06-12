@@ -63,31 +63,6 @@ function isAssetRichCashPoor(vitals: Vitals): boolean {
   );
 }
 
-function Stat({
-  label,
-  value,
-  sub,
-  valueColor,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  valueColor?: string | undefined;
-}) {
-  return (
-    <div className="bg-bg px-4 py-3">
-      <div className="font-display text-muted text-[10px] tracking-[0.2em] uppercase">{label}</div>
-      <div
-        className="mt-1 text-lg tabular-nums"
-        style={valueColor ? { color: valueColor } : undefined}
-      >
-        {value}
-      </div>
-      {sub ? <div className="text-muted text-xs">{sub}</div> : null}
-    </div>
-  );
-}
-
 function StatusLadder({ current, hex }: { current: string; hex: string }) {
   return (
     <div className="font-display flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tracking-[0.18em]">
@@ -139,51 +114,100 @@ function SplitBar({ vitals, hex, className }: { vitals: Vitals; hex: string; cla
 }
 
 function SplitLegend({ vitals, hex }: { vitals: Vitals; hex: string }) {
-  const hasPosition = vitals.positions.length > 0;
+  const holding = vitals.positions.length > 0;
+  const deployed = vitals.netWorthUsd > 0 ? vitals.positionValueUsd / vitals.netWorthUsd : 0;
   return (
-    <div className="text-muted flex items-center gap-x-4 gap-y-1 text-xs">
+    <div className="text-muted flex items-center gap-x-2 text-xs">
       <span className="flex items-center gap-1.5">
         {/* Match the bar's tier colour (bright cash / dim locked), not a fixed green. */}
         <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: hex }} />
         cash <span className="text-ink tabular-nums">{formatUsd(vitals.cashUsd)}</span>
       </span>
-      {hasPosition ? (
-        <span className="flex items-center gap-1.5">
-          <span
-            className="inline-block h-2 w-2 rounded-sm"
-            style={{ backgroundColor: hex, opacity: 0.4 }}
-          />
-          in {positionLabel(vitals)}{' '}
-          <span className="text-ink tabular-nums">{formatUsd(vitals.positionValueUsd)}</span>
-        </span>
-      ) : null}
+      <span className="text-muted/40">·</span>
+      <span className="tabular-nums">
+        {formatPct(deployed, 0)} deployed
+        {holding ? <span className="not-tabular-nums"> in {positionLabel(vitals)}</span> : null}
+      </span>
       <span className="ml-auto tabular-nums">{formatUsd(vitals.seedUsd, 0)} seed</span>
     </div>
   );
 }
 
-function LiquidityPanel({ vitals }: { vitals: Vitals }) {
-  const holding = vitals.positions.length > 0;
-  const deployedPct = vitals.netWorthUsd > 0 ? vitals.positionValueUsd / vitals.netWorthUsd : 0;
+/**
+ * The runway clock — the moving headline of the slow part. Runway is derived from
+ * burn (net worth ÷ burn), so they're one idea: runway is the number, burn its
+ * sub-line, not two separate cells.
+ */
+function RunwayBlock({ vitals }: { vitals: Vitals }) {
   return (
-    <div className="bg-line grid grid-cols-2 gap-px">
-      <Stat label="Liquid" value={formatUsd(vitals.cashUsd)} sub="to pay rent & open trades" />
-      {holding ? (
-        // Only meaningful with an open position: the clock until rent forces a sale.
-        // All-cash, this equals the net-worth runway below — so we show deployment instead.
-        <Stat
-          label="Cash runway"
-          value={formatRunway(vitals.cashRunwayHours)}
-          sub="before forced to sell"
-          valueColor={cashRunwayColor(vitals.cashRunwayHours)}
-        />
-      ) : (
-        <Stat
-          label="Deployed"
-          value={formatPct(deployedPct, 0)}
-          sub="all in cash — earning no rent"
-        />
-      )}
+    <div>
+      <div className="font-display text-muted text-[10px] tracking-[0.2em] uppercase">
+        Runway · until eviction
+      </div>
+      <div className="mt-1 flex items-baseline gap-2">
+        <span
+          className="text-3xl leading-none font-semibold tabular-nums"
+          style={{ color: cashRunwayColor(vitals.netWorthRunwayHours) }}
+        >
+          {formatRunway(vitals.netWorthRunwayHours)}
+        </span>
+        <span className="text-muted text-sm tabular-nums">
+          · {formatUsd(vitals.burnPerHourUsd, 3)}/h burn
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ScoreItem({
+  label,
+  value,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  valueColor?: string | undefined;
+}) {
+  return (
+    <span className="flex items-baseline gap-1.5">
+      <span>{label}</span>
+      <span
+        className={`tabular-nums ${valueColor ? '' : 'text-ink'}`}
+        style={valueColor ? { color: valueColor } : undefined}
+      >
+        {value}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * The box score — slow-changing record (peak, drawdown, age, trades) collapsed into
+ * one dense strip of label·value pairs, like the stat line under an athlete's name.
+ * It recedes so the eye lands on net worth + the runway clock above.
+ */
+function BoxScore({ vitals }: { vitals: Vitals }) {
+  return (
+    <div className="text-muted flex flex-wrap items-baseline gap-x-5 gap-y-1 text-xs">
+      <ScoreItem label="peak" value={formatUsd(vitals.peakUsd)} />
+      <span className="flex items-baseline gap-1.5">
+        <span>drawdown</span>
+        <span
+          className={`tabular-nums ${drawdownColor(vitals.maxDrawdownFraction) ? '' : 'text-ink'}`}
+          style={
+            drawdownColor(vitals.maxDrawdownFraction)
+              ? { color: drawdownColor(vitals.maxDrawdownFraction) }
+              : undefined
+          }
+        >
+          {formatPct(vitals.maxDrawdownFraction)}
+        </span>
+        <span className="text-muted/50 text-[10px]" title="Hackathon disqualification threshold">
+          DQ&nbsp;{formatPct(DRAWDOWN_CAP, 0)}
+        </span>
+      </span>
+      <ScoreItem label="alive" value={`${vitals.daysSurvived.toFixed(2)}d`} />
+      <ScoreItem label="trades" value={String(vitals.tradeCount)} />
     </div>
   );
 }
@@ -215,24 +239,6 @@ function PnlRow({ vitals }: { vitals: Vitals }) {
   );
 }
 
-function StatGrid({ vitals }: { vitals: Vitals }) {
-  return (
-    <div className="bg-line grid grid-cols-2 gap-px">
-      <Stat label="Runway" value={formatRunway(vitals.netWorthRunwayHours)} sub="until eviction" />
-      <Stat label="Burn" value={`${formatUsd(vitals.burnPerHourUsd, 3)}/h`} sub="rent + data" />
-      <Stat
-        label="Max drawdown"
-        value={formatPct(vitals.maxDrawdownFraction)}
-        sub={`DQ at ${formatPct(DRAWDOWN_CAP, 0)}`}
-        valueColor={drawdownColor(vitals.maxDrawdownFraction)}
-      />
-      <Stat label="Peak" value={formatUsd(vitals.peakUsd)} sub="net worth high" />
-      <Stat label="Alive" value={`${vitals.daysSurvived.toFixed(2)}d`} sub="since birth" />
-      <Stat label="Trades" value={String(vitals.tradeCount)} sub="this run" />
-    </div>
-  );
-}
-
 /** Full vitals panel — the desktop left rail. */
 export function VitalSigns({ vitals }: { vitals: Vitals }) {
   const v = vitality(vitals);
@@ -240,7 +246,7 @@ export function VitalSigns({ vitals }: { vitals: Vitals }) {
   const lifeFraction = lifeFractionOf(vitals);
 
   return (
-    <section className="flex flex-col gap-5">
+    <section className="flex flex-col gap-4">
       <div>
         <h1 className="font-display text-xl tracking-[0.25em]">EVICTION&nbsp;NOTICE</h1>
         <div className="text-muted text-xs">autonomous agent · earning its keep</div>
@@ -251,7 +257,7 @@ export function VitalSigns({ vitals }: { vitals: Vitals }) {
       <div className="flex items-end justify-between gap-4">
         <div>
           <div className="font-display text-muted text-[10px] tracking-[0.25em] uppercase">
-            Net worth · keeps the roof on
+            Net worth
           </div>
           <div
             className="text-6xl leading-none font-semibold tabular-nums"
@@ -270,9 +276,14 @@ export function VitalSigns({ vitals }: { vitals: Vitals }) {
 
       <HeartbeatLine alive={vitals.alive} color={v.hex} health={lifeFraction} />
 
-      <LiquidityPanel vitals={vitals} />
       <AssetRichWarning vitals={vitals} />
-      <StatGrid vitals={vitals} />
+
+      {/* Box score: the slow-changing record, demoted below a divider so the live
+          vitals above carry the eye. */}
+      <div className="border-line flex flex-col gap-3 border-t pt-4">
+        <RunwayBlock vitals={vitals} />
+        <BoxScore vitals={vitals} />
+      </div>
     </section>
   );
 }
@@ -307,13 +318,13 @@ export function CompactVitals({ vitals }: { vitals: Vitals }) {
         </span>
         <span className="text-right">
           <span className="font-display text-muted block text-[9px] tracking-[0.2em] uppercase">
-            Cash runway
+            Runway
           </span>
           <span
             className="text-sm tabular-nums"
-            style={{ color: cashRunwayColor(vitals.cashRunwayHours) }}
+            style={{ color: cashRunwayColor(vitals.netWorthRunwayHours) }}
           >
-            {formatRunway(vitals.cashRunwayHours)}
+            {formatRunway(vitals.netWorthRunwayHours)}
           </span>
         </span>
       </div>
@@ -328,9 +339,9 @@ export function CompactVitals({ vitals }: { vitals: Vitals }) {
 /** Secondary vitals demoted below the feed on mobile — the detail, not the headline. */
 export function SecondaryVitals({ vitals }: { vitals: Vitals }) {
   return (
-    <div className="flex flex-col gap-5">
-      <LiquidityPanel vitals={vitals} />
-      <StatGrid vitals={vitals} />
+    <div className="flex flex-col gap-3">
+      <RunwayBlock vitals={vitals} />
+      <BoxScore vitals={vitals} />
     </div>
   );
 }
