@@ -34,6 +34,8 @@ export interface Vitals {
   netPnlUsd: number;
   /** Peak net worth observed. */
   peakUsd: number;
+  /** Worst peak-to-trough drop over the lifetime (fractional) — the drawdown DQ metric. */
+  maxDrawdownFraction: number;
   burnPerHourUsd: number;
   /** Hours of cash left at burn — the forced-sale pressure. */
   cashRunwayHours: number;
@@ -92,9 +94,21 @@ export function computeVitals(
       ? orderedSnaps.map((s) => ({ tsMs: Date.parse(s.ts), balanceUsd: s.net_worth_usd }))
       : cashSeries;
 
+  // Peak + worst drawdown over the lifetime. Max drawdown is measured against a
+  // *running* peak (the high-water mark only ratchets up), so it never un-falls —
+  // matching the competition's permanent DQ metric.
   let peakUsd = netWorthUsd;
+  let runningPeak = 0;
+  let maxDrawdownFraction = 0;
   for (const point of series) {
+    runningPeak = Math.max(runningPeak, point.balanceUsd);
     peakUsd = Math.max(peakUsd, point.balanceUsd);
+    if (runningPeak > 0) {
+      maxDrawdownFraction = Math.max(
+        maxDrawdownFraction,
+        (runningPeak - point.balanceUsd) / runningPeak,
+      );
+    }
   }
 
   const bornMs = agentState?.born_at
@@ -117,6 +131,7 @@ export function computeVitals(
     seedUsd,
     netPnlUsd: netWorthUsd - seedUsd,
     peakUsd,
+    maxDrawdownFraction,
     burnPerHourUsd,
     cashRunwayHours: runway(cashUsd),
     netWorthRunwayHours: runway(netWorthUsd),

@@ -80,6 +80,30 @@ describe('computeVitals', () => {
     expect(v.series.at(-1)?.balanceUsd).toBe(21);
   });
 
+  it('tracks the worst peak-to-trough drawdown over the lifetime (the DQ metric)', () => {
+    const transactions: Transaction[] = [
+      tx({ kind: 'income', amount: 20, reason: 'seed', ts: bornAt }),
+    ];
+    const snap = (id: number, ts: string, net: number): Snapshot => ({
+      id,
+      agent_id: 'agent-0',
+      ts,
+      cash_usd: net,
+      position_value_usd: 0,
+      net_worth_usd: net,
+      positions: [],
+    });
+    const snapshots: Snapshot[] = [
+      snap(1, '2026-06-22T01:00:00Z', 20),
+      snap(2, '2026-06-22T02:00:00Z', 30), // peak
+      snap(3, '2026-06-22T03:00:00Z', 18), // trough — 40% below the $30 high-water mark
+    ];
+    const v = computeVitals(transactions, state, now, snapshots);
+
+    expect(v.peakUsd).toBe(30);
+    expect(v.maxDrawdownFraction).toBeCloseTo(0.4, 6); // (30 − 18) / 30, vs the running peak
+  });
+
   it('does not annualize a newborn’s burn into a tiny runway', () => {
     const justBorn: AgentState = {
       agent_id: 'agent-0',

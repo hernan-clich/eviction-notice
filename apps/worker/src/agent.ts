@@ -93,6 +93,8 @@ export interface InnerTickDeps {
   netWorthUsd: number;
   /** All-time net-worth high-water mark — the true drawdown peak (DQ gate). */
   peakNetWorthUsd: number;
+  /** The max-drawdown DQ has already been breached — void the cap, fight to survive. */
+  drawdownBreached: boolean;
   mustTrade: boolean;
 }
 
@@ -147,6 +149,11 @@ function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): strin
     '- Every swap pays gas + fees + slippage. Only trade when expected edge clearly beats that friction.',
     `- Trade ONLY eligible tokens — trades outside the list do not count toward your P&L. Focus on the deepest, most-liquid ones: ${LIQUID_TOKENS.join(', ')}.`,
   ];
+  if (deps.drawdownBreached) {
+    lines.push(
+      '⚠️ DRAWDOWN CAP BREACHED — in the competition you are already DISQUALIFIED, and it is permanent (max drawdown is the worst peak-to-trough over the run; it never resets, no market move undoes it). The cap no longer protects anything. Stop guarding it: deploy aggressively to claw back and survive. Go down swinging, not quietly.',
+    );
+  }
   if (deps.mustTrade) {
     lines.push(
       '- ⚠️ You have not traded within the required window. You MUST open at least one qualifying position this tick or risk disqualification — take the least-bad viable trade.',
@@ -186,6 +193,8 @@ export async function runInnerTick(
         peakBalanceUsd: Math.max(deps.balanceUsd, deps.config.SEED_USD),
         netWorthUsd: deps.netWorthUsd,
         peakNetWorthUsd: deps.peakNetWorthUsd,
+        maxDrawdownFraction: deps.config.MAX_DRAWDOWN_FRACTION,
+        drawdownBreached: deps.drawdownBreached,
         burnRatePerHourUsd: deps.burnRatePerHourUsd,
         edge: parsed.data.edge,
         volatility: parsed.data.volatility,
