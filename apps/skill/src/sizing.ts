@@ -19,10 +19,21 @@ import { z } from 'zod';
  */
 
 export const sizingInputSchema = z.object({
-  /** Current ledger balance (USD). */
+  /** Cash available to DEPLOY (USD). Position-size + liquidity caps use this. */
   balanceUsd: z.number().positive(),
-  /** Peak balance to date (USD) — drawdown is measured peak-to-trough. */
+  /** Cash high-water mark — fallback drawdown peak for cash-only callers. */
   peakBalanceUsd: z.number().positive(),
+  /**
+   * Current PORTFOLIO net worth (cash + open positions). Drawdown — the DQ gate —
+   * is measured on this, not on cash. Defaults to balanceUsd if a caller only
+   * tracks cash.
+   */
+  netWorthUsd: z.number().positive().optional(),
+  /**
+   * All-time high-water mark of net worth — the true drawdown peak the competition
+   * measures against (and it only ratchets up). Defaults to peakBalanceUsd.
+   */
+  peakNetWorthUsd: z.number().positive().optional(),
   /** Cost of being alive (USD/hour) — rent + expected data burn. */
   burnRatePerHourUsd: z.number().nonnegative(),
   /** Expected fractional return on the position (e.g. 0.02 = +2%). */
@@ -92,9 +103,13 @@ export function decideSizing(input: SizingInput): SizingDecision {
     slippage: cfg.slippage,
   };
 
-  // How much we can lose before breaching the drawdown DQ gate.
-  const floorBalanceUsd = cfg.peakBalanceUsd * (1 - cfg.maxDrawdownFraction);
-  const allowedLossUsd = cfg.balanceUsd - floorBalanceUsd;
+  // Drawdown (the DQ gate) is measured on PORTFOLIO net worth vs its all-time
+  // high-water mark — NOT on cash. The peak only ratchets up, so banking profit
+  // raises the floor. Fall back to cash/peakBalance for cash-only callers.
+  const netWorthUsd = cfg.netWorthUsd ?? cfg.balanceUsd;
+  const peakNetWorthUsd = Math.max(cfg.peakNetWorthUsd ?? cfg.peakBalanceUsd, netWorthUsd);
+  const floorBalanceUsd = peakNetWorthUsd * (1 - cfg.maxDrawdownFraction);
+  const allowedLossUsd = netWorthUsd - floorBalanceUsd;
 
   if (allowedLossUsd <= 0) {
     return {

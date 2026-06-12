@@ -91,6 +91,8 @@ export interface InnerTickDeps {
   burnRatePerHourUsd: number;
   /** Marked net worth (cash + open positions) — drives the survival tier + desperation. */
   netWorthUsd: number;
+  /** All-time net-worth high-water mark — the true drawdown peak (DQ gate). */
+  peakNetWorthUsd: number;
   mustTrade: boolean;
 }
 
@@ -182,6 +184,8 @@ export async function runInnerTick(
       const sizingInput = {
         balanceUsd: deps.balanceUsd,
         peakBalanceUsd: Math.max(deps.balanceUsd, deps.config.SEED_USD),
+        netWorthUsd: deps.netWorthUsd,
+        peakNetWorthUsd: deps.peakNetWorthUsd,
         burnRatePerHourUsd: deps.burnRatePerHourUsd,
         edge: parsed.data.edge,
         volatility: parsed.data.volatility,
