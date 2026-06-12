@@ -219,6 +219,7 @@ async function main(): Promise<void> {
         // runway math and its desperation. Falls back to rent-only burn + cash.
         let burnRatePerHourUsd = config.RENT_PER_HOUR_USD;
         let netWorthUsd = balanceAfterRent;
+        let peakNetWorthUsd = Math.max(balanceAfterRent, config.SEED_USD);
         try {
           const [txs, agentState, snapshots] = await Promise.all([
             fetchTransactions(client, config.AGENT_ID),
@@ -230,6 +231,7 @@ async function main(): Promise<void> {
             burnRatePerHourUsd = vitals.burnPerHourUsd;
           }
           netWorthUsd = vitals.netWorthUsd;
+          peakNetWorthUsd = vitals.peakUsd;
         } catch (error: unknown) {
           log.warn('vitals calc failed — using rent-only burn + cash net worth', {
             error: error instanceof Error ? error.message : String(error),
@@ -242,6 +244,7 @@ async function main(): Promise<void> {
           balanceUsd: balanceAfterRent,
           burnRatePerHourUsd,
           netWorthUsd,
+          peakNetWorthUsd,
           mustTrade,
         });
         log.info('decided', {

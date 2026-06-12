@@ -90,6 +90,35 @@ describe('decideSizing', () => {
     expect(d.reason).toMatch(/[Mm]andatory daily trade/);
   });
 
+  it('measures drawdown on net worth vs its true peak, not cash/seed', () => {
+    // Profited to a $30 net-worth peak, now back at $21 — exactly the 30% DQ floor.
+    // The old cash/seed peak ($21) would leave room; the true peak ($30) does not.
+    const d = decideSizing({
+      ...base,
+      balanceUsd: 21,
+      peakBalanceUsd: 21,
+      netWorthUsd: 21,
+      peakNetWorthUsd: 30,
+    });
+    expect(d.decision).toBe('skip');
+    expect(d.reason).toMatch(/drawdown cap/);
+  });
+
+  it('uses net worth (not just cash) for the drawdown budget when holding positions', () => {
+    // $5 cash but $20 net worth (the rest in a position), $20 peak → $6 loss budget.
+    const d = decideSizing({
+      ...base,
+      balanceUsd: 5,
+      peakBalanceUsd: 5,
+      netWorthUsd: 20,
+      peakNetWorthUsd: 20,
+      gasPerSwapUsd: 0.01,
+      minPositionUsd: 1,
+    });
+    expect(d.decision).toBe('trade'); // drawdown allows it; cash caps the size
+    expect(d.sizeUsd).toBeLessThanOrEqual(5); // can only deploy the cash it has
+  });
+
   it('lowers the edge bar under desperation — takes a thin edge it skips when calm', () => {
     const thin = { ...base, edge: 0.02 }; // skips at desperation 0 (above)
     expect(decideSizing(thin).decision).toBe('skip');
