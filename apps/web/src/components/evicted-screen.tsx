@@ -19,6 +19,7 @@ import {
 
 import { Feed } from './feed';
 import { HeartbeatLine } from './heartbeat-line';
+import { Markdown } from './markdown';
 
 // The drained rose of the memorial — deliberately softer than the live alarm red
 // (#ff5468). Every prior screen earned its phosphor green; this one has none. The
@@ -168,7 +169,7 @@ export function EvictedScreen({
               className="text-ink mx-auto mt-3 max-w-md pl-4 text-left text-sm leading-relaxed italic"
               style={{ borderLeft: `2px solid ${ROSE}` }}
             >
-              “{memorial.lastWords}”
+              <Markdown text={memorial.lastWords} />
             </blockquote>
           </div>
         ) : null}

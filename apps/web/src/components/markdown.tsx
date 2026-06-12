@@ -45,6 +45,7 @@ function renderInline(text: string): ReactNode[] {
 }
 
 const BULLET = /^[-*]\s+(.*)$/;
+const RULE = /^([-*_])\1{2,}$/;
 
 /** Split a `| a | b |` row into trimmed cells, dropping the outer pipes. */
 function splitRow(line: string): string[] {
@@ -120,6 +121,12 @@ export function Markdown({ text, className }: { text: string; className?: string
     const line = (lines[i] ?? '').trim();
     if (line === '') {
       flushList();
+      continue;
+    }
+    if (RULE.test(line)) {
+      flushList();
+      blocks.push(<hr key={key} className="border-line my-1 border-t" />);
+      key += 1;
       continue;
     }
     if (isTableStart(lines, i)) {
