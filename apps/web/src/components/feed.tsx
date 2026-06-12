@@ -48,17 +48,25 @@ function metaNumber(meta: Transaction['meta'], key: string): number | null {
  */
 function displayAmount(tx: Transaction): { value: number; color: string; tag?: string } | null {
   if (tx.reason === 'trade_open') {
+    // Friction = swap fee + slippage paid to open. Live execution reconciles to
+    // ~zero, so a "+$0.00 friction" row is just noise — drop it when there's none.
     const friction = metaNumber(tx.meta, 'frictionUsd');
-    return friction === null ? null : { value: -friction, color: '#ff5468', tag: 'friction' };
+    if (friction === null || friction === 0) return null;
+    return { value: -friction, color: '#ff5468', tag: 'friction' };
   }
   if (tx.reason === 'trade_close') {
     const pnl = metaNumber(tx.meta, 'netPnlUsd');
-    return pnl === null
-      ? null
-      : { value: pnl, color: pnl >= 0 ? '#4ef0a0' : '#ff5468', tag: 'P&L' };
+    return pnl === null ? null : { value: pnl, color: pnlColor(pnl), tag: 'P&L' };
   }
   if (tx.reason === 'decision' || tx.amount === 0) return null;
   return { value: tx.amount, color: tone(tx.reason).color };
+}
+
+/** Green for a gain, red for a loss, neutral grey for an exact break-even ($0). */
+function pnlColor(value: number): string {
+  if (value > 0) return '#4ef0a0';
+  if (value < 0) return '#ff5468';
+  return '#6a7570';
 }
 
 /** Strip a leading status emoji (✅/❌/⚠️) the model sometimes prefixes onto its decision. */

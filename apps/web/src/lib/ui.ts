@@ -13,10 +13,21 @@ export function formatSignedUsd(value: number): string {
   return `${sign}$${abs.toFixed(decimals)}`;
 }
 
-/** Time-to-death, shown as a death clock: days when comfortable, hours when close. */
+/** Time to eviction, shown as a clock: days when comfortable, hours when close. */
 export function formatRunway(hours: number): string {
   if (!Number.isFinite(hours)) return '∞';
   return hours >= 48 ? `${(hours / 24).toFixed(1)}d` : `${hours.toFixed(1)}h`;
+}
+
+/** Plain percentage, e.g. 0.234 → "23.4%". */
+export function formatPct(fraction: number, decimals = 1): string {
+  return `${(fraction * 100).toFixed(decimals)}%`;
+}
+
+/** Signed percentage, e.g. +12.3% / -83.0% / 0.0% — the headline return figure. */
+export function formatSignedPct(fraction: number): string {
+  const sign = fraction > 0 ? '+' : fraction < 0 ? '-' : '';
+  return `${sign}${Math.abs(fraction * 100).toFixed(1)}%`;
 }
 
 export interface Vitality {
@@ -31,11 +42,11 @@ const TIERS: Record<SurvivalTier, Vitality> = {
 };
 
 /**
- * Status is the ONE life-or-death axis: net worth as a fraction of seed (the shared
- * `survivalTier`, the same driver the agent's desperation reads). Cash never kills
+ * Status is the ONE eviction axis: net worth as a fraction of seed (the shared
+ * `survivalTier`, the same driver the agent's desperation reads). Cash never evicts
  * the agent directly — it can always liquidate to make rent — so cash pressure is
  * surfaced separately (the amber asset-rich/cash-poor warning + the cash-runway
- * stat), NOT promoted onto this death ladder.
+ * stat), NOT promoted onto this eviction ladder.
  */
 export function vitality(vitals: { netWorthUsd: number; seedUsd: number }): Vitality {
   return TIERS[survivalTier(vitals.netWorthUsd, vitals.seedUsd)];

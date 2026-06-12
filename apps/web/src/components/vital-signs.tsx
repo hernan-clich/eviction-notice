@@ -1,10 +1,21 @@
 import type { Vitals } from 'shared';
 
-import { formatRunway, formatSignedUsd, formatUsd, vitality } from '@/lib/ui';
+import {
+  formatPct,
+  formatRunway,
+  formatSignedPct,
+  formatSignedUsd,
+  formatUsd,
+  vitality,
+} from '@/lib/ui';
 
 import { HeartbeatLine } from './heartbeat-line';
 
 const STATES = ['STABLE', 'STRAINED', 'FINAL NOTICE'] as const;
+
+// The competition's hard max-drawdown DQ line (worst peak-to-trough vs the
+// net-worth high-water mark). Mirrors the worker's MAX_DRAWDOWN_FRACTION.
+const DRAWDOWN_CAP = 0.3;
 
 const clamp01 = (n: number): number => Math.max(0, Math.min(n, 1));
 
@@ -12,7 +23,7 @@ function statusLabel(vitals: Vitals): string {
   return vitals.alive ? vitality(vitals).label : 'EVICTED';
 }
 
-/** Net worth as a fraction of seed, clamped — the agent's remaining life force. */
+/** Net worth as a fraction of seed, clamped — how far it is above the eviction floor. */
 function lifeFractionOf(vitals: Vitals): number {
   return vitals.seedUsd > 0 ? clamp01(vitals.netWorthUsd / vitals.seedUsd) : 0;
 }
@@ -33,6 +44,13 @@ function cashRunwayColor(hours: number): string | undefined {
   if (!Number.isFinite(hours) || hours >= 72) return undefined;
   if (hours >= 24) return '#f5c451';
   return '#ff5468';
+}
+
+/** Neutral with headroom, amber nearing the DQ line, red once the cap is breached. */
+function drawdownColor(fraction: number): string | undefined {
+  if (fraction >= DRAWDOWN_CAP) return '#ff5468';
+  if (fraction >= DRAWDOWN_CAP * 0.67) return '#f5c451';
+  return undefined;
 }
 
 /** True when most of net worth is locked in positions AND cash can't outlast the burn. */
@@ -145,15 +163,27 @@ function SplitLegend({ vitals, hex }: { vitals: Vitals; hex: string }) {
 }
 
 function LiquidityPanel({ vitals }: { vitals: Vitals }) {
+  const holding = vitals.positions.length > 0;
+  const deployedPct = vitals.netWorthUsd > 0 ? vitals.positionValueUsd / vitals.netWorthUsd : 0;
   return (
     <div className="bg-line grid grid-cols-2 gap-px">
       <Stat label="Liquid" value={formatUsd(vitals.cashUsd)} sub="to pay rent & open trades" />
-      <Stat
-        label="Cash runway"
-        value={formatRunway(vitals.cashRunwayHours)}
-        sub="before forced to sell"
-        valueColor={cashRunwayColor(vitals.cashRunwayHours)}
-      />
+      {holding ? (
+        // Only meaningful with an open position: the clock until rent forces a sale.
+        // All-cash, this equals the net-worth runway below — so we show deployment instead.
+        <Stat
+          label="Cash runway"
+          value={formatRunway(vitals.cashRunwayHours)}
+          sub="before forced to sell"
+          valueColor={cashRunwayColor(vitals.cashRunwayHours)}
+        />
+      ) : (
+        <Stat
+          label="Deployed"
+          value={formatPct(deployedPct, 0)}
+          sub="all in cash — earning no rent"
+        />
+      )}
     </div>
   );
 }
@@ -170,17 +200,17 @@ function AssetRichWarning({ vitals }: { vitals: Vitals }) {
 }
 
 function PnlRow({ vitals }: { vitals: Vitals }) {
+  const returnFraction = vitals.seedUsd > 0 ? vitals.netPnlUsd / vitals.seedUsd : 0;
+  const color = vitals.netPnlUsd > 0 ? '#4ef0a0' : vitals.netPnlUsd < 0 ? '#ff5468' : '#6a7570';
   return (
     <div className="text-right">
       <div className="font-display text-muted text-[10px] tracking-[0.25em] uppercase">
         Net P&amp;L
       </div>
-      <div
-        className="text-lg tabular-nums"
-        style={{ color: vitals.netPnlUsd >= 0 ? '#4ef0a0' : '#ff5468' }}
-      >
-        {formatSignedUsd(vitals.netPnlUsd)}
+      <div className="text-lg tabular-nums" style={{ color }}>
+        {formatSignedPct(returnFraction)}
       </div>
+      <div className="text-muted text-xs tabular-nums">{formatSignedUsd(vitals.netPnlUsd)}</div>
     </div>
   );
 }
@@ -188,18 +218,17 @@ function PnlRow({ vitals }: { vitals: Vitals }) {
 function StatGrid({ vitals }: { vitals: Vitals }) {
   return (
     <div className="bg-line grid grid-cols-2 gap-px">
-      <Stat
-        label="Runway"
-        value={formatRunway(vitals.netWorthRunwayHours)}
-        sub="net worth at burn"
-      />
+      <Stat label="Runway" value={formatRunway(vitals.netWorthRunwayHours)} sub="until eviction" />
       <Stat label="Burn" value={`${formatUsd(vitals.burnPerHourUsd, 3)}/h`} sub="rent + data" />
-      <Stat label="Alive" value={`${vitals.daysSurvived.toFixed(2)}d`} sub="since birth" />
       <Stat
-        label="Trades"
-        value={String(vitals.tradeCount)}
-        sub={`peak ${formatUsd(vitals.peakUsd)}`}
+        label="Max drawdown"
+        value={formatPct(vitals.maxDrawdownFraction)}
+        sub={`DQ at ${formatPct(DRAWDOWN_CAP, 0)}`}
+        valueColor={drawdownColor(vitals.maxDrawdownFraction)}
       />
+      <Stat label="Peak" value={formatUsd(vitals.peakUsd)} sub="net worth high" />
+      <Stat label="Alive" value={`${vitals.daysSurvived.toFixed(2)}d`} sub="since birth" />
+      <Stat label="Trades" value={String(vitals.tradeCount)} sub="this run" />
     </div>
   );
 }
@@ -222,7 +251,7 @@ export function VitalSigns({ vitals }: { vitals: Vitals }) {
       <div className="flex items-end justify-between gap-4">
         <div>
           <div className="font-display text-muted text-[10px] tracking-[0.25em] uppercase">
-            Net worth · life force
+            Net worth · keeps the roof on
           </div>
           <div
             className="text-6xl leading-none font-semibold tabular-nums"
