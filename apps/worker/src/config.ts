@@ -6,6 +6,11 @@ const envSchema = z.object({
   // New-scheme secret key (sb_secret_…) — bypasses RLS so the worker can write.
   SUPABASE_SECRET_KEY: z.string().min(1),
   AGENT_ID: z.string().min(1).default('agent-0'),
+  // Behaviour mode. 'survival' (default): the rent/eviction drama — optimise to
+  // stay alive. 'compete': the judged-run brief — maximise total return, stay
+  // deployed, never breach the drawdown cap, ≥1 trade/day. Drives the prompt +
+  // sizer posture; pair with a low RENT_PER_HOUR_USD for the competition window.
+  AGENT_MODE: z.enum(['survival', 'compete']).default('survival'),
   SEED_USD: z.coerce.number().positive().default(20),
   RENT_PER_HOUR_USD: z.coerce.number().nonnegative().default(0.07),
   // 30 minutes by default (≈ 48 ticks/day). Lower for local testing.

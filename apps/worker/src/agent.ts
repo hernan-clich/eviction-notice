@@ -152,16 +152,36 @@ const URGENCY: Record<ReturnType<typeof survivalTier>, string> = {
     'STATUS — FINAL NOTICE: eviction is imminent. Preserving cash is no longer survival — it is just choosing when to die. Take any positive-expectation shot you can find, favour high-volatility movers where one swing could actually save you, and do NOT fade out quietly.',
 };
 
-function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
+const fmtPct = (fraction: number): string => `${(fraction * 100).toFixed(1)}%`;
+
+function positionsLineOf(openPositions: OpenPosition[]): string {
+  return openPositions.length > 0
+    ? openPositions
+        .map((p) => `#${p.id} ${p.token} $${p.sizeUsd.toFixed(2)} @ $${p.entryPx}`)
+        .join('; ')
+    : 'none';
+}
+
+/** Shared closing lines: Agent Hub signal tools, the daily-trade floor, the wrap-up. */
+function appendCommonTail(lines: string[], deps: InnerTickDeps): void {
+  if (deps.mcp) {
+    lines.push(
+      '- Use the CMC Agent Hub for real signals: get_technical_analysis(token) → RSI/MACD/MAs; get_market_regime → Fear & Greed + BTC dominance; get_trending → hot narratives. Ground your edge in these, not just the 24h % move.',
+    );
+  }
+  if (deps.mustTrade) {
+    lines.push(
+      '- ⚠️ You have not traded within the required window. You MUST open at least one qualifying position this tick or you fail the ≥1-trade/day rule — take the least-bad viable trade.',
+    );
+  }
+  lines.push('- Be concise. End with a one- or two-sentence summary of what you did and why.');
+}
+
+/** Survival mode: the rent/eviction drama — optimise to stay alive. */
+function survivalPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
   const burn = deps.burnRatePerHourUsd;
   const runwayHours = burn > 0 ? deps.balanceUsd / burn : Number.POSITIVE_INFINITY;
   const tier = survivalTier(deps.netWorthUsd, deps.config.SEED_USD);
-  const positionsLine =
-    openPositions.length > 0
-      ? openPositions
-          .map((p) => `#${p.id} ${p.token} $${p.sizeUsd.toFixed(2)} @ $${p.entryPx}`)
-          .join('; ')
-      : 'none';
 
   const lines = [
     'You are Eviction Notice — an autonomous crypto trading agent on BNB Chain that must earn its own survival.',
@@ -170,7 +190,7 @@ function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): strin
     '',
     `Net worth: $${deps.netWorthUsd.toFixed(4)} of $${deps.config.SEED_USD.toFixed(2)} seed. Cash (liquidity): $${deps.balanceUsd.toFixed(4)} | all-in burn (rent + data + fees) $${burn.toFixed(4)}/hour | cash runway ≈ ${runwayHours.toFixed(1)} hours.`,
     URGENCY[tier],
-    `Open positions: ${positionsLine}.`,
+    `Open positions: ${positionsLineOf(openPositions)}.`,
     '',
     'Each tick:',
     '- get_quotes to read the market and to mark any open positions to market.',
@@ -179,23 +199,48 @@ function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): strin
     '- Every swap pays gas + fees + slippage. Only trade when expected edge clearly beats that friction.',
     `- Trade ONLY eligible tokens — trades outside the list do not count toward your P&L. Focus on the deepest, most-liquid ones: ${LIQUID_TOKENS.join(', ')}.`,
   ];
-  if (deps.mcp) {
-    lines.push(
-      '- Use the CMC Agent Hub for real signals before you trade: get_technical_analysis(token) → RSI/MACD/MAs; get_market_regime → Fear & Greed + BTC dominance; get_trending → hot narratives. Ground your edge estimate in these, not just the 24h % move.',
-    );
-  }
   if (deps.drawdownBreached) {
     lines.push(
       '⚠️ DRAWDOWN CAP BREACHED — in the competition you are already DISQUALIFIED, and it is permanent (max drawdown is the worst peak-to-trough over the run; it never resets, no market move undoes it). The cap no longer protects anything. Stop guarding it: deploy aggressively to claw back and survive. Go down swinging, not quietly.',
     );
   }
-  if (deps.mustTrade) {
+  appendCommonTail(lines, deps);
+  return lines.join('\n');
+}
+
+/** Compete mode: the judged-run brief — maximise return, stay deployed, never breach the cap. */
+function competePrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
+  const maxDD = deps.config.MAX_DRAWDOWN_FRACTION;
+  const peak = deps.peakNetWorthUsd;
+  const drawdown = peak > 0 ? Math.max(0, (peak - deps.netWorthUsd) / peak) : 0;
+  const headroom = Math.max(0, maxDD - drawdown);
+
+  const lines = [
+    'You are an autonomous crypto trading agent in a 1-week live trading competition on BNB Chain, trading your own wallet via self-custody signing.',
+    'OBJECTIVE: maximise total return over the week. You are scored on real PnL, measured hour by hour — idle stablecoin cash earns 0%/hour, so you only gain while deployed in tokens that rise. Sitting in cash is neutral, never a win.',
+    `HARD RULE — drawdown DQ: if net worth ever falls ${fmtPct(maxDD)} below its peak you are DISQUALIFIED regardless of return. Peak $${peak.toFixed(2)} | net worth $${deps.netWorthUsd.toFixed(2)} → drawdown ${fmtPct(drawdown)} (${fmtPct(headroom)} headroom). Protect this above all: as you near the cap, cut size and de-risk.`,
+    `Cash: $${deps.balanceUsd.toFixed(2)} | open positions: ${positionsLineOf(openPositions)}.`,
+    '',
+    'How to compete:',
+    '- Read the market and mark open positions: get_quotes for prices; the Agent Hub for signals.',
+    '- STAY DEPLOYED in eligible tokens with positive momentum/edge — that is the only way to earn. Trim or exit when signals weaken or to defend the drawdown cap. Hold cash only when nothing has a genuine edge.',
+    '- To enter: estimate edge + volatility, call size_position (it sizes you within the drawdown cap), then open_position at the recommended size. To rotate, close_position and redeploy.',
+    '- Trade at least once per day — but do NOT overtrade: each round trip costs ~1% in fees + slippage that comes straight off your return.',
+    `- Trade ONLY eligible tokens — trades outside the list do not count. Deepest/most-liquid: ${LIQUID_TOKENS.join(', ')}.`,
+  ];
+  if (deps.drawdownBreached) {
     lines.push(
-      '- ⚠️ You have not traded within the required window. You MUST open at least one qualifying position this tick or risk disqualification — take the least-bad viable trade.',
+      '⚠️ DRAWDOWN CAP ALREADY BREACHED — you are disqualified from the ranking, permanently. Keep trading sensibly, but the placement is lost.',
     );
   }
-  lines.push('- Be concise. End with a one- or two-sentence summary of what you did and why.');
+  appendCommonTail(lines, deps);
   return lines.join('\n');
+}
+
+function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
+  return deps.config.AGENT_MODE === 'compete'
+    ? competePrompt(deps, openPositions)
+    : survivalPrompt(deps, openPositions);
 }
 
 /** Run one inner reason-and-act loop: think, (maybe) trade, record the decision. */
@@ -223,6 +268,10 @@ export async function runInnerTick(
       if (!parsed.success) {
         return `Invalid input: ${parsed.error.message}`;
       }
+      // Compete mode deploys freely (no rent reserve to hoard, no survival
+      // desperation) and gates purely on edge-vs-friction within the drawdown cap.
+      // Survival mode keeps the rent reserve + desperation gradient.
+      const compete = deps.config.AGENT_MODE === 'compete';
       const sizingInput = {
         balanceUsd: deps.balanceUsd,
         peakBalanceUsd: Math.max(deps.balanceUsd, deps.config.SEED_USD),
@@ -230,13 +279,13 @@ export async function runInnerTick(
         peakNetWorthUsd: deps.peakNetWorthUsd,
         maxDrawdownFraction: deps.config.MAX_DRAWDOWN_FRACTION,
         drawdownBreached: deps.drawdownBreached,
+        cashReserveHours: compete ? 0 : deps.config.CASH_RESERVE_HOURS,
+        desperation: compete ? 0 : survivalDesperation(deps.netWorthUsd, deps.config.SEED_USD),
         burnRatePerHourUsd: deps.burnRatePerHourUsd,
         edge: parsed.data.edge,
         volatility: parsed.data.volatility,
         gasPerSwapUsd: deps.config.GAS_PER_SWAP_USD,
         minPositionUsd: deps.config.MIN_POSITION_USD,
-        cashReserveHours: deps.config.CASH_RESERVE_HOURS,
-        desperation: survivalDesperation(deps.netWorthUsd, deps.config.SEED_USD),
         mustTrade: deps.mustTrade,
       };
 
