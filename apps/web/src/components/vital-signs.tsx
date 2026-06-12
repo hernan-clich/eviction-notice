@@ -120,17 +120,21 @@ function SplitBar({ vitals, hex, className }: { vitals: Vitals; hex: string; cla
   );
 }
 
-function SplitLegend({ vitals }: { vitals: Vitals }) {
+function SplitLegend({ vitals, hex }: { vitals: Vitals; hex: string }) {
   const hasPosition = vitals.positions.length > 0;
   return (
     <div className="text-muted flex items-center gap-x-4 gap-y-1 text-xs">
       <span className="flex items-center gap-1.5">
-        <span className="bg-phosphor inline-block h-2 w-2 rounded-sm" />
+        {/* Match the bar's tier colour (bright cash / dim locked), not a fixed green. */}
+        <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: hex }} />
         cash <span className="text-ink tabular-nums">{formatUsd(vitals.cashUsd)}</span>
       </span>
       {hasPosition ? (
         <span className="flex items-center gap-1.5">
-          <span className="bg-phosphor/40 inline-block h-2 w-2 rounded-sm" />
+          <span
+            className="inline-block h-2 w-2 rounded-sm"
+            style={{ backgroundColor: hex, opacity: 0.4 }}
+          />
           in {positionLabel(vitals)}{' '}
           <span className="text-ink tabular-nums">{formatUsd(vitals.positionValueUsd)}</span>
         </span>
@@ -232,7 +236,7 @@ export function VitalSigns({ vitals }: { vitals: Vitals }) {
 
       <div className="flex flex-col gap-2">
         <SplitBar vitals={vitals} hex={v.hex} />
-        <SplitLegend vitals={vitals} />
+        <SplitLegend vitals={vitals} hex={v.hex} />
       </div>
 
       <HeartbeatLine alive={vitals.alive} color={v.hex} health={lifeFraction} />
@@ -285,7 +289,7 @@ export function CompactVitals({ vitals }: { vitals: Vitals }) {
         </span>
       </div>
       <SplitBar vitals={vitals} hex={v.hex} className="h-1.5" />
-      <SplitLegend vitals={vitals} />
+      <SplitLegend vitals={vitals} hex={v.hex} />
       <HeartbeatLine alive={vitals.alive} color={v.hex} health={lifeFraction} className="h-7" />
       <AssetRichWarning vitals={vitals} />
     </header>
