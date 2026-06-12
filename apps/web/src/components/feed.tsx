@@ -1,6 +1,6 @@
 import { explorerTxUrl, type BscNetwork, type Transaction } from 'shared';
 
-import { formatFeedTime, formatSignedUsd } from '@/lib/ui';
+import { formatFeedTimestamp, formatSignedUsd } from '@/lib/ui';
 
 import { Markdown } from './markdown';
 
@@ -100,13 +100,7 @@ function TxLink({ link }: { link: TxRef }) {
   );
 }
 
-export function Feed({
-  transactions,
-  bornMs,
-}: {
-  transactions: readonly Transaction[];
-  bornMs: number | null;
-}) {
+export function Feed({ transactions }: { transactions: readonly Transaction[] }) {
   const feed = [...transactions].reverse();
   if (feed.length === 0) {
     return <p className="text-muted text-sm">Waiting for the agent to do something…</p>;
@@ -118,11 +112,16 @@ export function Feed({
         const isDecision = tx.reason === 'decision';
         const link = txLink(tx.meta);
         const amt = displayAmount(tx);
+        const ts = formatFeedTimestamp(tx.ts);
         return (
           <li key={tx.id} className="flex animate-[feed-in_0.35s_ease-out] flex-col gap-1 py-3">
             <div className="flex items-baseline gap-3 text-sm">
-              <time className="text-muted w-16 shrink-0 text-xs" dateTime={tx.ts}>
-                {formatFeedTime(tx.ts, bornMs)}
+              <time
+                className="text-muted w-24 shrink-0 text-xs leading-tight whitespace-nowrap"
+                dateTime={tx.ts}
+              >
+                <span className="block">{ts.date}</span>
+                <span className="text-muted/70 block">{ts.time}</span>
               </time>
               <span
                 className={`font-display shrink-0 border px-1.5 py-0.5 text-[10px] tracking-widest uppercase ${t.chip}`}

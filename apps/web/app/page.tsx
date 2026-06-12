@@ -59,7 +59,6 @@ export default function Dashboard() {
   }, []);
 
   const vitals = computeVitals(transactions, agentState, nowMs, snapshots);
-  const bornMs = agentState?.born_at ? Date.parse(agentState.born_at) : null;
 
   if (agentState?.status === 'dead') {
     return (
@@ -94,7 +93,7 @@ export default function Dashboard() {
         <CompactVitals vitals={vitals} />
         <section className="flex flex-col gap-3 px-5 py-6">
           {feedLabel}
-          <Feed transactions={transactions} bornMs={bornMs} />
+          <Feed transactions={transactions} />
         </section>
         <div className="border-line flex flex-col gap-6 border-t px-5 py-7">
           <SecondaryVitals vitals={vitals} />
@@ -114,7 +113,7 @@ export default function Dashboard() {
         <section className="flex min-h-0 flex-col px-7 py-8 md:overflow-hidden">
           <div className="border-line shrink-0 border-b pb-3 md:pr-4">{feedLabel}</div>
           <div className="pane-scroll md:min-h-0 md:flex-1 md:overflow-y-auto md:pr-4">
-            <Feed transactions={transactions} bornMs={bornMs} />
+            <Feed transactions={transactions} />
           </div>
         </section>
       </div>
