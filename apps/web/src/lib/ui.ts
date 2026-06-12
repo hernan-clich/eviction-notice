@@ -1,5 +1,7 @@
 /** Presentation helpers for the vital-signs UI. */
 
+import { survivalTier, type SurvivalTier } from 'shared';
+
 export function formatUsd(value: number, decimals = 2): string {
   return `$${value.toFixed(decimals)}`;
 }
@@ -22,23 +24,21 @@ export interface Vitality {
   label: string;
 }
 
-const STABLE: Vitality = { hex: '#4ef0a0', label: 'STABLE' };
-const STRAINED: Vitality = { hex: '#f5c451', label: 'STRAINED' };
-const FINAL_NOTICE: Vitality = { hex: '#ff5468', label: 'FINAL NOTICE' };
+const TIERS: Record<SurvivalTier, Vitality> = {
+  stable: { hex: '#4ef0a0', label: 'STABLE' },
+  strained: { hex: '#f5c451', label: 'STRAINED' },
+  'final-notice': { hex: '#ff5468', label: 'FINAL NOTICE' },
+};
 
 /**
- * Status is the ONE life-or-death axis: net worth as a fraction of seed. Cash never
- * kills the agent directly — it can always liquidate to make rent — so cash pressure
- * is surfaced separately (the amber asset-rich/cash-poor warning + the cash-runway
- * stat), NOT promoted onto this death ladder. A 97%-net-worth agent is STABLE, even
- * if illiquid; it only trips FINAL NOTICE when net worth itself erodes (e.g. forced
- * sells whose friction eats it). One death axis, fed indirectly by the cash crunch.
+ * Status is the ONE life-or-death axis: net worth as a fraction of seed (the shared
+ * `survivalTier`, the same driver the agent's desperation reads). Cash never kills
+ * the agent directly — it can always liquidate to make rent — so cash pressure is
+ * surfaced separately (the amber asset-rich/cash-poor warning + the cash-runway
+ * stat), NOT promoted onto this death ladder.
  */
 export function vitality(vitals: { netWorthUsd: number; seedUsd: number }): Vitality {
-  const fraction = vitals.seedUsd > 0 ? vitals.netWorthUsd / vitals.seedUsd : 0;
-  if (fraction >= 0.6) return STABLE;
-  if (fraction >= 0.3) return STRAINED;
-  return FINAL_NOTICE;
+  return TIERS[survivalTier(vitals.netWorthUsd, vitals.seedUsd)];
 }
 
 const MONTHS = [

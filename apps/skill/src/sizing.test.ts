@@ -89,4 +89,31 @@ describe('decideSizing', () => {
     expect(d.sizeUsd).toBeGreaterThan(0);
     expect(d.reason).toMatch(/[Mm]andatory daily trade/);
   });
+
+  it('lowers the edge bar under desperation — takes a thin edge it skips when calm', () => {
+    const thin = { ...base, edge: 0.02 }; // skips at desperation 0 (above)
+    expect(decideSizing(thin).decision).toBe('skip');
+
+    const desperate = decideSizing({ ...thin, desperation: 1 });
+    expect(desperate.decision).toBe('trade');
+    expect(desperate.reason).toMatch(/[Dd]esperate/);
+  });
+
+  it('frees the rent reserve under desperation so a near-broke agent can still fight', () => {
+    // $2 cash, $0.12/h burn, 24h reserve = $2.88 > cash → a calm agent can't size.
+    const broke: SizingInput = {
+      ...base,
+      balanceUsd: 2,
+      peakBalanceUsd: 2,
+      burnRatePerHourUsd: 0.12,
+      gasPerSwapUsd: 0.01,
+      minPositionUsd: 1,
+      cashReserveHours: 24,
+    };
+    expect(decideSizing(broke).decision).toBe('skip'); // reserve eats all the cash
+
+    const desperate = decideSizing({ ...broke, desperation: 1 });
+    expect(desperate.decision).toBe('trade'); // reserve → 0, cash freed to fight
+    expect(desperate.sizeUsd).toBeGreaterThan(0);
+  });
 });

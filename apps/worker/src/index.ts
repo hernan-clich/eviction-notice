@@ -21,6 +21,7 @@ import {
   fetchAgentState,
   fetchBalance,
   fetchOpenPositions,
+  fetchSnapshots,
   fetchStatus,
   fetchTransactions,
   insertSnapshot,
@@ -213,20 +214,24 @@ async function main(): Promise<void> {
           const last = await lastTradeAtMs(client, config.AGENT_ID);
           mustTrade = last === null || Date.now() - last > config.TRADE_FLOOR_MS;
         }
-        // Real all-in burn (rent + data + x402) so the agent reasons + sizes on the
-        // SAME number the dashboard shows — not rent alone. Falls back to rent-only.
+        // Vitals on the SAME basis the dashboard shows: all-in burn (rent + data +
+        // x402) and marked net worth (from snapshots). These drive the agent's
+        // runway math and its desperation. Falls back to rent-only burn + cash.
         let burnRatePerHourUsd = config.RENT_PER_HOUR_USD;
+        let netWorthUsd = balanceAfterRent;
         try {
-          const [txs, agentState] = await Promise.all([
+          const [txs, agentState, snapshots] = await Promise.all([
             fetchTransactions(client, config.AGENT_ID),
             fetchAgentState(client, config.AGENT_ID),
+            fetchSnapshots(client, config.AGENT_ID),
           ]);
-          const liveBurn = computeVitals(txs, agentState, Date.now()).burnPerHourUsd;
-          if (liveBurn > 0) {
-            burnRatePerHourUsd = liveBurn;
+          const vitals = computeVitals(txs, agentState, Date.now(), snapshots);
+          if (vitals.burnPerHourUsd > 0) {
+            burnRatePerHourUsd = vitals.burnPerHourUsd;
           }
+          netWorthUsd = vitals.netWorthUsd;
         } catch (error: unknown) {
-          log.warn('burn-rate calc failed — using rent-only', {
+          log.warn('vitals calc failed — using rent-only burn + cash net worth', {
             error: error instanceof Error ? error.message : String(error),
           });
         }
@@ -236,6 +241,7 @@ async function main(): Promise<void> {
           config,
           balanceUsd: balanceAfterRent,
           burnRatePerHourUsd,
+          netWorthUsd,
           mustTrade,
         });
         log.info('decided', {
