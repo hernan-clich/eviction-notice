@@ -34,6 +34,7 @@ const quoteSchema = z.object({
 });
 
 const coinSchema = z.object({
+  id: z.number(),
   symbol: z.string(),
   quote: z.object({ USD: quoteSchema }),
 });
@@ -45,6 +46,8 @@ const quotesResponseSchema = z.object({
 });
 
 export interface TokenQuote {
+  /** CoinMarketCap numeric id — needed by the Agent Hub technical-analysis tool. */
+  cmcId: number;
   symbol: string;
   priceUsd: number;
   percentChange24h: number | null;
@@ -79,6 +82,7 @@ export async function fetchQuotes(config: CmcConfig, symbols: string[]): Promise
     const usd = coin.quote.USD;
     if (usd.price === null) continue;
     quotes.push({
+      cmcId: coin.id,
       symbol: coin.symbol,
       priceUsd: usd.price,
       percentChange24h: usd.percent_change_24h,
@@ -87,6 +91,21 @@ export async function fetchQuotes(config: CmcConfig, symbols: string[]): Promise
     });
   }
   return quotes;
+}
+
+const cmcIdCache = new Map<string, number>();
+
+/** Resolve a token symbol to its canonical CoinMarketCap numeric id (cached). */
+export async function resolveCmcId(config: CmcConfig, symbol: string): Promise<number> {
+  const key = symbol.toUpperCase();
+  const cached = cmcIdCache.get(key);
+  if (cached !== undefined) return cached;
+  const [quote] = await fetchQuotes(config, [symbol]);
+  if (!quote) {
+    throw new Error(`No CoinMarketCap id for ${symbol}.`);
+  }
+  cmcIdCache.set(key, quote.cmcId);
+  return quote.cmcId;
 }
 
 export interface MeteredQuotesDeps {

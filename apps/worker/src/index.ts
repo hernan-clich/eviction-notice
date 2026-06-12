@@ -10,6 +10,7 @@
 import { computeVitals, isAlive } from 'shared';
 
 import { runInnerTick } from './agent.ts';
+import { createCmcMcpCaller } from './cmc-mcp.ts';
 import { cmcConfig, fetchQuotes } from './cmc.ts';
 import { loadConfig } from './config.ts';
 import { createAnthropicClient } from './llm.ts';
@@ -42,6 +43,10 @@ const client = createClient(config);
 // The inner reason-and-act loop is optional: without an Anthropic key the
 // heartbeat still accrues rent and tracks survival, it just doesn't think yet.
 const llm = config.ANTHROPIC_API_KEY ? createAnthropicClient(config) : null;
+// CMC Agent Hub signal caller (RSI/MACD/regime/trending), authed with the CMC key.
+const mcp = config.CMC_API_KEY
+  ? createCmcMcpCaller({ url: config.CMC_MCP_URL, apiKey: config.CMC_API_KEY })
+  : null;
 
 let running = true;
 let wake: (() => void) | null = null;
@@ -244,6 +249,7 @@ async function main(): Promise<void> {
           llm,
           supabase: client,
           config,
+          mcp,
           balanceUsd: balanceAfterRent,
           burnRatePerHourUsd,
           netWorthUsd,
