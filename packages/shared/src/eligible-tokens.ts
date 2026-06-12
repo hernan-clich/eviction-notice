@@ -163,14 +163,13 @@ export function isEligibleToken(symbol: string): boolean {
 }
 
 /**
- * A curated subset of the deepest, most-liquid eligible tokens. Small $20 trades
- * into thin pools get eaten by slippage, so the agent is steered toward these.
+ * A curated subset of the deepest, most-liquid eligible tokens — the agent's focus.
+ * Small trades into thin pools get eaten by slippage, so it's steered toward these.
+ * Includes a few liquid high-volatility names (memes/AI) for return upside in compete
+ * mode; the drawdown-capped sizer keeps their exposure small.
  */
 export const LIQUID_TOKENS: readonly string[] = [
   'ETH',
-  'USDT',
-  'USDC',
-  'DAI',
   'BCH',
   'LTC',
   'XRP',
@@ -183,6 +182,7 @@ export const LIQUID_TOKENS: readonly string[] = [
   'AVAX',
   'DOT',
   'ATOM',
+  'ETC',
   'FIL',
   'INJ',
   'CAKE',
@@ -193,4 +193,9 @@ export const LIQUID_TOKENS: readonly string[] = [
   'SNX',
   'LDO',
   'APE',
+  'FET',
+  'SHIB',
+  'FLOKI',
+  'BONK',
+  'PENGU',
 ];
