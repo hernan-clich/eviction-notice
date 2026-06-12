@@ -104,7 +104,7 @@ export default function Dashboard() {
 
       {/* Desktop: vitals rail beside a full-height, independently-scrolling feed. */}
       <div className="mx-auto hidden max-w-7xl md:grid md:h-screen md:grid-cols-[minmax(340px,440px)_1fr] md:overflow-hidden">
-        <aside className="border-line pane-scroll flex animate-[reveal_0.5s_ease-out] flex-col gap-7 px-7 py-8 md:overflow-y-auto md:border-r">
+        <aside className="border-line pane-scroll flex animate-[reveal_0.5s_ease-out] flex-col gap-5 px-7 py-7 md:overflow-y-auto md:border-r">
           <VitalSigns vitals={vitals} />
           {chart}
           {errorBanner}
