@@ -220,6 +220,7 @@ async function main(): Promise<void> {
         let burnRatePerHourUsd = config.RENT_PER_HOUR_USD;
         let netWorthUsd = balanceAfterRent;
         let peakNetWorthUsd = Math.max(balanceAfterRent, config.SEED_USD);
+        let drawdownBreached = false;
         try {
           const [txs, agentState, snapshots] = await Promise.all([
             fetchTransactions(client, config.AGENT_ID),
@@ -232,6 +233,8 @@ async function main(): Promise<void> {
           }
           netWorthUsd = vitals.netWorthUsd;
           peakNetWorthUsd = vitals.peakUsd;
+          // Sticky: once the worst drawdown ever crossed the cap, the DQ is permanent.
+          drawdownBreached = vitals.maxDrawdownFraction >= config.MAX_DRAWDOWN_FRACTION;
         } catch (error: unknown) {
           log.warn('vitals calc failed — using rent-only burn + cash net worth', {
             error: error instanceof Error ? error.message : String(error),
@@ -245,6 +248,7 @@ async function main(): Promise<void> {
           burnRatePerHourUsd,
           netWorthUsd,
           peakNetWorthUsd,
+          drawdownBreached,
           mustTrade,
         });
         log.info('decided', {

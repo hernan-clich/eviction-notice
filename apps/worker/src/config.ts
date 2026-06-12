@@ -30,6 +30,10 @@ const envSchema = z.object({
   // Cash the sizer keeps unspent to pay rent/data — this many hours of burn. Stops
   // the agent going all-in and starving its own metabolism (#16).
   CASH_RESERVE_HOURS: z.coerce.number().nonnegative().default(24),
+  // Max-drawdown DQ gate (fraction of the net-worth high-water mark). Matches the
+  // competition's ~30%. Guarded fiercely until breached; once breached the sizer
+  // voids it (already disqualified → fight for survival).
+  MAX_DRAWDOWN_FRACTION: z.coerce.number().positive().max(1).default(0.3),
   // Paper-trade friction: PancakeSwap V2 fee per side + expected slippage per swap.
   SWAP_FEE_RATE: z.coerce.number().nonnegative().default(0.0025),
   SLIPPAGE: z.coerce.number().nonnegative().default(0.001),

@@ -65,6 +65,12 @@ export const sizingInputSchema = z.object({
    * than fade out (certain eviction makes inaction the worst option).
    */
   desperation: z.number().min(0).max(1).default(0),
+  /**
+   * The max-drawdown DQ has ALREADY been breached (you're disqualified, and it's
+   * permanent — drawdown never un-falls). The cap then protects nothing, so it's
+   * voided: trade for survival/recovery, bounded only by available cash. Off the leash.
+   */
+  drawdownBreached: z.boolean().default(false),
   /** Daily-floor override: force the least-harmful qualifying trade (≥1 trade/day rule). */
   mustTrade: z.boolean().default(false),
 });
@@ -111,7 +117,9 @@ export function decideSizing(input: SizingInput): SizingDecision {
   const floorBalanceUsd = peakNetWorthUsd * (1 - cfg.maxDrawdownFraction);
   const allowedLossUsd = netWorthUsd - floorBalanceUsd;
 
-  if (allowedLossUsd <= 0) {
+  // Guard the cap fiercely — UNTIL it's already breached. Once disqualified there's
+  // nothing left to protect, so we skip this gate and fight (see drawdownCappedSize).
+  if (!cfg.drawdownBreached && allowedLossUsd <= 0) {
     return {
       decision: 'skip',
       sizeUsd: 0,
@@ -127,7 +135,10 @@ export function decideSizing(input: SizingInput): SizingDecision {
   // you're about to be evicted anyway, so a dying agent frees that cash to fight.
   const effectiveReserveHours = cfg.cashReserveHours * (1 - cfg.desperation);
   const cashReserveUsd = cfg.burnRatePerHourUsd * effectiveReserveHours;
-  const drawdownCappedSize = allowedLossUsd / cfg.volatility;
+  // Once already DQ'd, the drawdown budget is meaningless — bound size by cash alone.
+  const drawdownCappedSize = cfg.drawdownBreached
+    ? Number.POSITIVE_INFINITY
+    : allowedLossUsd / cfg.volatility;
   const balanceCappedSize = cfg.balanceUsd * cfg.maxPositionFraction;
   const liquidityCappedSize = Math.max(0, cfg.balanceUsd - cashReserveUsd);
   const size = Math.min(drawdownCappedSize, balanceCappedSize, liquidityCappedSize);
@@ -183,9 +194,11 @@ export function decideSizing(input: SizingInput): SizingDecision {
 
   // Took it on a sub-margin edge only because desperation lowered the bar.
   const onRelaxedBar = cfg.edge < friction + cfg.edgeMargin;
-  const reason = onRelaxedBar
-    ? `Desperate (${desperatePct}%): taking ${usd(round2(size))} on a thin ${pct(cfg.edge)} edge vs ${pct(friction)} friction — folding means eviction.`
-    : `Trading ${usd(round2(size))}: ${pct(cfg.edge)} edge clears ${pct(friction)} friction with margin.`;
+  const reason = cfg.drawdownBreached
+    ? `Drawdown cap already breached — off the leash: deploying ${usd(round2(size))} to claw back and survive.`
+    : onRelaxedBar
+      ? `Desperate (${desperatePct}%): taking ${usd(round2(size))} on a thin ${pct(cfg.edge)} edge vs ${pct(friction)} friction — folding means eviction.`
+      : `Trading ${usd(round2(size))}: ${pct(cfg.edge)} edge clears ${pct(friction)} friction with margin.`;
 
   return {
     decision: 'trade',

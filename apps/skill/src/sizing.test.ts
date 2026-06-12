@@ -119,6 +119,28 @@ describe('decideSizing', () => {
     expect(d.sizeUsd).toBeLessThanOrEqual(5); // can only deploy the cash it has
   });
 
+  it('voids the drawdown cap once already breached — fights instead of freezing', () => {
+    // Net worth $2.12 vs a $4.92 peak = ~57% drawdown, well past the 30% DQ.
+    const breachedInput: SizingInput = {
+      ...base,
+      balanceUsd: 2.12,
+      peakBalanceUsd: 2.12,
+      netWorthUsd: 2.12,
+      peakNetWorthUsd: 4.92,
+      gasPerSwapUsd: 0.01,
+      minPositionUsd: 1,
+    };
+    // Default: frozen at the cap.
+    expect(decideSizing(breachedInput).decision).toBe('skip');
+    expect(decideSizing(breachedInput).reason).toMatch(/drawdown cap/);
+
+    // Already DQ'd → cap voided → it trades to claw back.
+    const breached = decideSizing({ ...breachedInput, drawdownBreached: true });
+    expect(breached.decision).toBe('trade');
+    expect(breached.sizeUsd).toBeGreaterThan(0);
+    expect(breached.reason).toMatch(/off the leash|breached/i);
+  });
+
   it('lowers the edge bar under desperation — takes a thin edge it skips when calm', () => {
     const thin = { ...base, edge: 0.02 }; // skips at desperation 0 (above)
     expect(decideSizing(thin).decision).toBe('skip');
