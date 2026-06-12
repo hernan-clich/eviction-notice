@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 
 import type { WorkerConfig } from './config.ts';
+import { log, preview } from './log.ts';
 
 /**
  * A thin LLM port so the inner reason-and-act loop can be driven by a mock in
@@ -84,6 +85,15 @@ export function createAnthropicClient(config: WorkerConfig): LlmClient {
         })),
         messages: messages.map((message) => toSdkMessage(message)),
       });
+
+      if (config.LOG_RESPONSES) {
+        log.info('claude response', {
+          model: config.ANTHROPIC_MODEL,
+          stopReason: response.stop_reason,
+          usage: response.usage,
+          content: preview(response.content),
+        });
+      }
 
       const content: (TextPart | ToolUsePart)[] = [];
       for (const block of response.content) {

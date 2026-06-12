@@ -45,7 +45,11 @@ const client = createClient(config);
 const llm = config.ANTHROPIC_API_KEY ? createAnthropicClient(config) : null;
 // CMC Agent Hub signal caller (RSI/MACD/regime/trending), authed with the CMC key.
 const mcp = config.CMC_API_KEY
-  ? createCmcMcpCaller({ url: config.CMC_MCP_URL, apiKey: config.CMC_API_KEY })
+  ? createCmcMcpCaller({
+      url: config.CMC_MCP_URL,
+      apiKey: config.CMC_API_KEY,
+      logResponses: config.LOG_RESPONSES,
+    })
   : null;
 
 let running = true;

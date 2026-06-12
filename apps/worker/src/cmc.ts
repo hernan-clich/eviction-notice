@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import type { WorkerConfig } from './config.ts';
+import { log, preview } from './log.ts';
 import { insertTransaction, type AppSupabaseClient } from './supabase.ts';
 
 /**
@@ -120,6 +121,9 @@ export async function meteredFetchQuotes(
   symbols: string[],
 ): Promise<TokenQuote[]> {
   const quotes = await fetchQuotes(cmcConfig(deps.config), symbols);
+  if (deps.config.LOG_RESPONSES) {
+    log.info('cmc quotes response', { symbols, quotes: preview(quotes) });
+  }
   await insertTransaction(deps.supabase, {
     agentId: deps.agentId,
     kind: 'expense',

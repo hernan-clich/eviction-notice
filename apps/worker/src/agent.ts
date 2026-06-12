@@ -7,6 +7,7 @@ import { cmcConfig, fetchQuotes, meteredFetchQuotes, resolveCmcId } from './cmc.
 import type { WorkerConfig } from './config.ts';
 import { executeSwap } from './execution.ts';
 import { runConversation, type LlmClient, type LlmTool, type ToolHandler } from './llm.ts';
+import { log } from './log.ts';
 import { closeProceedsUsd, swapFrictionUsd, type FrictionParams } from './paper-trade.ts';
 import {
   closePosition,
@@ -250,6 +251,9 @@ export async function runInnerTick(
           maxPaymentAtomic: deps.config.X402_MAX_PAYMENT_ATOMIC,
           preferNetwork: deps.config.TWAK_CHAIN,
         });
+        if (deps.config.LOG_RESPONSES) {
+          log.info('skill response', { input: sizingInput, decision, receipt });
+        }
         const cost = deps.config.SKILL_CALL_COST_USD;
         await insertTransaction(deps.supabase, {
           agentId,
