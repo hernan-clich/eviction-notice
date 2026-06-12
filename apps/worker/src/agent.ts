@@ -48,7 +48,7 @@ const TOOLS: LlmTool[] = [
   {
     name: 'size_position',
     description:
-      'Ask the Solvency-Aware Sizing skill how big a position to take, or whether to skip. Provide your estimated edge (expected fractional return, e.g. 0.02) and volatility (fractional downside risk, e.g. 0.05). Returns a position size + go/no-go decision optimised for survival.',
+      'Ask the Solvency-Aware Sizing skill how big a position to take, or whether to skip. Provide your estimated edge (expected fractional return, e.g. 0.02) and volatility (fractional downside risk, e.g. 0.05). Returns a position size + go/no-go decision tuned to keep the rent paid.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -145,11 +145,11 @@ function fmtPrice(price: number): string {
 
 const URGENCY: Record<ReturnType<typeof survivalTier>, string> = {
   stable:
-    'STATUS — STABLE: you have breathing room. Be selective; only deploy on a clear, high-conviction edge. Sitting in cash is a fine choice here.',
+    'STATUS — STABLE: you are comfortably ahead of rent. Be selective; only deploy on a clear, high-conviction edge. Sitting in cash is a fine choice here.',
   strained:
-    'STATUS — STRAINED: net worth is sinking and the burn is winning. Sitting in cash only DELAYS eviction, it does not prevent it. Lower your bar, hunt harder for a workable trade, and stop hoarding rent you may not live to spend.',
+    'STATUS — STRAINED: net worth is sinking and the burn is winning. Sitting in cash only DELAYS eviction, it does not prevent it. Lower your bar, hunt harder for a workable trade, and stop hoarding cash that will not matter once you are evicted.',
   'final-notice':
-    'STATUS — FINAL NOTICE: eviction is imminent. Preserving cash is no longer survival — it is just choosing when to die. Take any positive-expectation shot you can find, favour high-volatility movers where one swing could actually save you, and do NOT fade out quietly.',
+    'STATUS — FINAL NOTICE: eviction is imminent. Preserving cash no longer keeps the lights on — it just picks the day you lose the room. Take any positive-expectation shot you can find, favour high-volatility movers where one swing could actually make rent, and do NOT go quietly.',
 };
 
 const fmtPct = (fraction: number): string => `${(fraction * 100).toFixed(1)}%`;
@@ -177,15 +177,15 @@ function appendCommonTail(lines: string[], deps: InnerTickDeps): void {
   lines.push('- Be concise. End with a one- or two-sentence summary of what you did and why.');
 }
 
-/** Survival mode: the rent/eviction drama — optimise to stay alive. */
+/** Survival mode: the rent/eviction drama — optimise to keep a roof over its head. */
 function survivalPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
   const burn = deps.burnRatePerHourUsd;
   const runwayHours = burn > 0 ? deps.balanceUsd / burn : Number.POSITIVE_INFINITY;
   const tier = survivalTier(deps.netWorthUsd, deps.config.SEED_USD);
 
   const lines = [
-    'You are Eviction Notice — an autonomous crypto trading agent on BNB Chain that must earn its own survival.',
-    'Your NET WORTH — cash plus open positions marked to market — is your life force; if it hits zero you are EVICTED permanently. Optimise for survival, not maximum return.',
+    'You are Eviction Notice — an autonomous crypto trading agent on BNB Chain that must earn its own rent to keep a roof over its head.',
+    'Your NET WORTH — cash plus open positions marked to market — is what keeps the roof on; if it hits zero you are EVICTED permanently. Optimise to stay housed, not for maximum return.',
     'Rent, data, and trades are paid from CASH. Deploying cash into a position does NOT lose it (net worth is unchanged) — but it cuts liquidity. Keep enough cash to cover rent, or you may be forced to liquidate at a bad price.',
     '',
     `Net worth: $${deps.netWorthUsd.toFixed(4)} of $${deps.config.SEED_USD.toFixed(2)} seed. Cash (liquidity): $${deps.balanceUsd.toFixed(4)} | all-in burn (rent + data + fees) $${burn.toFixed(4)}/hour | cash runway ≈ ${runwayHours.toFixed(1)} hours.`,

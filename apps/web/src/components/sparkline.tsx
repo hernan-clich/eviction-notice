@@ -43,6 +43,12 @@ export function Sparkline({
     area = `${line} L${(lastPoint?.[0] ?? WIDTH).toFixed(1)} ${floorY} L${PAD} ${floorY} Z`;
   }
 
+  // The SVG stretches non-uniformly (preserveAspectRatio="none"), so an SVG <circle>
+  // renders as an ellipse. Place the endpoint dot in screen space instead — a div
+  // positioned at the last point's percentage coords stays a perfect circle.
+  const dotLeftPct = lastPoint ? (lastPoint[0] / WIDTH) * 100 : null;
+  const dotTopPct = lastPoint ? (lastPoint[1] / HEIGHT) * 100 : null;
+
   return (
     <div className="relative">
       <svg
@@ -89,8 +95,18 @@ export function Sparkline({
             style={{ filter: `drop-shadow(0 0 3px ${color})` }}
           />
         ) : null}
-        {lastPoint ? <circle cx={lastPoint[0]} cy={lastPoint[1]} r={3} fill={color} /> : null}
       </svg>
+      {dotLeftPct !== null && dotTopPct !== null ? (
+        <span
+          className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            left: `${dotLeftPct}%`,
+            top: `${dotTopPct}%`,
+            backgroundColor: color,
+            boxShadow: `0 0 6px ${color}`,
+          }}
+        />
+      ) : null}
       <span className="text-muted absolute top-0 right-0 text-[10px]">
         {formatUsd(seedUsd, 0)} seed
       </span>
