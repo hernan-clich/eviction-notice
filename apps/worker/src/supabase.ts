@@ -1,5 +1,14 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { agentStatusSchema, computeBalance, type AgentStatus, type TransactionKind } from 'shared';
+import {
+  agentStateSchema,
+  agentStatusSchema,
+  computeBalance,
+  transactionSchema,
+  type AgentState,
+  type AgentStatus,
+  type Transaction,
+  type TransactionKind,
+} from 'shared';
 import { z } from 'zod';
 
 import type { WorkerConfig } from './config.ts';
@@ -70,6 +79,38 @@ export async function fetchStatus(
     throw new Error(`fetch status: ${error.message}`);
   }
   return statusRowSchema.parse(data).status;
+}
+
+/** Full ledger for the agent (oldest-first) — for vitals / burn-rate computation. */
+export async function fetchTransactions(
+  client: AppSupabaseClient,
+  agentId: string,
+): Promise<Transaction[]> {
+  const { data, error } = await client
+    .from('transactions')
+    .select('*')
+    .eq('agent_id', agentId)
+    .order('ts', { ascending: true });
+  if (error) {
+    throw new Error(`fetch transactions: ${error.message}`);
+  }
+  return z.array(transactionSchema).parse(data ?? []);
+}
+
+/** The agent lifecycle row (born_at, status, …) — for vitals. */
+export async function fetchAgentState(
+  client: AppSupabaseClient,
+  agentId: string,
+): Promise<AgentState> {
+  const { data, error } = await client
+    .from('agent_state')
+    .select('agent_id, born_at, died_at, status')
+    .eq('agent_id', agentId)
+    .single();
+  if (error) {
+    throw new Error(`fetch agent_state: ${error.message}`);
+  }
+  return agentStateSchema.parse(data);
 }
 
 /**
