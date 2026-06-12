@@ -17,3 +17,10 @@ export const log = {
   warn: (msg: string, fields?: Fields): void => emit('warn', msg, fields),
   error: (msg: string, fields?: Fields): void => emit('error', msg, fields),
 };
+
+/** Stringify a value for a log field, truncated so one response can't flood the line. */
+export function preview(value: unknown, max = 3000): string {
+  const s = typeof value === 'string' ? value : JSON.stringify(value);
+  if (s === undefined) return 'undefined';
+  return s.length > max ? `${s.slice(0, max)}…[${s.length} chars total]` : s;
+}

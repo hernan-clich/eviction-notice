@@ -1,6 +1,8 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
+import { log, preview } from './log.ts';
+
 /**
  * CoinMarketCap **AI Agent Hub** client — the MCP server (`mcp.coinmarketcap.com/mcp`)
  * that serves pre-computed trading signals the raw quotes API doesn't: RSI/MACD/MAs,
@@ -16,7 +18,11 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 /** Calls one Agent Hub MCP tool and returns its parsed JSON result. */
 export type McpCaller = (name: string, args: Record<string, unknown>) => Promise<unknown>;
 
-export function createCmcMcpCaller(opts: { url: string; apiKey: string }): McpCaller {
+export function createCmcMcpCaller(opts: {
+  url: string;
+  apiKey: string;
+  logResponses?: boolean;
+}): McpCaller {
   return async (name, args) => {
     const transport = new StreamableHTTPClientTransport(new URL(opts.url), {
       requestInit: { headers: { 'X-CMC-MCP-API-KEY': opts.apiKey } },
@@ -29,11 +35,16 @@ export function createCmcMcpCaller(opts: { url: string; apiKey: string }): McpCa
       const result = await client.callTool({ name, arguments: args });
       const content = (result.content ?? []) as { text?: string }[];
       const text = content.map((c) => c.text ?? '').join('');
+      let parsed: unknown;
       try {
-        return JSON.parse(text) as unknown;
+        parsed = JSON.parse(text) as unknown;
       } catch {
-        return text;
+        parsed = text;
       }
+      if (opts.logResponses) {
+        log.info('cmc mcp response', { tool: name, args, response: preview(parsed) });
+      }
+      return parsed;
     } finally {
       await client.close();
     }

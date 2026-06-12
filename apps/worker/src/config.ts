@@ -70,6 +70,12 @@ const envSchema = z.object({
   TWAK_SLIPPAGE_PCT: z.coerce.number().positive().max(50).default(1),
   // TWAK reads this to sign headlessly; never passed on the command line.
   TWAK_WALLET_PASSWORD: z.string().min(1).optional(),
+  // Verbose observability: log raw CMC/MCP/Claude/skill responses (truncated).
+  // On by default; set LOG_RESPONSES=false to quiet it.
+  LOG_RESPONSES: z
+    .string()
+    .default('true')
+    .transform((v) => v !== 'false'),
 });
 
 export type WorkerConfig = z.infer<typeof envSchema>;

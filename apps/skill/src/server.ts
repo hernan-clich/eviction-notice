@@ -112,6 +112,20 @@ function canonicalPaymentRequired(config: SkillServerConfig, resource: string, e
   };
 }
 
+/** Verbose observability: log the sizing request + decision (off when LOG_RESPONSES=false). */
+function logSkillResponse(input: unknown, decision: unknown): void {
+  if (process.env['LOG_RESPONSES'] === 'false') return;
+  console.log(
+    JSON.stringify({
+      ts: new Date().toISOString(),
+      level: 'info',
+      msg: 'skill decision',
+      input,
+      decision,
+    }),
+  );
+}
+
 /** The x402-gated Solvency-Aware Sizing skill as a Hono app (no network binding). */
 export function createSkillApp(config: SkillServerConfig): Hono {
   const mode: SettlementMode = config.settlement ?? 'simulated';
@@ -170,7 +184,9 @@ export function createSkillApp(config: SkillServerConfig): Hono {
       // The TWAK client surfaces only the response body (not headers), so echo the
       // settle tx in the body too — the worker reads `transactionHash` to link the
       // on-chain proof in the feed. The decision schema ignores the extra field.
-      return c.json({ ...decideSizing(parsed.data), transactionHash: result.txHash });
+      const decision = { ...decideSizing(parsed.data), transactionHash: result.txHash };
+      logSkillResponse(parsed.data, decision);
+      return c.json(decision);
     }
 
     // simulated mode
@@ -192,7 +208,9 @@ export function createSkillApp(config: SkillServerConfig): Hono {
       return c.json({ error: parsed.error.message }, 400);
     }
     c.header('X-PAYMENT-RESPONSE', encodeSettlementHeader(verified.receipt));
-    return c.json(decideSizing(parsed.data));
+    const decision = decideSizing(parsed.data);
+    logSkillResponse(parsed.data, decision);
+    return c.json(decision);
   });
 
   return app;
