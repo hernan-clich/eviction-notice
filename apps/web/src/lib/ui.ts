@@ -41,16 +41,34 @@ export function vitality(vitals: { netWorthUsd: number; seedUsd: number }): Vita
   return FINAL_NOTICE;
 }
 
-const HOUR_MS = 3_600_000;
-const DAY_MS = 86_400_000;
+const MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
 
-/** Feed timestamp relative to birth (T+2.1d), falling back to clock time if birth is unknown. */
-export function formatFeedTime(tsIso: string, bornMs: number | null): string {
-  if (bornMs === null) {
-    return new Date(tsIso).toLocaleTimeString();
-  }
-  const elapsed = Math.max(Date.parse(tsIso) - bornMs, 0);
-  if (elapsed >= DAY_MS) return `T+${(elapsed / DAY_MS).toFixed(1)}d`;
-  if (elapsed >= HOUR_MS) return `T+${(elapsed / HOUR_MS).toFixed(1)}h`;
-  return `T+${Math.round(elapsed / 60_000)}m`;
+/**
+ * Absolute feed timestamp, split into an unambiguous date + local clock time. The
+ * agent pays rent across days, so each row needs the date — and `DD-Mon-YYYY`
+ * (e.g. `12-Jun-2026`) reads the same everywhere, dodging the MM/DD vs DD/MM trap.
+ */
+export function formatFeedTimestamp(tsIso: string): { date: string; time: string } {
+  const d = new Date(tsIso);
+  const date = `${String(d.getDate()).padStart(2, '0')}-${MONTHS[d.getMonth()]}-${d.getFullYear()}`;
+  const time = d.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+  return { date, time };
 }
