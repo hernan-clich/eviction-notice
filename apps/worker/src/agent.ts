@@ -2,7 +2,8 @@ import { isEligibleToken, LIQUID_TOKENS, survivalDesperation, survivalTier } fro
 import { decideSizing } from 'skill';
 import { z } from 'zod';
 
-import { cmcConfig, fetchQuotes, meteredFetchQuotes } from './cmc.ts';
+import { compactTrending, stripDefinitions, type McpCaller } from './cmc-mcp.ts';
+import { cmcConfig, fetchQuotes, meteredFetchQuotes, resolveCmcId } from './cmc.ts';
 import type { WorkerConfig } from './config.ts';
 import { executeSwap } from './execution.ts';
 import { runConversation, type LlmClient, type LlmTool, type ToolHandler } from './llm.ts';
@@ -82,10 +83,38 @@ const TOOLS: LlmTool[] = [
   },
 ];
 
+/** CMC Agent Hub signal tools — only offered when an MCP caller is available. */
+const AGENT_HUB_TOOLS: LlmTool[] = [
+  {
+    name: 'get_technical_analysis',
+    description:
+      'CMC Agent Hub: pre-computed technical indicators for a token — RSI (7/14/21), MACD (line/signal/histogram), SMA/EMA (7/30/200), Fibonacci levels, pivot. Use it to judge momentum + overbought/oversold before estimating edge.',
+    inputSchema: {
+      type: 'object',
+      properties: { token: { type: 'string', description: 'Token symbol, e.g. "BNB"' } },
+      required: ['token'],
+    },
+  },
+  {
+    name: 'get_market_regime',
+    description:
+      'CMC Agent Hub: overall market regime — total market-cap trend, BTC dominance, liquidity, and the Fear & Greed index. Use it to gauge risk-on vs risk-off before deploying.',
+    inputSchema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'get_trending',
+    description:
+      'CMC Agent Hub: top trending crypto narratives/sectors with 24h/7d momentum and their lead coins — find where capital is rotating.',
+    inputSchema: { type: 'object', properties: {}, required: [] },
+  },
+];
+
 export interface InnerTickDeps {
   llm: LlmClient;
   supabase: AppSupabaseClient;
   config: WorkerConfig;
+  /** CMC Agent Hub signal caller (RSI/MACD/regime/trending). Null = not configured. */
+  mcp: McpCaller | null;
   balanceUsd: number;
   /** All-in burn (rent + data + x402) — the same figure the dashboard shows. */
   burnRatePerHourUsd: number;
@@ -149,6 +178,11 @@ function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): strin
     '- Every swap pays gas + fees + slippage. Only trade when expected edge clearly beats that friction.',
     `- Trade ONLY eligible tokens — trades outside the list do not count toward your P&L. Focus on the deepest, most-liquid ones: ${LIQUID_TOKENS.join(', ')}.`,
   ];
+  if (deps.mcp) {
+    lines.push(
+      '- Use the CMC Agent Hub for real signals before you trade: get_technical_analysis(token) → RSI/MACD/MAs; get_market_regime → Fear & Greed + BTC dominance; get_trending → hot narratives. Ground your edge estimate in these, not just the 24h % move.',
+    );
+  }
   if (deps.drawdownBreached) {
     lines.push(
       '⚠️ DRAWDOWN CAP BREACHED — in the competition you are already DISQUALIFIED, and it is permanent (max drawdown is the worst peak-to-trough over the run; it never resets, no market move undoes it). The cap no longer protects anything. Stop guarding it: deploy aggressively to claw back and survive. Go down swinging, not quietly.',
@@ -363,12 +397,63 @@ export async function runInnerTick(
     },
   };
 
+  // CMC Agent Hub signal tools — wired only when the MCP caller is configured. Each
+  // call is metered as a data_call (visible in the feed), like the quotes feed.
+  if (deps.mcp) {
+    const mcp = deps.mcp;
+    const logHubCall = (reasoning: string, signal: string): Promise<void> =>
+      insertTransaction(deps.supabase, {
+        agentId,
+        kind: 'expense',
+        amount: -deps.config.CMC_DATA_COST_USD,
+        reason: 'data_call',
+        reasoning,
+        meta: { source: 'cmc/agent-hub', signal },
+      });
+
+    handlers['get_technical_analysis'] = async (input) => {
+      const parsed = z.object({ token: z.string() }).safeParse(input);
+      if (!parsed.success) return `Invalid input: ${parsed.error.message}`;
+      try {
+        const id = await resolveCmcId(cmcConfig(deps.config), parsed.data.token);
+        const ta = await mcp('get_crypto_technical_analysis', { id: String(id) });
+        await logHubCall(`Pulled RSI/MACD for ${parsed.data.token} via CMC Agent Hub.`, 'ta');
+        return JSON.stringify(ta);
+      } catch (error) {
+        return `Agent Hub technical analysis failed: ${error instanceof Error ? error.message : String(error)}`;
+      }
+    };
+
+    handlers['get_market_regime'] = async () => {
+      try {
+        const raw = await mcp('get_global_metrics_latest', {});
+        await logHubCall(
+          'Read the market regime (Fear & Greed, dominance) via CMC Agent Hub.',
+          'regime',
+        );
+        return JSON.stringify(stripDefinitions(raw));
+      } catch (error) {
+        return `Agent Hub market regime failed: ${error instanceof Error ? error.message : String(error)}`;
+      }
+    };
+
+    handlers['get_trending'] = async () => {
+      try {
+        const raw = await mcp('trending_crypto_narratives', {});
+        await logHubCall('Read trending narratives via CMC Agent Hub.', 'trending');
+        return JSON.stringify(compactTrending(raw));
+      } catch (error) {
+        return `Agent Hub trending failed: ${error instanceof Error ? error.message : String(error)}`;
+      }
+    };
+  }
+
   const outcome = await runConversation({
     llm: deps.llm,
     system: systemPrompt(deps, openPositions),
     userText:
       'A new tick has begun. Assess the market, manage any open positions, and decide what to do.',
-    tools: TOOLS,
+    tools: deps.mcp ? [...TOOLS, ...AGENT_HUB_TOOLS] : TOOLS,
     handlers,
     maxIterations: deps.config.AGENT_MAX_ITERATIONS,
   });

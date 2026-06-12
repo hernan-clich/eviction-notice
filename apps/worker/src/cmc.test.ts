@@ -21,6 +21,7 @@ describe('fetchQuotes', () => {
         data: {
           BNB: [
             {
+              id: 1839,
               symbol: 'BNB',
               quote: {
                 USD: { price: 600, percent_change_24h: 1.5, volume_24h: 1000, market_cap: 9000 },
@@ -33,7 +34,14 @@ describe('fetchQuotes', () => {
 
     const quotes = await fetchQuotes(config, ['BNB']);
     expect(quotes).toEqual([
-      { symbol: 'BNB', priceUsd: 600, percentChange24h: 1.5, volume24h: 1000, marketCap: 9000 },
+      {
+        cmcId: 1839,
+        symbol: 'BNB',
+        priceUsd: 600,
+        percentChange24h: 1.5,
+        volume24h: 1000,
+        marketCap: 9000,
+      },
     ]);
   });
 
@@ -45,6 +53,7 @@ describe('fetchQuotes', () => {
         data: {
           ETH: [
             {
+              id: 1027,
               symbol: 'ETH',
               quote: {
                 USD: { price: 1624, percent_change_24h: -2.3, volume_24h: 5, market_cap: 7 },
@@ -52,6 +61,7 @@ describe('fetchQuotes', () => {
             },
             // meme token squatting on the ticker — null price must not break parsing
             {
+              id: 99_999,
               symbol: 'ETH',
               quote: {
                 USD: { price: null, percent_change_24h: null, volume_24h: null, market_cap: null },
@@ -64,7 +74,14 @@ describe('fetchQuotes', () => {
 
     const quotes = await fetchQuotes(config, ['ETH']);
     expect(quotes).toEqual([
-      { symbol: 'ETH', priceUsd: 1624, percentChange24h: -2.3, volume24h: 5, marketCap: 7 },
+      {
+        cmcId: 1027,
+        symbol: 'ETH',
+        priceUsd: 1624,
+        percentChange24h: -2.3,
+        volume24h: 5,
+        marketCap: 7,
+      },
     ]);
   });
 

@@ -17,6 +17,9 @@ const envSchema = z.object({
   CMC_API_KEY: z.string().min(1).optional(),
   CMC_API_BASE: z.string().url().default('https://pro-api.coinmarketcap.com'),
   CMC_DATA_COST_USD: z.coerce.number().nonnegative().default(0.01),
+  // CMC AI Agent Hub MCP server — pre-computed RSI/MACD/Fear&Greed/trending signals
+  // (auth via the same CMC_API_KEY, free tier). Scores higher + real alpha (#62).
+  CMC_MCP_URL: z.string().url().default('https://mcp.coinmarketcap.com/mcp'),
   // Anthropic — optional so the heartbeat boots without it; the inner loop needs it.
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_MODEL: z.string().min(1).default('claude-haiku-4-5'),
