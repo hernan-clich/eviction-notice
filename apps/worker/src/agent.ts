@@ -1,4 +1,4 @@
-import { isEligibleToken, LIQUID_TOKENS } from 'shared';
+import { isEligibleToken, LIQUID_TOKENS, survivalDesperation, survivalTier } from 'shared';
 import { decideSizing } from 'skill';
 import { z } from 'zod';
 
@@ -89,6 +89,8 @@ export interface InnerTickDeps {
   balanceUsd: number;
   /** All-in burn (rent + data + x402) — the same figure the dashboard shows. */
   burnRatePerHourUsd: number;
+  /** Marked net worth (cash + open positions) — drives the survival tier + desperation. */
+  netWorthUsd: number;
   mustTrade: boolean;
 }
 
@@ -107,9 +109,19 @@ function fmtPrice(price: number): string {
   return price.toPrecision(3);
 }
 
+const URGENCY: Record<ReturnType<typeof survivalTier>, string> = {
+  stable:
+    'STATUS — STABLE: you have breathing room. Be selective; only deploy on a clear, high-conviction edge. Sitting in cash is a fine choice here.',
+  strained:
+    'STATUS — STRAINED: net worth is sinking and the burn is winning. Sitting in cash only DELAYS eviction, it does not prevent it. Lower your bar, hunt harder for a workable trade, and stop hoarding rent you may not live to spend.',
+  'final-notice':
+    'STATUS — FINAL NOTICE: eviction is imminent. Preserving cash is no longer survival — it is just choosing when to die. Take any positive-expectation shot you can find, favour high-volatility movers where one swing could actually save you, and do NOT fade out quietly.',
+};
+
 function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
   const burn = deps.burnRatePerHourUsd;
   const runwayHours = burn > 0 ? deps.balanceUsd / burn : Number.POSITIVE_INFINITY;
+  const tier = survivalTier(deps.netWorthUsd, deps.config.SEED_USD);
   const positionsLine =
     openPositions.length > 0
       ? openPositions
@@ -122,7 +134,8 @@ function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): strin
     'Your NET WORTH — cash plus open positions marked to market — is your life force; if it hits zero you are EVICTED permanently. Optimise for survival, not maximum return.',
     'Rent, data, and trades are paid from CASH. Deploying cash into a position does NOT lose it (net worth is unchanged) — but it cuts liquidity. Keep enough cash to cover rent, or you may be forced to liquidate at a bad price.',
     '',
-    `Cash (liquidity): $${deps.balanceUsd.toFixed(4)} | all-in burn (rent + data + fees) $${burn.toFixed(4)}/hour | cash runway ≈ ${runwayHours.toFixed(1)} hours.`,
+    `Net worth: $${deps.netWorthUsd.toFixed(4)} of $${deps.config.SEED_USD.toFixed(2)} seed. Cash (liquidity): $${deps.balanceUsd.toFixed(4)} | all-in burn (rent + data + fees) $${burn.toFixed(4)}/hour | cash runway ≈ ${runwayHours.toFixed(1)} hours.`,
+    URGENCY[tier],
     `Open positions: ${positionsLine}.`,
     '',
     'Each tick:',
@@ -175,6 +188,7 @@ export async function runInnerTick(
         gasPerSwapUsd: deps.config.GAS_PER_SWAP_USD,
         minPositionUsd: deps.config.MIN_POSITION_USD,
         cashReserveHours: deps.config.CASH_RESERVE_HOURS,
+        desperation: survivalDesperation(deps.netWorthUsd, deps.config.SEED_USD),
         mustTrade: deps.mustTrade,
       };
 

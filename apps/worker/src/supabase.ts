@@ -3,9 +3,11 @@ import {
   agentStateSchema,
   agentStatusSchema,
   computeBalance,
+  snapshotSchema,
   transactionSchema,
   type AgentState,
   type AgentStatus,
+  type Snapshot,
   type Transaction,
   type TransactionKind,
 } from 'shared';
@@ -111,6 +113,22 @@ export async function fetchAgentState(
     throw new Error(`fetch agent_state: ${error.message}`);
   }
   return agentStateSchema.parse(data);
+}
+
+/** Per-tick balance-sheet snapshots — for marked net worth in vitals. */
+export async function fetchSnapshots(
+  client: AppSupabaseClient,
+  agentId: string,
+): Promise<Snapshot[]> {
+  const { data, error } = await client
+    .from('snapshots')
+    .select('*')
+    .eq('agent_id', agentId)
+    .order('id', { ascending: true });
+  if (error) {
+    throw new Error(`fetch snapshots: ${error.message}`);
+  }
+  return z.array(snapshotSchema).parse(data ?? []);
 }
 
 /**

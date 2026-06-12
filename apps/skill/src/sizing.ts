@@ -45,6 +45,15 @@ export const sizingInputSchema = z.object({
   cashReserveHours: z.number().nonnegative().default(0),
   /** Required margin of edge over friction before trading (fractional). */
   edgeMargin: z.number().nonnegative().default(0.005),
+  /** How far BELOW friction the edge bar may fall at full desperation (fractional). */
+  maxDesperationDiscount: z.number().nonnegative().default(0.01),
+  /**
+   * Survival desperation in [0,1] — 0 while comfortable, 1 at death's door. As it
+   * rises the agent stops hoarding its rent reserve and lowers its edge bar: a calm
+   * agent waits for a clean edge; a dying one takes a sub-friction gamble rather
+   * than fade out (certain eviction makes inaction the worst option).
+   */
+  desperation: z.number().min(0).max(1).default(0),
   /** Daily-floor override: force the least-harmful qualifying trade (≥1 trade/day rule). */
   mustTrade: z.boolean().default(false),
 });
@@ -99,7 +108,10 @@ export function decideSizing(input: SizingInput): SizingDecision {
   // Largest survival-safe size: a volatility-sized loss stays within the drawdown
   // budget, never more than maxPositionFraction of balance, and never so much that
   // it spends the cash reserve kept back for rent/data (prevents going all-in).
-  const cashReserveUsd = cfg.burnRatePerHourUsd * cfg.cashReserveHours;
+  // Desperation shrinks the rent reserve: hoarding 24h of rent is pointless when
+  // you're about to be evicted anyway, so a dying agent frees that cash to fight.
+  const effectiveReserveHours = cfg.cashReserveHours * (1 - cfg.desperation);
+  const cashReserveUsd = cfg.burnRatePerHourUsd * effectiveReserveHours;
   const drawdownCappedSize = allowedLossUsd / cfg.volatility;
   const balanceCappedSize = cfg.balanceUsd * cfg.maxPositionFraction;
   const liquidityCappedSize = Math.max(0, cfg.balanceUsd - cashReserveUsd);
@@ -126,8 +138,14 @@ export function decideSizing(input: SizingInput): SizingDecision {
 
   const friction = roundTripFrictionFraction(size, frictionParams);
 
-  // Skip-rule: edge must clear friction by the margin.
-  if (cfg.edge < friction + cfg.edgeMargin) {
+  // Skip-rule: edge must clear friction by the REQUIRED margin — which desperation
+  // lowers from +edgeMargin (patient) all the way to −maxDesperationDiscount (a
+  // sub-friction hail-mary), because folding is certain eviction.
+  const requiredMargin =
+    cfg.edgeMargin - cfg.desperation * (cfg.edgeMargin + cfg.maxDesperationDiscount);
+  const desperatePct = Math.round(cfg.desperation * 100);
+
+  if (cfg.edge < friction + requiredMargin) {
     if (cfg.mustTrade) {
       return {
         decision: 'trade',
@@ -136,18 +154,28 @@ export function decideSizing(input: SizingInput): SizingDecision {
         reason: `Mandatory daily trade: ${pct(cfg.edge)} edge under-clears ${pct(friction)} friction; sizing for least harm.`,
       };
     }
+    const barNote =
+      cfg.desperation > 0
+        ? ` even at a relaxed bar (${desperatePct}% desperate)`
+        : ` (+${pct(cfg.edgeMargin)} margin)`;
     return {
       decision: 'skip',
       sizeUsd: 0,
       roundTripFrictionFraction: friction,
-      reason: `Skipping: ${pct(cfg.edge)} edge doesn't beat ${pct(friction)} round-trip friction (+${pct(cfg.edgeMargin)} margin).`,
+      reason: `Skipping: ${pct(cfg.edge)} edge doesn't beat ${pct(friction)} round-trip friction${barNote}.`,
     };
   }
+
+  // Took it on a sub-margin edge only because desperation lowered the bar.
+  const onRelaxedBar = cfg.edge < friction + cfg.edgeMargin;
+  const reason = onRelaxedBar
+    ? `Desperate (${desperatePct}%): taking ${usd(round2(size))} on a thin ${pct(cfg.edge)} edge vs ${pct(friction)} friction — folding means eviction.`
+    : `Trading ${usd(round2(size))}: ${pct(cfg.edge)} edge clears ${pct(friction)} friction with margin.`;
 
   return {
     decision: 'trade',
     sizeUsd: round2(size),
     roundTripFrictionFraction: friction,
-    reason: `Trading ${usd(round2(size))}: ${pct(cfg.edge)} edge clears ${pct(friction)} friction with margin.`,
+    reason,
   };
 }
