@@ -87,6 +87,8 @@ export interface InnerTickDeps {
   supabase: AppSupabaseClient;
   config: WorkerConfig;
   balanceUsd: number;
+  /** All-in burn (rent + data + x402) — the same figure the dashboard shows. */
+  burnRatePerHourUsd: number;
   mustTrade: boolean;
 }
 
@@ -106,7 +108,7 @@ function fmtPrice(price: number): string {
 }
 
 function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
-  const burn = deps.config.RENT_PER_HOUR_USD;
+  const burn = deps.burnRatePerHourUsd;
   const runwayHours = burn > 0 ? deps.balanceUsd / burn : Number.POSITIVE_INFINITY;
   const positionsLine =
     openPositions.length > 0
@@ -120,7 +122,7 @@ function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): strin
     'Your NET WORTH — cash plus open positions marked to market — is your life force; if it hits zero you are EVICTED permanently. Optimise for survival, not maximum return.',
     'Rent, data, and trades are paid from CASH. Deploying cash into a position does NOT lose it (net worth is unchanged) — but it cuts liquidity. Keep enough cash to cover rent, or you may be forced to liquidate at a bad price.',
     '',
-    `Cash (liquidity): $${deps.balanceUsd.toFixed(4)} | burn $${burn.toFixed(4)}/hour | cash runway ≈ ${runwayHours.toFixed(1)} hours.`,
+    `Cash (liquidity): $${deps.balanceUsd.toFixed(4)} | all-in burn (rent + data + fees) $${burn.toFixed(4)}/hour | cash runway ≈ ${runwayHours.toFixed(1)} hours.`,
     `Open positions: ${positionsLine}.`,
     '',
     'Each tick:',
@@ -167,7 +169,7 @@ export async function runInnerTick(
       const sizingInput = {
         balanceUsd: deps.balanceUsd,
         peakBalanceUsd: Math.max(deps.balanceUsd, deps.config.SEED_USD),
-        burnRatePerHourUsd: deps.config.RENT_PER_HOUR_USD,
+        burnRatePerHourUsd: deps.burnRatePerHourUsd,
         edge: parsed.data.edge,
         volatility: parsed.data.volatility,
         gasPerSwapUsd: deps.config.GAS_PER_SWAP_USD,

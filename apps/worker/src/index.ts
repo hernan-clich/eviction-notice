@@ -7,7 +7,7 @@
  * the agent is EVICTED and the loop halts permanently — no revivals.
  */
 
-import { isAlive } from 'shared';
+import { computeVitals, isAlive } from 'shared';
 
 import { runInnerTick } from './agent.ts';
 import { cmcConfig, fetchQuotes } from './cmc.ts';
@@ -18,9 +18,11 @@ import { rentForInterval } from './rent.ts';
 import {
   createClient,
   ensureBorn,
+  fetchAgentState,
   fetchBalance,
   fetchOpenPositions,
   fetchStatus,
+  fetchTransactions,
   insertSnapshot,
   insertTransaction,
   lastTradeAtMs,
@@ -211,11 +213,29 @@ async function main(): Promise<void> {
           const last = await lastTradeAtMs(client, config.AGENT_ID);
           mustTrade = last === null || Date.now() - last > config.TRADE_FLOOR_MS;
         }
+        // Real all-in burn (rent + data + x402) so the agent reasons + sizes on the
+        // SAME number the dashboard shows — not rent alone. Falls back to rent-only.
+        let burnRatePerHourUsd = config.RENT_PER_HOUR_USD;
+        try {
+          const [txs, agentState] = await Promise.all([
+            fetchTransactions(client, config.AGENT_ID),
+            fetchAgentState(client, config.AGENT_ID),
+          ]);
+          const liveBurn = computeVitals(txs, agentState, Date.now()).burnPerHourUsd;
+          if (liveBurn > 0) {
+            burnRatePerHourUsd = liveBurn;
+          }
+        } catch (error: unknown) {
+          log.warn('burn-rate calc failed — using rent-only', {
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
         const decision = await runInnerTick({
           llm,
           supabase: client,
           config,
           balanceUsd: balanceAfterRent,
+          burnRatePerHourUsd,
           mustTrade,
         });
         log.info('decided', {
