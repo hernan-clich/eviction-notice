@@ -303,9 +303,14 @@ export function CompactVitals({ vitals }: { vitals: Vitals }) {
       className="bg-bg/95 border-line sticky top-0 z-30 flex flex-col gap-2 border-t-2 border-b px-5 py-3 backdrop-blur"
       style={{ borderTopColor: v.hex }}
     >
-      <div className="flex items-center justify-between">
-        <span className="font-display text-sm tracking-[0.2em]">EVICTION&nbsp;NOTICE</span>
-        <span className="font-display text-[11px] tracking-[0.18em]" style={{ color: v.hex }}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-display text-sm tracking-[0.18em] whitespace-nowrap">
+          EVICTION&nbsp;NOTICE
+        </span>
+        <span
+          className="font-display text-[11px] tracking-[0.14em] whitespace-nowrap"
+          style={{ color: v.hex }}
+        >
           ● {current}
         </span>
       </div>
