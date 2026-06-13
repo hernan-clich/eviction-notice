@@ -32,6 +32,38 @@ export interface LedgerSource {
   subscribe: (agentId: string, handlers: LedgerHandlers) => () => void;
 }
 
+/**
+ * Plays a frozen run from a committed static JSON (shape: a serialized `LedgerData`,
+ * produced by /export-replay). The deterministic, DB-independent source behind the
+ * shareable `/replay` route — same `LedgerSource` seam, so it feeds the identical
+ * replay UI. A recording never streams, so `subscribe` is a no-op.
+ */
+export function staticReplaySource(jsonUrl: string): LedgerSource {
+  return {
+    async load() {
+      const res = await fetch(jsonUrl);
+      if (!res.ok) {
+        throw new Error(`load replay: ${res.status} ${res.statusText}`);
+      }
+      const raw = (await res.json()) as {
+        transactions?: unknown[];
+        agentState?: unknown;
+        snapshots?: unknown[];
+      };
+      return {
+        transactions: (raw.transactions ?? []).map((row) => transactionSchema.parse(row)),
+        agentState: raw.agentState ? agentStateSchema.parse(raw.agentState) : null,
+        snapshots: (raw.snapshots ?? []).map((row) => snapshotSchema.parse(row)),
+      };
+    },
+    subscribe() {
+      // A recording never streams — no subscription, nothing to tear down.
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      return () => {};
+    },
+  };
+}
+
 // Bumped per subscription so a rebuilt channel never collides with one whose
 // removal is still in flight (we re-subscribe on focus/reconnect to recover a
 // dropped socket — tearing down and recreating the channel).
