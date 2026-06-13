@@ -101,12 +101,15 @@ export function EvictedScreen({
       {/* The stamp — slammed down like a notice nailed to the door */}
       <div className="flex flex-col items-center gap-3">
         <div
-          className="animate-[stamp-in_0.55s_cubic-bezier(0.2,1.4,0.4,1)_both] px-8 py-3"
+          className="animate-[stamp-in_0.55s_cubic-bezier(0.2,1.4,0.4,1)_both] px-5 py-2.5 sm:px-8 sm:py-3"
           style={{ border: `2px solid ${ROSE}`, animationDelay: '0.45s' }}
         >
+          {/* Scales with the viewport so the letter-spaced wordmark never overflows a
+              narrow phone; the negative margin-end cancels the trailing track so it
+              stays optically centred at every size. */}
           <h1
-            className="font-display text-6xl tracking-[0.28em] sm:text-7xl"
-            style={{ color: ROSE, marginRight: '-0.28em' }}
+            className="font-display -me-[0.18em] text-[2.25rem] tracking-[0.18em] sm:-me-[0.28em] sm:text-6xl sm:tracking-[0.28em] md:text-7xl"
+            style={{ color: ROSE }}
           >
             EVICTED
           </h1>
