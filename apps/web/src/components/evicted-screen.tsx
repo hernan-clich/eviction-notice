@@ -63,6 +63,16 @@ export function EvictedScreen({
   const epitaph = memorialEpitaph(memorial);
   const note = memorial.lastWords ? lastWordsEssence(memorial.lastWords) : null;
 
+  // One source for the record — rendered as a 5-across strip on desktop and an
+  // itemized list on mobile (a 5-wide strip can't survive ~380px).
+  const stats: { label: string; value: string }[] = [
+    { label: 'Tenancy', value: formatLifespanShort(memorial.tenancyMs) },
+    { label: 'Peak', value: formatUsd(memorial.peakUsd) },
+    { label: 'Trades', value: `${memorial.trades} · ${memorial.wins}W/${memorial.losses}L` },
+    { label: 'Rent paid', value: formatUsd(memorial.rentPaidUsd) },
+    { label: 'Cost of staying', value: formatUsd(memorial.costOfStayingUsd) },
+  ];
+
   if (showLedger) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
@@ -184,39 +194,51 @@ export function EvictedScreen({
         </div>
       ) : null}
 
-      {/* The record — a compact strip, one SELECT against the lifetime ledger */}
+      {/* The record — one SELECT against the lifetime ledger. Desktop: a 5-across
+          strip. Mobile: itemized lines (label left, value right), which also suits
+          the eviction-document framing. */}
       <div
-        className="animate-[mourn-in_0.8s_ease-out_both] grid w-full grid-cols-3 gap-y-4 sm:grid-cols-5"
+        className="animate-[mourn-in_0.8s_ease-out_both] w-full"
         style={{ animationDelay: '1.9s' }}
       >
-        <MemorialStat label="Tenancy" value={formatLifespanShort(memorial.tenancyMs)} />
-        <MemorialStat label="Peak" value={formatUsd(memorial.peakUsd)} />
-        <MemorialStat
-          label="Trades"
-          value={`${memorial.trades} · ${memorial.wins}W/${memorial.losses}L`}
-        />
-        <MemorialStat label="Rent paid" value={formatUsd(memorial.rentPaidUsd)} />
-        <MemorialStat label="Cost of staying" value={formatUsd(memorial.costOfStayingUsd)} />
+        <div className="divide-line border-line flex flex-col divide-y border-y sm:hidden">
+          {stats.map((s) => (
+            <div key={s.label} className="flex items-baseline justify-between py-2.5">
+              <span className="font-display text-muted text-[10px] tracking-[0.2em] uppercase">
+                {s.label}
+              </span>
+              <span className="text-ink tabular-nums">{s.value}</span>
+            </div>
+          ))}
+        </div>
+        <div className="hidden grid-cols-5 gap-y-4 sm:grid">
+          {stats.map((s) => (
+            <MemorialStat key={s.label} label={s.label} value={s.value} />
+          ))}
+        </div>
       </div>
 
-      {/* CTAs */}
+      {/* CTAs — a clear hierarchy on every breakpoint: Replay is the primary action
+          (a solid-outline button, comfortable tap target), the ledger a quiet
+          secondary link. No red — that stays the eviction's alone; "primary" comes
+          from weight, in the bright ink against the ash. */}
       <div
-        className="font-display animate-[mourn-in_0.8s_ease-out_both] flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm"
+        className="animate-[mourn-in_0.8s_ease-out_both] mx-auto flex w-full max-w-xs flex-col items-stretch gap-4"
         style={{ animationDelay: '2.1s' }}
       >
         <button
           type="button"
           onClick={replay}
-          className="text-muted hover:text-ink underline decoration-dotted underline-offset-[6px] transition-colors"
+          className="border-ink/55 text-ink hover:bg-ink/10 font-display flex w-full items-center justify-center gap-2.5 border px-6 py-3.5 text-sm tracking-[0.2em] uppercase transition-colors"
         >
-          ↻ Replay the run
+          <span aria-hidden="true">↻</span> Replay the run
         </button>
         <button
           type="button"
           onClick={() => setShowLedger(true)}
-          className="text-muted hover:text-ink underline decoration-dotted underline-offset-[6px] transition-colors"
+          className="text-muted hover:text-ink font-display mx-auto py-2 text-xs tracking-[0.15em] uppercase underline decoration-dotted underline-offset-4 transition-colors"
         >
-          ▤ Read the full ledger
+          <span aria-hidden="true">▤</span> Read the full ledger
         </button>
       </div>
     </main>
