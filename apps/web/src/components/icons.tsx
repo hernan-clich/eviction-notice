@@ -36,6 +36,25 @@ export function RefreshIcon({ size = 17, className }: IconProps) {
   );
 }
 
+/** Tabler `player-play`. */
+export function PlayIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg {...base(size, className)}>
+      <path d="M7 4v16l13 -8z" />
+    </svg>
+  );
+}
+
+/** Tabler `player-pause`. */
+export function PauseIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg {...base(size, className)}>
+      <path d="M6 5m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z" />
+      <path d="M14 5m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z" />
+    </svg>
+  );
+}
+
 /** Tabler `list-details`. */
 export function ListDetailsIcon({ size = 15, className }: IconProps) {
   return (
