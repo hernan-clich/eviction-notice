@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { HeartbeatLine } from './heartbeat-line';
 
@@ -18,14 +18,22 @@ import { HeartbeatLine } from './heartbeat-line';
 export function DeathTransition({ color, onDone }: { color: string; onDone: () => void }) {
   const [flat, setFlat] = useState(false);
 
+  // The parent re-renders every second (the live clock), passing a fresh inline
+  // onDone each time. Keep it in a ref so the timers below run exactly once and
+  // aren't reset on every tick (which would stop the flatline ever landing).
+  const onDoneRef = useRef(onDone);
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
+
   useEffect(() => {
     const stop = setTimeout(() => setFlat(true), 1100); // a last beat, then the line goes flat
-    const done = setTimeout(onDone, 2800); // hold the flatline, then reveal the notice
+    const done = setTimeout(() => onDoneRef.current(), 2800); // hold the flatline, then reveal
     return () => {
       clearTimeout(stop);
       clearTimeout(done);
     };
-  }, [onDone]);
+  }, []);
 
   return (
     <div className="bg-bg animate-[fade-in_0.5s_ease-out_both] fixed inset-0 z-50 flex items-center justify-center px-6">
