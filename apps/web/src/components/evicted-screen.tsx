@@ -44,15 +44,17 @@ export function EvictedScreen({
   vitals,
   transactions,
   agentState,
+  onReplay,
 }: {
   vitals: Vitals;
   transactions: readonly Transaction[];
   agentState: AgentState | null;
+  /** Enter the replay (re-animate the run from the ledger). */
+  onReplay?: () => void;
 }) {
   // The memorial is one self-contained frame; the full ledger is one click away as
   // its own view (keeps the notice a clean, shareable card instead of an endless
-  // scroll). `replayKey` lets "Replay the run" re-run the ceremony for now — the
-  // full move-in→eviction scrubber lands with #28.
+  // scroll). `replayKey` re-runs the entrance ceremony if no replay handler is wired.
   const [showLedger, setShowLedger] = useState(false);
   const [replayKey, setReplayKey] = useState(0);
 
@@ -229,7 +231,7 @@ export function EvictedScreen({
       >
         <button
           type="button"
-          onClick={replay}
+          onClick={onReplay ?? replay}
           className="border-ink/55 text-ink hover:bg-ink/10 font-display flex w-full items-center justify-center gap-2.5 border px-6 py-3.5 text-sm tracking-[0.2em] uppercase transition-colors"
         >
           <RefreshIcon size={17} /> Replay the run

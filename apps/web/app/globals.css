@@ -18,6 +18,12 @@
   color-scheme: dark;
 }
 
+/* Tailwind v4's Preflight no longer sets buttons to a pointer cursor — restore it
+ * app-wide so every actionable control reads as clickable. */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 @keyframes pulse-dot {
   0%,
   100% {

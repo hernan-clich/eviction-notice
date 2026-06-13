@@ -8,6 +8,7 @@ export * from './eligible-tokens.ts';
 export * from './explorer.ts';
 export * from './ledger.ts';
 export * from './memorial.ts';
+export * from './replay.ts';
 export * from './survival.ts';
 export * from './vitals.ts';
 export * from './x402.ts';
