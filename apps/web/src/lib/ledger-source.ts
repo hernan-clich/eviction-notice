@@ -32,6 +32,11 @@ export interface LedgerSource {
   subscribe: (agentId: string, handlers: LedgerHandlers) => () => void;
 }
 
+// Bumped per subscription so a rebuilt channel never collides with one whose
+// removal is still in flight (we re-subscribe on focus/reconnect to recover a
+// dropped socket — tearing down and recreating the channel).
+let channelSeq = 0;
+
 export const realtimeLedgerSource: LedgerSource = {
   async load(agentId) {
     const supabase = getSupabase();
@@ -63,7 +68,7 @@ export const realtimeLedgerSource: LedgerSource = {
   subscribe(agentId, handlers) {
     const supabase = getSupabase();
     const channel = supabase
-      .channel(`ledger:${agentId}`)
+      .channel(`ledger:${agentId}:${channelSeq++}`)
       .on(
         'postgres_changes',
         {

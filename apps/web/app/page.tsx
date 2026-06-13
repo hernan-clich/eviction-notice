@@ -27,6 +27,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     let active = true;
+    let unsubscribe: (() => void) | null = null;
 
     const load = async () => {
       try {
@@ -35,23 +36,50 @@ export default function Dashboard() {
         setTransactions(data.transactions);
         setAgentState(data.agentState);
         setSnapshots(data.snapshots);
+        setLoadError(null); // recovered — clear any stale error from a dropped connection
       } catch (error) {
         if (active) setLoadError(error instanceof Error ? error.message : String(error));
       }
     };
-    void load();
 
-    const unsubscribe = realtimeLedgerSource.subscribe(AGENT_ID, {
-      onTransaction: (tx) => {
-        setTransactions((prev) => (prev.some((t) => t.id === tx.id) ? prev : [...prev, tx]));
-      },
-      onAgentState: (state) => {
-        setAgentState(state);
-      },
-      onSnapshot: (snap) => {
-        setSnapshots((prev) => (prev.some((s) => s.id === snap.id) ? prev : [...prev, snap]));
-      },
-    });
+    const subscribe = () => {
+      unsubscribe?.();
+      unsubscribe = realtimeLedgerSource.subscribe(AGENT_ID, {
+        onTransaction: (tx) => {
+          setTransactions((prev) => (prev.some((t) => t.id === tx.id) ? prev : [...prev, tx]));
+        },
+        onAgentState: (state) => {
+          setAgentState(state);
+        },
+        onSnapshot: (snap) => {
+          setSnapshots((prev) => (prev.some((s) => s.id === snap.id) ? prev : [...prev, snap]));
+        },
+      });
+    };
+
+    void load();
+    subscribe();
+
+    // Supabase Realtime drops its socket when the tab is backgrounded, the machine
+    // sleeps, or the network changes — and it does NOT replay rows missed while
+    // disconnected, so the feed silently goes stale until a manual refresh. When the
+    // tab comes back to life, refetch to catch up AND rebuild the channel on a fresh
+    // socket. Debounced because focus/online/visible often fire together on wake.
+    let lastResync = 0;
+    const resync = () => {
+      if (document.visibilityState === 'hidden') return;
+      const now = Date.now();
+      if (now - lastResync < 1500) return;
+      lastResync = now;
+      void load();
+      subscribe();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') resync();
+    };
+    globalThis.addEventListener('focus', resync);
+    globalThis.addEventListener('online', resync);
+    document.addEventListener('visibilitychange', onVisibility);
 
     const ticker = setInterval(() => {
       setNowMs(Date.now());
@@ -59,8 +87,11 @@ export default function Dashboard() {
 
     return () => {
       active = false;
-      unsubscribe();
+      unsubscribe?.();
       clearInterval(ticker);
+      globalThis.removeEventListener('focus', resync);
+      globalThis.removeEventListener('online', resync);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 
