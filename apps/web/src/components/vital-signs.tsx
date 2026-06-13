@@ -11,7 +11,10 @@ import {
 
 import { HeartbeatLine } from './heartbeat-line';
 
-const STATES = ['STABLE', 'STRAINED', 'FINAL NOTICE'] as const;
+// EVICTED is the ladder's terminus: dimmed while alive (the looming end), lit when
+// reached. The live dashboard hands off to the memorial on death, so it only lights
+// up during replay — but its presence keeps desktop consistent with the mobile header.
+const STATES = ['STABLE', 'STRAINED', 'FINAL NOTICE', 'EVICTED'] as const;
 
 // The competition's hard max-drawdown DQ line (worst peak-to-trough vs the
 // net-worth high-water mark). Mirrors the worker's MAX_DRAWDOWN_FRACTION.
