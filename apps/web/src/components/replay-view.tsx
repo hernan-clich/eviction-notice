@@ -92,10 +92,13 @@ export function ReplayView({
   const feed = slicedTxns.filter((t) => isReplayFeedReason(t.reason));
   const caseNo = caseNumber(aliveState.agent_id);
 
+  // A fixed frame: the dashboard scrolls in a bounded middle, the transport is a real
+  // flex child pinned at the bottom (no position:fixed to be thrown off by a tall feed
+  // entry). On mobile the dashboard's own sticky header stays pinned at the top.
   return (
-    <>
-      <div className="pb-44 md:pb-0">
-        <DashboardView vitals={replayVitals} transactions={feed} feedLabel="The feed" />
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <DashboardView vitals={replayVitals} transactions={feed} feedLabel="The feed" embedded />
       </div>
       <ReplayTransport
         vitals={fullVitals}
@@ -109,6 +112,6 @@ export function ReplayView({
         onSeek={clock.seekToLedger}
         onExit={onExit}
       />
-    </>
+    </div>
   );
 }

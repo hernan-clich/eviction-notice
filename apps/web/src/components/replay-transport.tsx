@@ -93,7 +93,7 @@ export function ReplayTransport({
   };
 
   return (
-    <div className="bg-bg/95 border-line fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur">
+    <div className="bg-bg/95 border-line shrink-0 border-t backdrop-blur">
       <div className="mx-auto max-w-5xl px-4 py-3 sm:px-6 sm:py-4">
         {/* It's a memory, not a revival — the badge keeps the recording honest. */}
         <div className="mb-2 flex items-baseline justify-between gap-3">

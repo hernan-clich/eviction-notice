@@ -18,12 +18,19 @@ export function DashboardView({
   transactions,
   banner = null,
   feedLabel = 'Live feed',
+  embedded = false,
 }: {
   vitals: Vitals;
   transactions: readonly Transaction[];
   banner?: ReactNode;
   feedLabel?: string;
+  /** Fill the parent (a bounded, scrollable frame) instead of the viewport — used by
+   *  the replay, which pins a transport below and scrolls the dashboard between. */
+  embedded?: boolean;
 }) {
+  // Live: own the viewport (min-h-screen / h-screen). Embedded: fill the scroll frame.
+  const mobileWrap = embedded ? 'flex flex-col md:hidden' : 'flex min-h-screen flex-col md:hidden';
+  const desktopHeight = embedded ? 'md:h-full' : 'md:h-screen';
   const sparklineColor = vitality(vitals).hex;
   const chart = (
     <div>
@@ -42,7 +49,7 @@ export function DashboardView({
   return (
     <>
       {/* Mobile: pinned compact vitals, feed as the scrolling body, detail demoted below it. */}
-      <div className="flex min-h-screen flex-col md:hidden">
+      <div className={mobileWrap}>
         <CompactVitals vitals={vitals} />
         <section className="flex flex-col gap-3 px-5 py-6">
           {label}
@@ -56,7 +63,9 @@ export function DashboardView({
       </div>
 
       {/* Desktop: vitals rail beside a full-height, independently-scrolling feed. */}
-      <div className="mx-auto hidden max-w-7xl md:grid md:h-screen md:grid-cols-[minmax(340px,440px)_1fr] md:overflow-hidden">
+      <div
+        className={`mx-auto hidden max-w-7xl md:grid ${desktopHeight} md:grid-cols-[minmax(340px,440px)_1fr] md:overflow-hidden`}
+      >
         <aside className="border-line pane-scroll flex animate-[reveal_0.5s_ease-out] flex-col gap-5 px-7 py-7 md:overflow-y-auto md:border-r">
           <VitalSigns vitals={vitals} />
           {chart}
