@@ -36,6 +36,7 @@ export function ReplayTransport({
   onToggle,
   onSpeed,
   onSeek,
+  onExit,
 }: {
   vitals: Vitals;
   schedule: ReplaySchedule;
@@ -46,6 +47,7 @@ export function ReplayTransport({
   onToggle: () => void;
   onSpeed: (s: ReplaySpeed) => void;
   onSeek: (ledgerMs: number) => void;
+  onExit: () => void;
 }) {
   const curveRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
@@ -54,6 +56,7 @@ export function ReplayTransport({
   const span = Math.max(schedule.evictedMs - born, 1);
   const series = vitals.series.length > 0 ? vitals.series : [{ tsMs: born, balanceUsd: 0 }];
   const ceil = Math.max(vitals.seedUsd, ...series.map((p) => p.balanceUsd), 1) * 1.05;
+  const hasCurve = series.length >= 2; // markers/peak are meaningless on a single point
 
   const xAt = (tsMs: number) => ((tsMs - born) / span) * W;
   const yAt = (bal: number) => H - PADY - (bal / ceil) * (H - 2 * PADY);
@@ -98,9 +101,19 @@ export function ReplayTransport({
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: ROSE }} />
             <span style={{ color: ROSE }}>REPLAY</span>
           </span>
-          <span className="font-display text-muted text-[11px] tracking-[0.2em] uppercase">
-            The life of Eviction Notice · No.&nbsp;{caseNo}
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="font-display text-muted text-[11px] tracking-[0.2em] uppercase">
+              The life of Eviction Notice · No.&nbsp;{caseNo}
+            </span>
+            {/* Exit even when paused — a paused replay must never be a dead end. */}
+            <button
+              type="button"
+              onClick={onExit}
+              className="font-display text-muted hover:text-ink text-[11px] tracking-[0.2em] uppercase transition-colors"
+            >
+              ✕ Close
+            </button>
+          </div>
         </div>
 
         {/* The curve = the scrubber */}
@@ -167,13 +180,15 @@ export function ReplayTransport({
                 opacity={0.5}
               />
             ) : null}
-            <circle
-              cx={peak.x}
-              cy={peak.y}
-              r={3.5}
-              fill={TIER_HEX.stable}
-              vectorEffect="non-scaling-stroke"
-            />
+            {hasCurve ? (
+              <circle
+                cx={peak.x}
+                cy={peak.y}
+                r={3.5}
+                fill={TIER_HEX.stable}
+                vectorEffect="non-scaling-stroke"
+              />
+            ) : null}
             {/* playhead */}
             <line
               x1={playheadX}
@@ -193,12 +208,14 @@ export function ReplayTransport({
           />
 
           {/* annotations */}
-          <span
-            className="text-muted pointer-events-none absolute top-0 -translate-x-1/2 text-[9px] tracking-wider"
-            style={{ left: `${(peak.x / W) * 100}%` }}
-          >
-            peak
-          </span>
+          {hasCurve ? (
+            <span
+              className="text-muted pointer-events-none absolute top-0 -translate-x-1/2 text-[9px] tracking-wider"
+              style={{ left: `${(peak.x / W) * 100}%` }}
+            >
+              peak
+            </span>
+          ) : null}
           {finalNotice ? (
             <span
               className="pointer-events-none absolute top-0 text-[9px] tracking-wider"

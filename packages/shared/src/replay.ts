@@ -88,8 +88,8 @@ export function buildReplaySchedule(
 ): ReplaySchedule {
   const bornMs = bounds.bornMs;
   const evictedMs = Math.max(bounds.evictedMs, bounds.bornMs + 1);
+  // beatTimes always seeds born + evicted, and evictedMs > bornMs, so this is ≥ 2.
   const keyframeMs = beatTimes(transactions, snapshots, bornMs, evictedMs);
-  if (keyframeMs.length < 2) keyframeMs.push(evictedMs);
 
   const realAtKeyframe = [0];
   for (let i = 1; i < keyframeMs.length; i += 1) {

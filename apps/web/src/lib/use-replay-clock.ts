@@ -33,7 +33,11 @@ export function useReplayClock(schedule: ReplaySchedule): ReplayClock {
 
   const elapsedRef = useRef(0); // real playback ms, 0..totalRealMs
   const speedRef = useRef<ReplaySpeed>(1);
-  speedRef.current = speed;
+  // Mirror speed into a ref (not during render) so the rAF loop reads the latest
+  // value without restarting the effect on every speed change.
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
 
   useEffect(() => {
     if (!playing) return;
