@@ -236,22 +236,23 @@ export function ReplayTransport({
           </span>
         </div>
 
-        {/* controls */}
-        <div className="mt-3 flex items-center justify-between gap-3">
+        {/* controls — one row on desktop; on narrow phones the timestamp drops to its
+            own line (order + basis-full) so the speed buttons never get pushed off. */}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <button
             type="button"
             onClick={onToggle}
             aria-label={playing ? 'Pause' : 'Play'}
-            className="border-line text-ink hover:bg-ink/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-md border transition-colors"
+            className="border-line text-ink hover:bg-ink/10 order-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-md border transition-colors"
           >
             {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
           </button>
 
-          <span className="text-muted font-display text-[11px] whitespace-nowrap tracking-wider tabular-nums sm:text-xs">
+          <span className="text-muted font-display order-3 basis-full text-center text-[11px] whitespace-nowrap tracking-wider tabular-nums sm:order-2 sm:basis-auto sm:text-left sm:text-xs">
             T+{formatLifespanLong(Math.max(0, clockMs - born))} / {formatLifespanLong(span)}
           </span>
 
-          <div className="font-display flex shrink-0 gap-1.5 text-xs">
+          <div className="font-display order-2 flex shrink-0 gap-1.5 text-xs sm:order-3">
             {SPEEDS.map((s) => (
               <button
                 key={s}
