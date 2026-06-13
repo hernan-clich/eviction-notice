@@ -30,6 +30,30 @@ export function formatSignedPct(fraction: number): string {
   return `${sign}${Math.abs(fraction * 100).toFixed(1)}%`;
 }
 
+/** Compact lifespan, the two largest non-zero units: "5d 14h" / "14h 38m" / "38m". */
+export function formatLifespanShort(ms: number): string {
+  const totalMin = Math.max(0, Math.floor(ms / 60_000));
+  const d = Math.floor(totalMin / 1440);
+  const h = Math.floor((totalMin % 1440) / 60);
+  const m = totalMin % 60;
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+/** Full lifespan down to the minute, for the birth→death bookend line. */
+export function formatLifespanLong(ms: number): string {
+  const totalMin = Math.max(0, Math.floor(ms / 60_000));
+  const d = Math.floor(totalMin / 1440);
+  const h = Math.floor((totalMin % 1440) / 60);
+  const m = totalMin % 60;
+  const parts: string[] = [];
+  if (d > 0) parts.push(`${d}d`);
+  if (h > 0 || d > 0) parts.push(`${h}h`);
+  parts.push(`${m}m`);
+  return parts.join(' ');
+}
+
 export interface Vitality {
   hex: string;
   label: string;
@@ -72,6 +96,20 @@ const MONTHS = [
  * agent pays rent across days, so each row needs the date — and `DD-Mon-YYYY`
  * (e.g. `12-Jun-2026`) reads the same everywhere, dodging the MM/DD vs DD/MM trap.
  */
+/** Time-of-day only, 24h: "04:41". For the "last words · logged" line. */
+export function formatClock(ms: number): string {
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+/** A single solemn timestamp for the memorial bookends: "Jun 22, 14:03" (24h, local). */
+export function formatDateTimeShort(ms: number): string {
+  const d = new Date(ms);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${hh}:${mm}`;
+}
+
 export function formatFeedTimestamp(tsIso: string): { date: string; time: string } {
   const d = new Date(tsIso);
   const date = `${String(d.getDate()).padStart(2, '0')}-${MONTHS[d.getMonth()]}-${d.getFullYear()}`;

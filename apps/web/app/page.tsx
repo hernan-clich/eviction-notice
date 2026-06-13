@@ -63,7 +63,7 @@ export default function Dashboard() {
   if (agentState?.status === 'dead') {
     return (
       <div className="crt">
-        <EvictedScreen vitals={vitals} />
+        <EvictedScreen vitals={vitals} transactions={transactions} agentState={agentState} />
       </div>
     );
   }

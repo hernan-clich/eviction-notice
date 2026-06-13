@@ -68,6 +68,34 @@
   }
 }
 
+/* The EVICTED stamp slamming down like a notice nailed to a door — overshoot, settle. */
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.6) rotate(-7deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.97) rotate(-1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-1.5deg);
+  }
+}
+
+/* Slow, reverent fade-up for the ceremony — each block staggers in behind the stamp. */
+@keyframes mourn-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* CRT scanline + vignette atmosphere */
 .crt::before {
   content: '';
