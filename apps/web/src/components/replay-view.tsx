@@ -13,10 +13,7 @@ import {
 import { useReplayClock } from '@/lib/use-replay-clock';
 
 import { DashboardView } from './dashboard-view';
-import { DeathTransition } from './death-transition';
 import { ReplayTransport } from './replay-transport';
-
-const EVICTION_RED = '#e0493e';
 
 function caseNumber(agentId: string): number {
   const trailing = /(\d+)$/.exec(agentId)?.[1];
@@ -26,9 +23,11 @@ function caseNumber(agentId: string): number {
 /**
  * The replay: the live dashboard, reanimated from the recorded ledger on a compressed
  * event-stepped clock. Slice the ledger at the clock and re-derive vitals each frame —
- * balance moves, status climbs, the pulse weakens, the feed re-streams its thoughts —
- * and on reaching eviction it plays the same death transition and hands back to the
- * memorial, so memorial → replay → death → memorial loops cleanly.
+ * balance moves, status climbs, the pulse weakens, the feed re-streams its thoughts.
+ * At the end it simply rests on the final frame (paused, playhead at eviction) so the
+ * viewer can read the last decisions and explore freely — no auto death beat yanking
+ * them away. The death transition belongs to the live witnessing; here the user is in
+ * control and exits via Close (or replays from the top).
  */
 export function ReplayView({
   transactions,
@@ -98,22 +97,18 @@ export function ReplayView({
       <div className="pb-44 md:pb-0">
         <DashboardView vitals={replayVitals} transactions={feed} feedLabel="The feed" />
       </div>
-      {clock.ended ? (
-        <DeathTransition color={EVICTION_RED} onDone={onExit} />
-      ) : (
-        <ReplayTransport
-          vitals={fullVitals}
-          schedule={schedule}
-          clockMs={clock.clockMs}
-          playing={clock.playing}
-          speed={clock.speed}
-          caseNo={caseNo}
-          onToggle={clock.toggle}
-          onSpeed={clock.setSpeed}
-          onSeek={clock.seekToLedger}
-          onExit={onExit}
-        />
-      )}
+      <ReplayTransport
+        vitals={fullVitals}
+        schedule={schedule}
+        clockMs={clock.clockMs}
+        playing={clock.playing}
+        speed={clock.speed}
+        caseNo={caseNo}
+        onToggle={clock.toggle}
+        onSpeed={clock.setSpeed}
+        onSeek={clock.seekToLedger}
+        onExit={onExit}
+      />
     </>
   );
 }
