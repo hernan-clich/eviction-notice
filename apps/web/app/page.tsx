@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { computeVitals, type AgentState, type Snapshot, type Transaction } from 'shared';
 
+import { DeathTransition } from '@/components/death-transition';
 import { EvictedScreen } from '@/components/evicted-screen';
 import { Feed } from '@/components/feed';
 import { Sparkline } from '@/components/sparkline';
@@ -18,6 +19,10 @@ export default function Dashboard() {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  // 'live' → the dashboard; 'dying' → the death-beat transition (only when we
+  // witness the agent cross into death); 'evicted' → the memorial.
+  const [phase, setPhase] = useState<'live' | 'dying' | 'evicted'>('live');
+  const sawAliveRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -60,7 +65,20 @@ export default function Dashboard() {
 
   const vitals = computeVitals(transactions, agentState, nowMs, snapshots);
 
-  if (agentState?.status === 'dead') {
+  // Drive the phase off the lifecycle. We only play the death beat when the agent
+  // was alive in this session and then crossed over; loading an already-evicted
+  // agent (never saw it alive) lands straight on the memorial.
+  const status = agentState?.status;
+  useEffect(() => {
+    if (status === 'alive') {
+      sawAliveRef.current = true;
+      setPhase('live');
+    } else if (status === 'dead') {
+      setPhase(sawAliveRef.current ? 'dying' : 'evicted');
+    }
+  }, [status]);
+
+  if (phase === 'evicted') {
     return (
       <div className="crt">
         <EvictedScreen vitals={vitals} transactions={transactions} agentState={agentState} />
@@ -88,6 +106,12 @@ export default function Dashboard() {
 
   return (
     <div className="crt">
+      {/* The death beat plays over the final live frame, dissolving it to black before
+          the memorial takes over. The eviction red matches the EVICTED stamp. */}
+      {phase === 'dying' ? (
+        <DeathTransition color="#e0493e" onDone={() => setPhase('evicted')} />
+      ) : null}
+
       {/* Mobile: pinned compact vitals, feed as the scrolling body, detail demoted below it. */}
       <div className="flex min-h-screen flex-col md:hidden">
         <CompactVitals vitals={vitals} />
