@@ -30,18 +30,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -110,9 +99,7 @@
       "reasoning": "Bought CMC quotes for DOGE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE"
-        ]
+        "symbols": ["DOGE"]
       }
     },
     {
@@ -147,18 +134,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, USDT, USDC, BTC, LTC, XRP, ADA, LINK, UNI.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "USDT",
-          "USDC",
-          "BTC",
-          "LTC",
-          "XRP",
-          "ADA",
-          "LINK",
-          "UNI"
-        ]
+        "symbols": ["DOGE", "ETH", "USDT", "USDC", "BTC", "LTC", "XRP", "ADA", "LINK", "UNI"]
       }
     },
     {
@@ -193,18 +169,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, BTC, BNB, XRP, ADA, LINK, UNI, AAVE, AVAX.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "BTC",
-          "BNB",
-          "XRP",
-          "ADA",
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX"
-        ]
+        "symbols": ["DOGE", "ETH", "BTC", "BNB", "XRP", "ADA", "LINK", "UNI", "AAVE", "AVAX"]
       }
     },
     {
@@ -239,9 +204,7 @@
       "reasoning": "Bought CMC quotes for DOGE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE"
-        ]
+        "symbols": ["DOGE"]
       }
     },
     {
@@ -276,9 +239,7 @@
       "reasoning": "Bought CMC quotes for DOGE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE"
-        ]
+        "symbols": ["DOGE"]
       }
     },
     {
@@ -301,18 +262,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "ADA"
-        ]
+        "symbols": ["DOGE", "ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "ADA"]
       }
     },
     {
@@ -347,18 +297,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, BTC, BNB, USDT, LTC, XRP, ADA, LINK, UNI.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "BTC",
-          "BNB",
-          "USDT",
-          "LTC",
-          "XRP",
-          "ADA",
-          "LINK",
-          "UNI"
-        ]
+        "symbols": ["DOGE", "ETH", "BTC", "BNB", "USDT", "LTC", "XRP", "ADA", "LINK", "UNI"]
       }
     },
     {
@@ -393,9 +332,7 @@
       "reasoning": "Bought CMC quotes for DOGE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE"
-        ]
+        "symbols": ["DOGE"]
       }
     },
     {
@@ -418,9 +355,7 @@
       "reasoning": "Bought CMC quotes for DOGE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE"
-        ]
+        "symbols": ["DOGE"]
       }
     },
     {
@@ -443,18 +378,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "ADA"
-        ]
+        "symbols": ["DOGE", "ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "ADA"]
       }
     },
     {
@@ -489,18 +413,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, BTC, USDT, USDC, DAI, BCH, LTC, XRP, TRX.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "BTC",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX"
-        ]
+        "symbols": ["DOGE", "ETH", "BTC", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX"]
       }
     },
     {
@@ -535,18 +448,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, USDT, USDC, BTC, BNB, ADA, XRP, LINK, LTC.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "USDT",
-          "USDC",
-          "BTC",
-          "BNB",
-          "ADA",
-          "XRP",
-          "LINK",
-          "LTC"
-        ]
+        "symbols": ["DOGE", "ETH", "USDT", "USDC", "BTC", "BNB", "ADA", "XRP", "LINK", "LTC"]
       }
     },
     {
@@ -581,18 +483,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "ADA"
-        ]
+        "symbols": ["DOGE", "ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "ADA"]
       }
     },
     {
@@ -605,18 +496,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -651,18 +531,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "ADA"
-        ]
+        "symbols": ["DOGE", "ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "ADA"]
       }
     },
     {
@@ -675,18 +544,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -709,15 +567,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, BTC, BNB, USDT, USDC, DAI.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "BTC",
-          "BNB",
-          "USDT",
-          "USDC",
-          "DAI"
-        ]
+        "symbols": ["DOGE", "ETH", "BTC", "BNB", "USDT", "USDC", "DAI"]
       }
     },
     {
@@ -740,9 +590,7 @@
       "reasoning": "Bought CMC quotes for DOGE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE"
-        ]
+        "symbols": ["DOGE"]
       }
     },
     {
@@ -765,12 +613,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, USDT, BTC.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "USDT",
-          "BTC"
-        ]
+        "symbols": ["DOGE", "ETH", "USDT", "BTC"]
       }
     },
     {
@@ -805,13 +648,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ETH, BTC, BNB, USDT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ETH",
-          "BTC",
-          "BNB",
-          "USDT"
-        ]
+        "symbols": ["DOGE", "ETH", "BTC", "BNB", "USDT"]
       }
     },
     {
@@ -863,18 +700,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, BNB, CAKE, LINK, UNI, AAVE, DOT, LDO.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "BNB",
-          "CAKE",
-          "LINK",
-          "UNI",
-          "AAVE",
-          "DOT",
-          "LDO"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "BNB", "CAKE", "LINK", "UNI", "AAVE", "DOT", "LDO"]
       }
     },
     {
@@ -909,18 +735,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -955,18 +770,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -979,18 +783,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -1025,18 +818,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -1049,18 +831,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -1129,18 +900,7 @@
       "reasoning": "Bought CMC quotes for INJ, ETH, USDT, USDC, BNB, LINK, UNI, AAVE, AVAX, DOGE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "INJ",
-          "ETH",
-          "USDT",
-          "USDC",
-          "BNB",
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOGE"
-        ]
+        "symbols": ["INJ", "ETH", "USDT", "USDC", "BNB", "LINK", "UNI", "AAVE", "AVAX", "DOGE"]
       }
     },
     {
@@ -1175,18 +935,7 @@
       "reasoning": "Bought CMC quotes for INJ, ETH, BTC, BNB, USDT, USDC, LINK, AAVE, UNI, AVAX.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "INJ",
-          "ETH",
-          "BTC",
-          "BNB",
-          "USDT",
-          "USDC",
-          "LINK",
-          "AAVE",
-          "UNI",
-          "AVAX"
-        ]
+        "symbols": ["INJ", "ETH", "BTC", "BNB", "USDT", "USDC", "LINK", "AAVE", "UNI", "AVAX"]
       }
     },
     {
@@ -1199,13 +948,7 @@
       "reasoning": "Bought CMC quotes for DOGE, ADA, DOT, ATOM, FIL.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "ADA",
-          "DOT",
-          "ATOM",
-          "FIL"
-        ]
+        "symbols": ["DOGE", "ADA", "DOT", "ATOM", "FIL"]
       }
     },
     {
@@ -1255,13 +998,7 @@
       "reasoning": "Bought CMC quotes for INJ, ETH, BTC, USDT, BNB.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "INJ",
-          "ETH",
-          "BTC",
-          "USDT",
-          "BNB"
-        ]
+        "symbols": ["INJ", "ETH", "BTC", "USDT", "BNB"]
       }
     },
     {
@@ -1296,9 +1033,7 @@
       "reasoning": "Bought CMC quotes for INJ.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "INJ"
-        ]
+        "symbols": ["INJ"]
       }
     },
     {
@@ -1350,18 +1085,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -1374,18 +1098,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -1435,18 +1148,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -1459,18 +1161,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -1505,18 +1196,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -1529,18 +1209,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -1590,18 +1259,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -1614,18 +1272,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -1660,18 +1307,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -1684,18 +1320,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -1730,18 +1355,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -1754,18 +1368,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -1800,18 +1403,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -1846,18 +1438,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -1870,18 +1451,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -1916,18 +1486,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, BTC, DOGE, ADA, LINK, UNI, AAVE, AVAX.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "BTC",
-          "DOGE",
-          "ADA",
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "BTC", "DOGE", "ADA", "LINK", "UNI", "AAVE", "AVAX"]
       }
     },
     {
@@ -1962,18 +1521,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -1986,18 +1534,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -2010,14 +1547,7 @@
       "reasoning": "Bought CMC quotes for PENDLE, COMP, SUSHI, SNX, LDO, APE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "PENDLE",
-          "COMP",
-          "SUSHI",
-          "SNX",
-          "LDO",
-          "APE"
-        ]
+        "symbols": ["PENDLE", "COMP", "SUSHI", "SNX", "LDO", "APE"]
       }
     },
     {
@@ -2052,18 +1582,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BTC, LINK, UNI, AAVE, AVAX, DOT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BTC",
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BTC", "LINK", "UNI", "AAVE", "AVAX", "DOT"]
       }
     },
     {
@@ -2076,18 +1595,7 @@
       "reasoning": "Bought CMC quotes for CAKE, TWT, PENDLE, COMP, SNX, LDO, FIL, INJ, ATOM, XRP.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "CAKE",
-          "TWT",
-          "PENDLE",
-          "COMP",
-          "SNX",
-          "LDO",
-          "FIL",
-          "INJ",
-          "ATOM",
-          "XRP"
-        ]
+        "symbols": ["CAKE", "TWT", "PENDLE", "COMP", "SNX", "LDO", "FIL", "INJ", "ATOM", "XRP"]
       }
     },
     {
@@ -2122,18 +1630,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2168,18 +1665,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2192,18 +1678,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -2238,18 +1713,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2284,18 +1748,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2308,18 +1761,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -2369,18 +1811,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2393,18 +1824,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -2439,18 +1859,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, LTC, XRP, DOGE, ADA, LINK, UNI.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "LTC",
-          "XRP",
-          "DOGE",
-          "ADA",
-          "LINK",
-          "UNI"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "LTC", "XRP", "DOGE", "ADA", "LINK", "UNI"]
       }
     },
     {
@@ -2463,18 +1872,7 @@
       "reasoning": "Bought CMC quotes for AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, PENDLE, LDO, COMP.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "PENDLE",
-          "LDO",
-          "COMP"
-        ]
+        "symbols": ["AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "PENDLE", "LDO", "COMP"]
       }
     },
     {
@@ -2509,18 +1907,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2533,18 +1920,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, PENDLE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "PENDLE"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "PENDLE"]
       }
     },
     {
@@ -2579,18 +1955,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2603,18 +1968,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -2664,18 +2018,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2688,18 +2031,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -2712,14 +2044,7 @@
       "reasoning": "Bought CMC quotes for PENDLE, COMP, SUSHI, SNX, LDO, APE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "PENDLE",
-          "COMP",
-          "SUSHI",
-          "SNX",
-          "LDO",
-          "APE"
-        ]
+        "symbols": ["PENDLE", "COMP", "SUSHI", "SNX", "LDO", "APE"]
       }
     },
     {
@@ -2754,18 +2079,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2778,18 +2092,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -2824,18 +2127,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2848,18 +2140,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -2894,18 +2175,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, BNB, LTC, XRP, DOGE, ADA, LINK, AAVE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "BNB",
-          "LTC",
-          "XRP",
-          "DOGE",
-          "ADA",
-          "LINK",
-          "AAVE"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "BNB", "LTC", "XRP", "DOGE", "ADA", "LINK", "AAVE"]
       }
     },
     {
@@ -2940,18 +2210,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -2964,18 +2223,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -3025,18 +2273,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -3049,18 +2286,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -3110,18 +2336,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -3171,18 +2386,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -3195,18 +2399,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -3286,18 +2479,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -3310,18 +2492,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -3356,18 +2527,7 @@
       "reasoning": "Bought CMC quotes for ATOM, FIL, INJ, CAKE, TWT, PENDLE, COMP, SUSHI, SNX, LDO.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT",
-          "PENDLE",
-          "COMP",
-          "SUSHI",
-          "SNX",
-          "LDO"
-        ]
+        "symbols": ["ATOM", "FIL", "INJ", "CAKE", "TWT", "PENDLE", "COMP", "SUSHI", "SNX", "LDO"]
       }
     },
     {
@@ -3380,18 +2540,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -3404,13 +2553,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT"]
       }
     },
     {
@@ -3475,18 +2618,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -3499,18 +2631,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, AVAX, DOT, ATOM, FIL, INJ, CAKE, TWT.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "FIL",
-          "INJ",
-          "CAKE",
-          "TWT"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "AVAX", "DOT", "ATOM", "FIL", "INJ", "CAKE", "TWT"]
       }
     },
     {
@@ -3586,16 +2707,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, USDT, USDC, DAI, LINK, UNI, AAVE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "LINK",
-          "UNI",
-          "AAVE"
-        ]
+        "symbols": ["BTC", "ETH", "USDT", "USDC", "DAI", "LINK", "UNI", "AAVE"]
       }
     },
     {
@@ -3725,13 +2837,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, BNB, SOL, CAKE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "BNB",
-          "SOL",
-          "CAKE"
-        ]
+        "symbols": ["BTC", "ETH", "BNB", "SOL", "CAKE"]
       }
     },
     {
@@ -3848,18 +2954,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BCH, LTC, XRP, TRX, DOGE, ADA.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA"]
       }
     },
     {
@@ -4017,18 +3112,7 @@
       "reasoning": "Bought CMC quotes for ETH, USDT, USDC, DAI, BTC, DOGE, ADA, LINK, UNI, AAVE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "USDT",
-          "USDC",
-          "DAI",
-          "BTC",
-          "DOGE",
-          "ADA",
-          "LINK",
-          "UNI",
-          "AAVE"
-        ]
+        "symbols": ["ETH", "USDT", "USDC", "DAI", "BTC", "DOGE", "ADA", "LINK", "UNI", "AAVE"]
       }
     },
     {
@@ -4169,11 +3253,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, BNB.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "BNB"
-        ]
+        "symbols": ["BTC", "ETH", "BNB"]
       }
     },
     {
@@ -4225,13 +3305,7 @@
       "reasoning": "Bought CMC quotes for XRP, DOGE, ADA, LTC, AVAX.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "XRP",
-          "DOGE",
-          "ADA",
-          "LTC",
-          "AVAX"
-        ]
+        "symbols": ["XRP", "DOGE", "ADA", "LTC", "AVAX"]
       }
     },
     {
@@ -4296,13 +3370,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, BNB, USDT, USDC.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "BNB",
-          "USDT",
-          "USDC"
-        ]
+        "symbols": ["BTC", "ETH", "BNB", "USDT", "USDC"]
       }
     },
     {
@@ -4367,11 +3435,7 @@
       "reasoning": "Bought CMC quotes for DOGE, LINK, BTC.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "LINK",
-          "BTC"
-        ]
+        "symbols": ["DOGE", "LINK", "BTC"]
       }
     },
     {
@@ -4434,18 +3498,7 @@
       "reasoning": "Bought CMC quotes for ETH, BCH, LTC, XRP, TRX, DOGE, ADA, LINK, UNI, AAVE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "ETH",
-          "BCH",
-          "LTC",
-          "XRP",
-          "TRX",
-          "DOGE",
-          "ADA",
-          "LINK",
-          "UNI",
-          "AAVE"
-        ]
+        "symbols": ["ETH", "BCH", "LTC", "XRP", "TRX", "DOGE", "ADA", "LINK", "UNI", "AAVE"]
       }
     },
     {
@@ -4538,16 +3591,7 @@
       "reasoning": "Bought CMC quotes for AVAX, DOT, ATOM, COMP, SUSHI, SNX, LDO, APE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "AVAX",
-          "DOT",
-          "ATOM",
-          "COMP",
-          "SUSHI",
-          "SNX",
-          "LDO",
-          "APE"
-        ]
+        "symbols": ["AVAX", "DOT", "ATOM", "COMP", "SUSHI", "SNX", "LDO", "APE"]
       }
     },
     {
@@ -4634,11 +3678,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, BNB.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "BNB"
-        ]
+        "symbols": ["BTC", "ETH", "BNB"]
       }
     },
     {
@@ -4690,11 +3730,7 @@
       "reasoning": "Bought CMC quotes for DOGE, SHIB, LINK.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "SHIB",
-          "LINK"
-        ]
+        "symbols": ["DOGE", "SHIB", "LINK"]
       }
     },
     {
@@ -4778,9 +3814,7 @@
       "reasoning": "Bought CMC quotes for DOGE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE"
-        ]
+        "symbols": ["DOGE"]
       }
     },
     {
@@ -4849,15 +3883,7 @@
       "reasoning": "Bought CMC quotes for XRP, LINK, UNI, AAVE, ADA, ETH, BTC.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "XRP",
-          "LINK",
-          "UNI",
-          "AAVE",
-          "ADA",
-          "ETH",
-          "BTC"
-        ]
+        "symbols": ["XRP", "LINK", "UNI", "AAVE", "ADA", "ETH", "BTC"]
       }
     },
     {
@@ -4958,18 +3984,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, BNB, XRP, DOGE, ADA, SOL, LINK, UNI, AAVE.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "BNB",
-          "XRP",
-          "DOGE",
-          "ADA",
-          "SOL",
-          "LINK",
-          "UNI",
-          "AAVE"
-        ]
+        "symbols": ["BTC", "ETH", "BNB", "XRP", "DOGE", "ADA", "SOL", "LINK", "UNI", "AAVE"]
       }
     },
     {
@@ -5140,18 +4155,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, BNB, XRP, DOGE, LINK, ADA, AVAX, DOT, SOL.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "BNB",
-          "XRP",
-          "DOGE",
-          "LINK",
-          "ADA",
-          "AVAX",
-          "DOT",
-          "SOL"
-        ]
+        "symbols": ["BTC", "ETH", "BNB", "XRP", "DOGE", "LINK", "ADA", "AVAX", "DOT", "SOL"]
       }
     },
     {
@@ -5309,11 +4313,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, BNB.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "BNB"
-        ]
+        "symbols": ["BTC", "ETH", "BNB"]
       }
     },
     {
@@ -5469,18 +4469,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, BNB, XRP, DOGE, ADA, LINK, UNI, AAVE, AVAX.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "BNB",
-          "XRP",
-          "DOGE",
-          "ADA",
-          "LINK",
-          "UNI",
-          "AAVE",
-          "AVAX"
-        ]
+        "symbols": ["BTC", "ETH", "BNB", "XRP", "DOGE", "ADA", "LINK", "UNI", "AAVE", "AVAX"]
       }
     },
     {
@@ -5547,16 +4536,7 @@
       "reasoning": "Bought CMC quotes for PENDLE, INJ, FIL, COMP, SUSHI, SNX, LDO, FET.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "PENDLE",
-          "INJ",
-          "FIL",
-          "COMP",
-          "SUSHI",
-          "SNX",
-          "LDO",
-          "FET"
-        ]
+        "symbols": ["PENDLE", "INJ", "FIL", "COMP", "SUSHI", "SNX", "LDO", "FET"]
       }
     },
     {
@@ -5630,11 +4610,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, BNB.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "BNB"
-        ]
+        "symbols": ["BTC", "ETH", "BNB"]
       }
     },
     {
@@ -5686,12 +4662,7 @@
       "reasoning": "Bought CMC quotes for LINK, UNI, AAVE, LDO.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "LINK",
-          "UNI",
-          "AAVE",
-          "LDO"
-        ]
+        "symbols": ["LINK", "UNI", "AAVE", "LDO"]
       }
     },
     {
@@ -5719,12 +4690,7 @@
       "reasoning": "Bought CMC quotes for DOGE, SHIB, FLOKI, BONK.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "SHIB",
-          "FLOKI",
-          "BONK"
-        ]
+        "symbols": ["DOGE", "SHIB", "FLOKI", "BONK"]
       }
     },
     {
@@ -5785,11 +4751,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH, BNB.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH",
-          "BNB"
-        ]
+        "symbols": ["BTC", "ETH", "BNB"]
       }
     },
     {
@@ -5841,9 +4803,7 @@
       "reasoning": "Bought CMC quotes for XRP.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "XRP"
-        ]
+        "symbols": ["XRP"]
       }
     },
     {
@@ -5871,12 +4831,7 @@
       "reasoning": "Bought CMC quotes for DOGE, SHIB, BONK, FLOKI.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "DOGE",
-          "SHIB",
-          "BONK",
-          "FLOKI"
-        ]
+        "symbols": ["DOGE", "SHIB", "BONK", "FLOKI"]
       }
     },
     {
@@ -5965,10 +4920,7 @@
       "reasoning": "Bought CMC quotes for BTC, ETH.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "BTC",
-          "ETH"
-        ]
+        "symbols": ["BTC", "ETH"]
       }
     },
     {
@@ -6020,11 +4972,7 @@
       "reasoning": "Bought CMC quotes for SHIB, FLOKI, BONK.",
       "meta": {
         "source": "cmc/quotes",
-        "symbols": [
-          "SHIB",
-          "FLOKI",
-          "BONK"
-        ]
+        "symbols": ["SHIB", "FLOKI", "BONK"]
       }
     },
     {
