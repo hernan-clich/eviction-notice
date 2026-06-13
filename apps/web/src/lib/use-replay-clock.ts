@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ledgerAt, realAt, type ReplaySchedule } from 'shared';
 
-export type ReplaySpeed = 1 | 8 | 30;
+export type ReplaySpeed = 1 | 2 | 4;
 
 export interface ReplayClock {
   /** Current ledger time the dashboard should render at. */

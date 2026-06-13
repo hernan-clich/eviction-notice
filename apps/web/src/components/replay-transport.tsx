@@ -17,7 +17,7 @@ const ROSE = '#e0493e';
 const W = 1000;
 const H = 120;
 const PADY = 16;
-const SPEEDS: ReplaySpeed[] = [1, 8, 30];
+const SPEEDS: ReplaySpeed[] = [1, 2, 4];
 
 /**
  * The transport IS the life: the lifetime net-worth curve doubles as the scrubber.
