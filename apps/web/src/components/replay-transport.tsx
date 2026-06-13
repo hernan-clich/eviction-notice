@@ -94,22 +94,23 @@ export function ReplayTransport({
 
   return (
     <div className="bg-bg/95 border-line fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur">
-      <div className="mx-auto max-w-5xl px-6 py-4">
+      <div className="mx-auto max-w-5xl px-4 py-3 sm:px-6 sm:py-4">
         {/* It's a memory, not a revival — the badge keeps the recording honest. */}
-        <div className="mb-2 flex items-baseline justify-between">
+        <div className="mb-2 flex items-baseline justify-between gap-3">
           <span className="font-display flex items-center gap-2 text-[11px] tracking-[0.3em]">
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: ROSE }} />
             <span style={{ color: ROSE }}>REPLAY</span>
           </span>
           <div className="flex items-center gap-4">
-            <span className="font-display text-muted text-[11px] tracking-[0.2em] uppercase">
+            {/* The verbose title is desktop-only — on mobile it crowds the badge + Close. */}
+            <span className="font-display text-muted hidden text-[11px] tracking-[0.2em] uppercase sm:inline">
               The life of Eviction Notice · No.&nbsp;{caseNo}
             </span>
             {/* Exit even when paused — a paused replay must never be a dead end. */}
             <button
               type="button"
               onClick={onExit}
-              className="font-display text-muted hover:text-ink text-[11px] tracking-[0.2em] uppercase transition-colors"
+              className="font-display text-muted hover:text-ink text-[11px] tracking-[0.2em] whitespace-nowrap uppercase transition-colors"
             >
               ✕ Close
             </button>
@@ -236,27 +237,27 @@ export function ReplayTransport({
         </div>
 
         {/* controls */}
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-3 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={onToggle}
             aria-label={playing ? 'Pause' : 'Play'}
-            className="border-line text-ink hover:bg-ink/10 flex h-11 w-11 items-center justify-center rounded-md border transition-colors"
+            className="border-line text-ink hover:bg-ink/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-md border transition-colors"
           >
             {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
           </button>
 
-          <span className="text-muted font-display text-xs tracking-wider tabular-nums">
+          <span className="text-muted font-display text-[11px] whitespace-nowrap tracking-wider tabular-nums sm:text-xs">
             T+{formatLifespanLong(Math.max(0, clockMs - born))} / {formatLifespanLong(span)}
           </span>
 
-          <div className="font-display flex gap-1.5 text-xs">
+          <div className="font-display flex shrink-0 gap-1.5 text-xs">
             {SPEEDS.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => onSpeed(s)}
-                className={`rounded-md border px-2.5 py-1 tracking-wider transition-colors ${
+                className={`rounded-md border px-2 py-1 tracking-wider transition-colors sm:px-2.5 ${
                   s === speed ? 'border-ink text-ink' : 'border-line text-muted hover:text-ink'
                 }`}
               >
