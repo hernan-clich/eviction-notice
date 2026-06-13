@@ -1,5 +1,6 @@
 'use client';
 
+import { notFound } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { realtimeLedgerSource } from '@/lib/ledger-source';
@@ -11,8 +12,20 @@ const AGENT_ID = 'agent-0';
  * dashboard does) and downloads it as JSON. Save the file to
  * apps/web/public/replays/<agent>.json and commit it — that frozen snapshot is what
  * the shareable /replay route plays, deterministically and without the DB.
+ *
+ * Local-only: run `pnpm --filter web dev` and open /export-replay. It reads the live
+ * Supabase via the public key (as the dashboard does) and downloads the current data.
+ * 404s on the deployed build so the public site exposes no data-dump route. The gate
+ * sits in this no-hook wrapper so the inner component's hooks stay unconditional.
  */
 export default function ExportReplay() {
+  if (process.env.NODE_ENV === 'production') {
+    notFound();
+  }
+  return <ExportReplayTool />;
+}
+
+function ExportReplayTool() {
   const [status, setStatus] = useState('Loading the ledger…');
 
   useEffect(() => {
