@@ -308,7 +308,7 @@ export function CompactVitals({ vitals }: { vitals: Vitals }) {
           EVICTION&nbsp;NOTICE
         </span>
         <span
-          className="font-display text-[11px] tracking-[0.14em] whitespace-nowrap"
+          className="font-display text-[10px] tracking-[0.14em] whitespace-nowrap"
           style={{ color: v.hex }}
         >
           ● {current}
