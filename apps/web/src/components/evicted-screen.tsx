@@ -156,9 +156,10 @@ export function EvictedScreen({
         </div>
       </div>
 
-      {/* Computed epitaph — solemn, specific, played straight */}
+      {/* Computed epitaph — the narrator's voice. Kept upright (the note below is the
+          agent's own italic words) so the two voices read as distinct, not one blur. */}
       <p
-        className="text-ink animate-[mourn-in_0.8s_ease-out_both] max-w-md text-lg leading-relaxed italic"
+        className="text-ink animate-[mourn-in_0.8s_ease-out_both] max-w-md text-lg leading-relaxed tracking-wide"
         style={{ animationDelay: '1.5s' }}
       >
         {epitaph}
@@ -167,7 +168,7 @@ export function EvictedScreen({
       {/* The note it left — the agent's own final entry, cut to the line that lands */}
       {note ? (
         <div
-          className="animate-[mourn-in_0.8s_ease-out_both] w-full"
+          className="animate-[mourn-in_0.8s_ease-out_both] mt-3 w-full"
           style={{ animationDelay: '1.7s' }}
         >
           <div className="font-display text-muted text-[10px] tracking-[0.3em] uppercase">
