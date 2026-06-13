@@ -19,11 +19,12 @@ import {
 } from '@/lib/ui';
 
 import { Feed } from './feed';
+import { ListDetailsIcon, RefreshIcon } from './icons';
 
-// The drained rose of the memorial — deliberately softer than the live alarm red
+// The eviction red — a deep, blooded red, distinct from the live alarm pink
 // (#ff5468). Every prior screen earned its phosphor green; this one has none. The
 // absence of the colour it had while alive is what reads as the lease having ended.
-const ROSE = '#e0857f';
+const ROSE = '#e0493e';
 
 function caseNumber(agentId: string): number {
   const trailing = /(\d+)$/.exec(agentId)?.[1];
@@ -223,7 +224,7 @@ export function EvictedScreen({
           secondary link. No red — that stays the eviction's alone; "primary" comes
           from weight, in the bright ink against the ash. */}
       <div
-        className="animate-[mourn-in_0.8s_ease-out_both] mx-auto flex w-full max-w-xs flex-col items-stretch gap-4"
+        className="animate-[mourn-in_0.8s_ease-out_both] mx-auto mt-6 flex w-full max-w-xs flex-col items-stretch gap-4"
         style={{ animationDelay: '2.1s' }}
       >
         <button
@@ -231,14 +232,17 @@ export function EvictedScreen({
           onClick={replay}
           className="border-ink/55 text-ink hover:bg-ink/10 font-display flex w-full items-center justify-center gap-2.5 border px-6 py-3.5 text-sm tracking-[0.2em] uppercase transition-colors"
         >
-          <span aria-hidden="true">↻</span> Replay the run
+          <RefreshIcon size={17} /> Replay the run
         </button>
         <button
           type="button"
           onClick={() => setShowLedger(true)}
-          className="text-muted hover:text-ink font-display mx-auto py-2 text-xs tracking-[0.15em] uppercase underline decoration-dotted underline-offset-4 transition-colors"
+          className="text-muted hover:text-ink font-display mx-auto inline-flex items-center gap-1.5 py-2 text-xs tracking-[0.15em] uppercase transition-colors"
         >
-          <span aria-hidden="true">▤</span> Read the full ledger
+          <ListDetailsIcon size={15} />
+          <span className="underline decoration-dotted underline-offset-4">
+            Read the full ledger
+          </span>
         </button>
       </div>
     </main>
