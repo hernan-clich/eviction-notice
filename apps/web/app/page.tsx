@@ -23,6 +23,7 @@ export default function Dashboard() {
   // witness the agent cross into death); 'evicted' → the memorial.
   const [phase, setPhase] = useState<'live' | 'dying' | 'evicted'>('live');
   const sawAliveRef = useRef(false);
+  const previewRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -65,11 +66,22 @@ export default function Dashboard() {
 
   const vitals = computeVitals(transactions, agentState, nowMs, snapshots);
 
+  // `?preview=death` forces the death beat regardless of lifecycle — the only way
+  // to watch it without staging a real live crossover (and handy for the demo).
+  useEffect(() => {
+    if (new URLSearchParams(globalThis.location.search).get('preview') === 'death') {
+      previewRef.current = true;
+      sawAliveRef.current = true;
+      setPhase('dying');
+    }
+  }, []);
+
   // Drive the phase off the lifecycle. We only play the death beat when the agent
   // was alive in this session and then crossed over; loading an already-evicted
   // agent (never saw it alive) lands straight on the memorial.
   const status = agentState?.status;
   useEffect(() => {
+    if (previewRef.current) return;
     if (status === 'alive') {
       sawAliveRef.current = true;
       setPhase('live');
