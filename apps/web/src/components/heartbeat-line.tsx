@@ -55,13 +55,37 @@ export function HeartbeatLine({
   alive,
   color,
   health = 0,
+  dying = false,
   className = 'h-10',
 }: {
   alive: boolean;
   color: string;
   health?: number;
+  /** The death beat: one last blip scrolls off to the left, then a flat line follows
+   *  it in and holds — so the pulse visibly leaves before the line goes flat. */
+  dying?: boolean;
   className?: string;
 }) {
+  if (dying) {
+    const amp = 5; // a small final beat, in the spirit of the minuscule FINAL NOTICE pulse
+    let beat = 'M0 20 H64';
+    for (const [dx, k] of BLIP) beat += ` l${dx} ${(k * amp).toFixed(2)}`;
+    beat += ` H${TRACE_WIDTH}`;
+    const flat = `M0 20 H${TRACE_WIDTH}`;
+    return (
+      <div className={`${className} w-full overflow-hidden`}>
+        {/* [beat][flat], scrolled left ONCE (fill forwards): the blip sweeps off the
+            left edge and the trailing flat line settles in and stays. */}
+        <div
+          className="flex h-full w-[200%]"
+          style={{ animation: 'ekg-scroll 2.4s linear forwards' }}
+        >
+          <Trace d={beat} color={color} />
+          <Trace d={flat} color={color} />
+        </div>
+      </div>
+    );
+  }
   if (!alive) {
     return (
       <div className={`${className} w-full overflow-hidden`}>
