@@ -30,8 +30,15 @@ export interface Vitals {
   /** cash + positions — the life force and the death line. */
   netWorthUsd: number;
   seedUsd: number;
-  /** netWorth − seed: is it actually winning? */
+  /** netWorth − seed: the all-in change incl. the fictional eviction burn. */
   netPnlUsd: number;
+  /**
+   * The real trading result the competition scores: netPnl with the *fictional*
+   * costs (rent + the modeled data-call fee) added back, since those never leave
+   * the wallet. Real on-chain costs (x402, gas, swap friction) stay subtracted.
+   * This is the honest "how is it trading" number, distinct from the eviction burn.
+   */
+  tradingPnlUsd: number;
   /** Peak net worth observed. */
   peakUsd: number;
   /** Worst peak-to-trough drop over the lifetime (fractional) — the drawdown DQ metric. */
@@ -62,6 +69,7 @@ export function computeVitals(
   let cash = 0;
   let seedUsd = 0;
   let burnUsd = 0; // cost of existing: rent + data + x402
+  let fictionalBurnUsd = 0; // rent + data only — invented costs, not real wallet spend
   let tradeCount = 0;
 
   for (const tx of ordered) {
@@ -72,6 +80,9 @@ export function computeVitals(
     }
     if (tx.reason === 'rent' || tx.reason === 'data_call' || tx.reason === 'x402_fee') {
       burnUsd += -tx.amount;
+    }
+    if (tx.reason === 'rent' || tx.reason === 'data_call') {
+      fictionalBurnUsd += -tx.amount;
     }
     if (tx.reason === 'trade_open') {
       tradeCount += 1;
@@ -130,6 +141,7 @@ export function computeVitals(
     netWorthUsd,
     seedUsd,
     netPnlUsd: netWorthUsd - seedUsd,
+    tradingPnlUsd: netWorthUsd - seedUsd + fictionalBurnUsd,
     peakUsd,
     maxDrawdownFraction,
     burnPerHourUsd,

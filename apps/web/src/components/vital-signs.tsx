@@ -226,18 +226,22 @@ function AssetRichWarning({ vitals }: { vitals: Vitals }) {
   );
 }
 
+// The real trading result (fictional rent + data burn added back) — the honest
+// "how is it trading" number the competition scores, not the all-in eviction P&L.
+// The operating burn lives separately in the runway/"cost of staying" below.
 function PnlRow({ vitals }: { vitals: Vitals }) {
-  const returnFraction = vitals.seedUsd > 0 ? vitals.netPnlUsd / vitals.seedUsd : 0;
-  const color = vitals.netPnlUsd > 0 ? '#4ef0a0' : vitals.netPnlUsd < 0 ? '#ff5468' : '#6a7570';
+  const pnl = vitals.tradingPnlUsd;
+  const returnFraction = vitals.seedUsd > 0 ? pnl / vitals.seedUsd : 0;
+  const color = pnl > 0 ? '#4ef0a0' : pnl < 0 ? '#ff5468' : '#6a7570';
   return (
     <div className="text-right">
       <div className="font-display text-muted text-[10px] tracking-[0.25em] uppercase">
-        Net P&amp;L
+        Trading P&amp;L
       </div>
       <div className="text-lg tabular-nums" style={{ color }}>
         {formatSignedPct(returnFraction)}
       </div>
-      <div className="text-muted text-xs tabular-nums">{formatSignedUsd(vitals.netPnlUsd)}</div>
+      <div className="text-muted text-xs tabular-nums">{formatSignedUsd(pnl)}</div>
     </div>
   );
 }
