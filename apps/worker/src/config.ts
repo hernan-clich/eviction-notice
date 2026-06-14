@@ -21,7 +21,11 @@ const envSchema = z.object({
   // requires it at point of use. Cost is the simulated per-call data burn ($/think).
   CMC_API_KEY: z.string().min(1).optional(),
   CMC_API_BASE: z.string().url().default('https://pro-api.coinmarketcap.com'),
-  CMC_DATA_COST_USD: z.coerce.number().nonnegative().default(0.01),
+  // CMC is free on our API key, so charging for data calls is pure fiction — it
+  // muddied the P&L and littered the feed with made-up −$0.01 rows. Default to 0:
+  // the data_call rows still log (informative — they show how we query the API),
+  // they just cost nothing. Set > 0 only if you ever want a modeled data burn.
+  CMC_DATA_COST_USD: z.coerce.number().nonnegative().default(0),
   // CMC AI Agent Hub MCP server — pre-computed RSI/MACD/Fear&Greed/trending signals
   // (auth via the same CMC_API_KEY, free tier). Scores higher + real alpha (#62).
   CMC_MCP_URL: z.string().url().default('https://mcp.coinmarketcap.com/mcp'),

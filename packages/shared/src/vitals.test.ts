@@ -39,6 +39,9 @@ describe('computeVitals', () => {
     expect(v.positionValueUsd).toBe(0);
     expect(v.seedUsd).toBe(20);
     expect(v.netPnlUsd).toBeCloseTo(-0.3, 6);
+    // Trading made +1.5 (13.5 close − 12 open); the −0.3 all-in is the fictional
+    // rent (1.68) + data (0.12) burn. Adding those back = the honest trading result.
+    expect(v.tradingPnlUsd).toBeCloseTo(1.5, 6);
     expect(v.peakUsd).toBe(20); // never got above the seed — close only recovered to 19.7
     expect(v.tradeCount).toBe(1);
     expect(v.daysSurvived).toBeCloseTo(1, 6);
