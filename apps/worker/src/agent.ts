@@ -75,7 +75,7 @@ const TOOLS: LlmTool[] = [
   {
     name: 'close_position',
     description:
-      'Close an open position by id: sell back to cash at the live price (paying gas + fees + slippage), realising the P&L. Close winners to bank gains or losers to cut risk.',
+      'Close an open position by id: sell back to cash at the live price (paying gas + fees + slippage), realising the P&L. Decide WHEN to close per the strategy — ride winners, cut losers; do not bank tiny gains on noise.',
     inputSchema: {
       type: 'object',
       properties: { positionId: { type: 'number' } },
@@ -171,7 +171,7 @@ function appendCommonTail(lines: string[], deps: InnerTickDeps): void {
   }
   if (deps.mustTrade) {
     lines.push(
-      '- ⚠️ You have not traded within the required window. You MUST open at least one qualifying position this tick or you fail the ≥1-trade/day rule — take the least-bad viable trade.',
+      '- ⚠️ You have not traded within the required window — you must open one position this tick to satisfy the ≥1-trade/day rule. With no genuine setup, take the SMALLEST qualifying trade (minimum size) so the forced trade costs the least friction.',
     );
   }
   lines.push('- Be concise. End with a one- or two-sentence summary of what you did and why.');
@@ -221,11 +221,12 @@ function competePrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): stri
     `EVICTION LINE — the one hard rule: if your net worth ever falls ${fmtPct(maxDD)} below its peak, you are EVICTED from the competition on the spot — out of the running no matter how strong your returns were. Peak $${peak.toFixed(2)} | net worth $${deps.netWorthUsd.toFixed(2)} → ${fmtPct(drawdown)} down (${fmtPct(headroom)} of room before eviction). Stay well clear: as you approach the line, cut size and de-risk.`,
     `Cash: $${deps.balanceUsd.toFixed(2)} | open positions: ${positionsLineOf(openPositions)}.`,
     '',
-    'How to earn your keep:',
-    '- Read the market and mark open positions: get_quotes for prices; the Agent Hub for signals.',
-    '- STAY DEPLOYED in eligible tokens with positive momentum/edge — that is how you make rent. Trim or exit when signals weaken, or to keep clear of the eviction line. Hold cash only when nothing has a genuine edge.',
-    '- To enter: estimate edge + volatility, call size_position (it keeps you the safe side of the eviction line), then open_position at the recommended size. To rotate, close_position and redeploy.',
-    '- Make at least one trade per day — but do NOT overtrade: each round trip costs ~1% in fees + slippage straight off your return.',
+    'How to earn your keep — trade less, but better; most ticks should be NO trade:',
+    '- Read the regime FIRST: get_market_regime (Fear & Greed + BTC dominance), then get_quotes. In a fearful or downtrend regime the tape is against longs — default to CASH, deploying only on a token with genuine relative strength. Never buy capitulation dips: in a downtrend, oversold only gets more oversold.',
+    '- Enter on MOMENTUM, not reversals — confirmed strength (price above rising moving averages, MACD turning up, real upward momentum), never "RSI is oversold, it is due to bounce." Riding strength has an edge here; catching falling knives does not.',
+    '- Be selective and honest: only deploy when you can name a concrete, signal-backed reason the token rises clearly MORE than the ~1% round-trip friction. Otherwise your edge is ~0 — hold cash. Do NOT inflate the edge you hand size_position to justify a trade. When a setup is genuinely strong, size it up (within your eviction-line headroom) so the win beats friction.',
+    '- RIDE WINNERS, CUT LOSERS: do NOT close a position just because it is up a little — hold while momentum holds and let it run. Exit only on a momentum reversal, a small stop on a loser, or to de-risk near the eviction line. Small losses + occasional bigger wins is the whole game.',
+    '- Mechanics: estimate edge + volatility honestly → size_position (it keeps you the safe side of the line) → open_position at the size it returns; rotate a weak position into a stronger one via close_position. Make at least one trade per day (the rule) but do NOT overtrade.',
     `- Trade ONLY eligible tokens — trades outside the list do not count. Deepest/most-liquid: ${LIQUID_TOKENS.join(', ')}.`,
   ];
   if (deps.drawdownBreached) {
