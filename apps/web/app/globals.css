@@ -93,6 +93,17 @@ button:not(:disabled) {
   }
 }
 
+/* Terminal cursor blink — the "knocking on the door" loading beat. */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 /* Plain opacity fade — the dashboard dissolving to the black death monitor. */
 @keyframes fade-in {
   from {
