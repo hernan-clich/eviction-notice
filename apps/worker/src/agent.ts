@@ -121,8 +121,10 @@ export interface InnerTickDeps {
   burnRatePerHourUsd: number;
   /** Marked net worth (cash + open positions) — drives the survival tier + desperation. */
   netWorthUsd: number;
-  /** All-time net-worth high-water mark — the true drawdown peak (DQ gate). */
-  peakNetWorthUsd: number;
+  /** Real-wallet equity (net worth + fictional burn added back) — the DQ/drawdown basis. */
+  tradingEquityUsd: number;
+  /** Peak real-wallet equity — the high-water mark the DQ drawdown is measured against. */
+  peakTradingEquityUsd: number;
   /** The max-drawdown DQ has already been breached — void the cap, fight to survive. */
   drawdownBreached: boolean;
   mustTrade: boolean;
@@ -211,14 +213,15 @@ function survivalPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): str
 /** Compete mode: the judged-run brief — maximise return, stay deployed, never breach the cap. */
 function competePrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
   const maxDD = deps.config.MAX_DRAWDOWN_FRACTION;
-  const peak = deps.peakNetWorthUsd;
-  const drawdown = peak > 0 ? Math.max(0, (peak - deps.netWorthUsd) / peak) : 0;
+  const peak = deps.peakTradingEquityUsd;
+  const equity = deps.tradingEquityUsd;
+  const drawdown = peak > 0 ? Math.max(0, (peak - equity) / peak) : 0;
   const headroom = Math.max(0, maxDD - drawdown);
 
   const lines = [
     'You are Eviction Notice — an autonomous trading agent that must earn its keep on BNB Chain, now entered in a 1-week live trading competition (you sign your own trades, fully self-custody).',
     'OBJECTIVE: earn your keep by posting the best total return you can. You are scored on real PnL, hour by hour — idle cash pays no rent, so you only get ahead while deployed in tokens that rise. Sitting in cash never makes rent.',
-    `EVICTION LINE — the one hard rule: if your net worth ever falls ${fmtPct(maxDD)} below its peak, you are EVICTED from the competition on the spot — out of the running no matter how strong your returns were. Peak $${peak.toFixed(2)} | net worth $${deps.netWorthUsd.toFixed(2)} → ${fmtPct(drawdown)} down (${fmtPct(headroom)} of room before eviction). Stay well clear: as you approach the line, cut size and de-risk.`,
+    `EVICTION LINE — the one hard rule: if your real trading equity ever falls ${fmtPct(maxDD)} below its peak, you are EVICTED from the competition on the spot — no matter how strong your returns were. This is measured on TRADING P&L only, NOT the rent you pay to stay listed (rent never counts toward the DQ). Peak equity $${peak.toFixed(2)} | now $${equity.toFixed(2)} → ${fmtPct(drawdown)} down (${fmtPct(headroom)} of room). Stay well clear: as you near the line, cut size and de-risk.`,
     `Cash: $${deps.balanceUsd.toFixed(2)} | open positions: ${positionsLineOf(openPositions)}.`,
     '',
     'How to earn your keep — trade less, but better; most ticks should be NO trade:',
@@ -276,8 +279,9 @@ export async function runInnerTick(
       const sizingInput = {
         balanceUsd: deps.balanceUsd,
         peakBalanceUsd: Math.max(deps.balanceUsd, deps.config.SEED_USD),
-        netWorthUsd: deps.netWorthUsd,
-        peakNetWorthUsd: deps.peakNetWorthUsd,
+        // Drawdown cap is on the real wallet (trading equity), not rent-eroded net worth.
+        netWorthUsd: deps.tradingEquityUsd,
+        peakNetWorthUsd: deps.peakTradingEquityUsd,
         maxDrawdownFraction: deps.config.MAX_DRAWDOWN_FRACTION,
         drawdownBreached: deps.drawdownBreached,
         cashReserveHours: compete ? 0 : deps.config.CASH_RESERVE_HOURS,
