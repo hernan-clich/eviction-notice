@@ -6,6 +6,7 @@ import { computeVitals, type AgentState, type Snapshot, type Transaction } from 
 import { DashboardView } from '@/components/dashboard-view';
 import { DeathTransition } from '@/components/death-transition';
 import { EvictedScreen } from '@/components/evicted-screen';
+import { LoadingState } from '@/components/loading-state';
 import { ReplayView } from '@/components/replay-view';
 import { realtimeLedgerSource } from '@/lib/ledger-source';
 
@@ -16,6 +17,9 @@ export default function Dashboard() {
   const [agentState, setAgentState] = useState<AgentState | null>(null);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  // The first load hasn't resolved yet — show the colourless "knocking" state, never
+  // the dashboard shell (empty defaults render as a false death in this app).
+  const [loaded, setLoaded] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   // 'live' → the dashboard; 'dying' → the death-beat transition (only when we
   // witness the agent cross into death); 'evicted' → the memorial.
@@ -37,6 +41,8 @@ export default function Dashboard() {
         setLoadError(null); // recovered — clear any stale error from a dropped connection
       } catch (error) {
         if (active) setLoadError(error instanceof Error ? error.message : String(error));
+      } finally {
+        if (active) setLoaded(true);
       }
     };
 
@@ -118,6 +124,15 @@ export default function Dashboard() {
       setPhase(sawAliveRef.current ? 'dying' : 'evicted');
     }
   }, [status]);
+
+  // Any transient unknown — the first load, or an error before any data arrived —
+  // falls back to the colourless "knocking" state, never the populated shell (which
+  // would render as a false death). Once real data lands, it resolves into the live
+  // dashboard or the memorial.
+  const noData = agentState === null && transactions.length === 0;
+  if (!loaded || (loadError !== null && noData)) {
+    return <LoadingState error={loaded ? loadError : null} />;
+  }
 
   if (phase === 'evicted') {
     return (

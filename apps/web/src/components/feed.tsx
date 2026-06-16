@@ -118,7 +118,7 @@ function TxLink({ link }: { link: TxRef }) {
 export function Feed({ transactions }: { transactions: readonly Transaction[] }) {
   const feed = [...transactions].reverse();
   if (feed.length === 0) {
-    return <p className="text-muted text-sm">Waiting for the agent to do something…</p>;
+    return <p className="text-muted text-sm">No activity on file yet.</p>;
   }
   return (
     <ul className="divide-line flex flex-col divide-y">
