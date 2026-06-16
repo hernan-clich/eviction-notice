@@ -280,13 +280,32 @@ async function main(): Promise<void> {
     }
 
     // Mark the balance sheet after this tick's actions (cash + positions = net worth).
-    // Eviction is on NET WORTH, not cash: an agent fully deployed in a token isn't
-    // broke — it can liquidate to pay rent. It's only evicted when total worth ≤ 0.
+    // Eviction basis by mode: SURVIVAL is the rent game — it dies when net worth (rent
+    // included) hits $0. COMPETE is scored on the REAL wallet, so the fictional rent
+    // must never permadeath a healthy trader: evict only when trading equity (net worth
+    // with the fictional burn added back) is gone.
     const netWorth = await recordSnapshot();
-    if (netWorth !== null && !isAlive({ balance: netWorth, status: 'alive' })) {
-      await markDead(client, config.AGENT_ID);
-      log.error('EVICTED', { netWorth, ticks });
-      break;
+    if (netWorth !== null) {
+      let evictionBasis = netWorth;
+      if (config.AGENT_MODE === 'compete') {
+        try {
+          const [txs, agentState, snapshots] = await Promise.all([
+            fetchTransactions(client, config.AGENT_ID),
+            fetchAgentState(client, config.AGENT_ID),
+            fetchSnapshots(client, config.AGENT_ID),
+          ]);
+          evictionBasis = computeVitals(txs, agentState, Date.now(), snapshots).tradingEquityUsd;
+        } catch (error: unknown) {
+          log.warn('eviction-basis vitals failed — falling back to net worth', {
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+      if (!isAlive({ balance: evictionBasis, status: 'alive' })) {
+        await markDead(client, config.AGENT_ID);
+        log.error('EVICTED', { netWorth, evictionBasis, mode: config.AGENT_MODE, ticks });
+        break;
+      }
     }
     await checkGasTank();
 

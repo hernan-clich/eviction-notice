@@ -107,6 +107,32 @@ describe('computeVitals', () => {
     expect(v.maxDrawdownFraction).toBeCloseTo(0.4, 6); // (30 − 18) / 30, vs the running peak
   });
 
+  it('measures drawdown from the seed, even when losses precede the first snapshot', () => {
+    // The agent loses before the first snapshot is written, so its first marked
+    // equity is already $15 (down from the $20 seed). Drawdown must count from the $20
+    // high-water mark, not the first snapshot — else it under-reports and could read
+    // "safe" while the competition has already DQ'd it.
+    const transactions: Transaction[] = [
+      tx({ kind: 'income', amount: 20, reason: 'seed', ts: bornAt }),
+    ];
+    const snap = (id: number, ts: string, net: number): Snapshot => ({
+      id,
+      agent_id: 'agent-0',
+      ts,
+      cash_usd: net,
+      position_value_usd: 0,
+      net_worth_usd: net,
+      positions: [],
+    });
+    const snapshots: Snapshot[] = [
+      snap(1, '2026-06-22T01:00:00Z', 15),
+      snap(2, '2026-06-22T02:00:00Z', 18),
+      snap(3, '2026-06-22T03:00:00Z', 12), // trough
+    ];
+    const v = computeVitals(transactions, state, now, snapshots);
+    expect(v.maxDrawdownFraction).toBeCloseTo(0.4, 6); // (20 seed − 12) / 20, not (18 − 12) / 18
+  });
+
   it('does NOT count fictional rent toward drawdown — only real trading equity', () => {
     // Net worth falls 20 → 16 → 14 purely from rent; trading is flat. The DQ must read
     // ~0% drawdown (real wallet steady), not the 30% the rent-eroded net worth implies.

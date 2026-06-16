@@ -112,23 +112,30 @@ export function computeVitals(
     ? latest.positions.map((p) => ({ token: p.token, valueUsd: p.valueUsd }))
     : [];
 
-  const series: BalancePoint[] =
+  // Sorted by tsMs (not just id) so the trading-equity two-pointer below is robust to
+  // any id/timestamp skew — a clock step, a backfill, or a multi-source #28 replay.
+  const series: BalancePoint[] = (
     orderedSnaps.length > 0
       ? orderedSnaps.map((s) => ({ tsMs: Date.parse(s.ts), balanceUsd: s.net_worth_usd }))
-      : cashSeries;
+      : [...cashSeries]
+  ).sort((a, b) => a.tsMs - b.tsMs);
 
   // peakUsd is the net-worth high-water mark (a narrative stat). But DRAWDOWN and the
   // DQ are measured on the REAL wallet — trading equity = net worth with the fictional
   // rent + data burn added back — so the invented burn alone can never trip the 30%
   // DQ. Reconstruct trading equity at each point by adding the cumulative fictional
-  // burn as of that timestamp (two-pointer; both series are time-ordered). Drawdown is
+  // burn as of that timestamp (two-pointer over the tsMs-sorted timeline). Drawdown is
   // vs a running peak (ratchets up only), matching the competition's permanent metric.
+  ficTimeline.sort((a, b) => a.tsMs - b.tsMs);
   const tradingEquityUsd = netWorthUsd + fictionalBurnUsd;
   let peakUsd = netWorthUsd;
   let peakTradingEquityUsd = Math.max(seedUsd, tradingEquityUsd);
   let fi = 0;
   let cumFic = 0;
-  let runningPeak = 0;
+  // Seed the running peak at the birth equity (the seed): a loss BEFORE the first
+  // snapshot still counts toward drawdown. Otherwise the DQ is measured from the first
+  // snapshot and under-reports — the agent could read "safe" while the comp has DQ'd it.
+  let runningPeak = seedUsd;
   let maxDrawdownFraction = 0;
   for (const point of series) {
     peakUsd = Math.max(peakUsd, point.balanceUsd);
