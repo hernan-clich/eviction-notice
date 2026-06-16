@@ -281,29 +281,42 @@ async function main(): Promise<void> {
 
     // Mark the balance sheet after this tick's actions (cash + positions = net worth).
     // Eviction basis by mode: SURVIVAL is the rent game — it dies when net worth (rent
-    // included) hits $0. COMPETE is scored on the REAL wallet, so the fictional rent
-    // must never permadeath a healthy trader: evict only when trading equity (net worth
-    // with the fictional burn added back) is gone.
+    // included) hits $0. COMPETE is scored on the REAL wallet — trading equity is net
+    // worth with the fictional rent/data burn added back, i.e. the actual wallet value
+    // (seed + trading P&L), since that burn never left the wallet. So compete evicts iff
+    // the real wallet is wiped; the fictional rent can never permadeath a healthy trader.
     const netWorth = await recordSnapshot();
     if (netWorth !== null) {
-      let evictionBasis = netWorth;
+      let evicted = false;
       if (config.AGENT_MODE === 'compete') {
+        // Only evict on a SUCCESSFULLY computed trading equity. If the ledger read fails
+        // (transient DB hiccup), SKIP eviction this tick — never fall back to rent-eroded
+        // net worth, which is the exact false-eviction this mode exists to prevent.
         try {
           const [txs, agentState, snapshots] = await Promise.all([
             fetchTransactions(client, config.AGENT_ID),
             fetchAgentState(client, config.AGENT_ID),
             fetchSnapshots(client, config.AGENT_ID),
           ]);
-          evictionBasis = computeVitals(txs, agentState, Date.now(), snapshots).tradingEquityUsd;
+          const tradingEquity = computeVitals(
+            txs,
+            agentState,
+            Date.now(),
+            snapshots,
+          ).tradingEquityUsd;
+          evicted = !isAlive({ balance: tradingEquity, status: 'alive' });
+          if (evicted) log.error('EVICTED', { netWorth, tradingEquity, mode: 'compete', ticks });
         } catch (error: unknown) {
-          log.warn('eviction-basis vitals failed — falling back to net worth', {
+          log.warn('eviction-basis vitals failed — skipping eviction this tick', {
             error: error instanceof Error ? error.message : String(error),
           });
         }
+      } else {
+        evicted = !isAlive({ balance: netWorth, status: 'alive' });
+        if (evicted) log.error('EVICTED', { netWorth, mode: 'survival', ticks });
       }
-      if (!isAlive({ balance: evictionBasis, status: 'alive' })) {
+      if (evicted) {
         await markDead(client, config.AGENT_ID);
-        log.error('EVICTED', { netWorth, evictionBasis, mode: config.AGENT_MODE, ticks });
         break;
       }
     }

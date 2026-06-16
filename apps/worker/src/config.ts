@@ -103,7 +103,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
   if (config.EXECUTION_MODE === 'live' && !config.TWAK_WALLET_PASSWORD) {
     problems.push('EXECUTION_MODE=live requires TWAK_WALLET_PASSWORD to sign swaps.');
   }
-  if (config.X402_SETTLEMENT === 'permit2' && /^0x0+$/i.test(config.X402_PAYER)) {
+  if (config.X402_SETTLEMENT === 'permit2' && /^0x0{40}$/i.test(config.X402_PAYER)) {
     problems.push(
       'X402_SETTLEMENT=permit2 requires a real X402_PAYER, not the zero-address placeholder.',
     );
