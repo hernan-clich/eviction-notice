@@ -107,6 +107,36 @@ describe('computeVitals', () => {
     expect(v.maxDrawdownFraction).toBeCloseTo(0.4, 6); // (30 − 18) / 30, vs the running peak
   });
 
+  it('does NOT count fictional rent toward drawdown — only real trading equity', () => {
+    // Net worth falls 20 → 16 → 14 purely from rent; trading is flat. The DQ must read
+    // ~0% drawdown (real wallet steady), not the 30% the rent-eroded net worth implies.
+    const transactions: Transaction[] = [
+      tx({ kind: 'income', amount: 20, reason: 'seed', ts: bornAt }),
+      tx({ kind: 'rent', amount: -4, reason: 'rent', ts: '2026-06-22T01:30:00Z' }),
+      tx({ kind: 'rent', amount: -2, reason: 'rent', ts: '2026-06-22T02:30:00Z' }),
+    ];
+    const snap = (id: number, ts: string, net: number): Snapshot => ({
+      id,
+      agent_id: 'agent-0',
+      ts,
+      cash_usd: net,
+      position_value_usd: 0,
+      net_worth_usd: net,
+      positions: [],
+    });
+    const snapshots: Snapshot[] = [
+      snap(1, '2026-06-22T01:00:00Z', 20),
+      snap(2, '2026-06-22T02:00:00Z', 16), // after $4 rent
+      snap(3, '2026-06-22T03:00:00Z', 14), // after $6 rent total
+    ];
+    const v = computeVitals(transactions, state, now, snapshots);
+
+    expect(v.netWorthUsd).toBe(14); // net worth is down (rent eroded it)
+    expect(v.tradingEquityUsd).toBeCloseTo(20, 6); // real wallet flat: 14 + 6 rent
+    expect(v.peakTradingEquityUsd).toBeCloseTo(20, 6);
+    expect(v.maxDrawdownFraction).toBeCloseTo(0, 6); // NOT 0.3 — rent doesn't trip the DQ
+  });
+
   it('does not annualize a newborn’s burn into a tiny runway', () => {
     const justBorn: AgentState = {
       agent_id: 'agent-0',

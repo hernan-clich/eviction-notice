@@ -39,9 +39,16 @@ export interface Vitals {
    * This is the honest "how is it trading" number, distinct from the eviction burn.
    */
   tradingPnlUsd: number;
-  /** Peak net worth observed. */
+  /** Current real-wallet equity: net worth with the fictional rent/data burn added back. */
+  tradingEquityUsd: number;
+  /** Peak net worth observed (narrative high-water mark). */
   peakUsd: number;
-  /** Worst peak-to-trough drop over the lifetime (fractional) — the drawdown DQ metric. */
+  /** Peak real-wallet equity — the high-water mark the DQ drawdown is measured against. */
+  peakTradingEquityUsd: number;
+  /**
+   * Worst peak-to-trough of TRADING EQUITY (real wallet), NOT the rent-eroded net
+   * worth — so the fictional burn can never trip the competition's 30% DQ on its own.
+   */
   maxDrawdownFraction: number;
   burnPerHourUsd: number;
   /** Hours of cash left at burn — the forced-sale pressure. */
@@ -71,10 +78,14 @@ export function computeVitals(
   let burnUsd = 0; // cost of existing: rent + data + x402
   let fictionalBurnUsd = 0; // rent + data only — invented costs, not real wallet spend
   let tradeCount = 0;
+  // Cumulative fictional burn over time — used to reconstruct real trading equity for
+  // the drawdown/DQ metric (so rent can't trip the competition's 30% line).
+  const ficTimeline: { tsMs: number; cum: number }[] = [];
 
   for (const tx of ordered) {
+    const tsMs = Date.parse(tx.ts);
     cash += tx.amount;
-    cashSeries.push({ tsMs: Date.parse(tx.ts), balanceUsd: cash });
+    cashSeries.push({ tsMs, balanceUsd: cash });
     if (tx.reason === 'seed') {
       seedUsd += tx.amount;
     }
@@ -83,6 +94,7 @@ export function computeVitals(
     }
     if (tx.reason === 'rent' || tx.reason === 'data_call') {
       fictionalBurnUsd += -tx.amount;
+      ficTimeline.push({ tsMs, cum: fictionalBurnUsd });
     }
     if (tx.reason === 'trade_open') {
       tradeCount += 1;
@@ -105,20 +117,30 @@ export function computeVitals(
       ? orderedSnaps.map((s) => ({ tsMs: Date.parse(s.ts), balanceUsd: s.net_worth_usd }))
       : cashSeries;
 
-  // Peak + worst drawdown over the lifetime. Max drawdown is measured against a
-  // *running* peak (the high-water mark only ratchets up), so it never un-falls —
-  // matching the competition's permanent DQ metric.
+  // peakUsd is the net-worth high-water mark (a narrative stat). But DRAWDOWN and the
+  // DQ are measured on the REAL wallet — trading equity = net worth with the fictional
+  // rent + data burn added back — so the invented burn alone can never trip the 30%
+  // DQ. Reconstruct trading equity at each point by adding the cumulative fictional
+  // burn as of that timestamp (two-pointer; both series are time-ordered). Drawdown is
+  // vs a running peak (ratchets up only), matching the competition's permanent metric.
+  const tradingEquityUsd = netWorthUsd + fictionalBurnUsd;
   let peakUsd = netWorthUsd;
+  let peakTradingEquityUsd = Math.max(seedUsd, tradingEquityUsd);
+  let fi = 0;
+  let cumFic = 0;
   let runningPeak = 0;
   let maxDrawdownFraction = 0;
   for (const point of series) {
-    runningPeak = Math.max(runningPeak, point.balanceUsd);
     peakUsd = Math.max(peakUsd, point.balanceUsd);
+    while (fi < ficTimeline.length && (ficTimeline[fi]?.tsMs ?? 0) <= point.tsMs) {
+      cumFic = ficTimeline[fi]?.cum ?? cumFic;
+      fi += 1;
+    }
+    const equity = point.balanceUsd + cumFic;
+    peakTradingEquityUsd = Math.max(peakTradingEquityUsd, equity);
+    runningPeak = Math.max(runningPeak, equity);
     if (runningPeak > 0) {
-      maxDrawdownFraction = Math.max(
-        maxDrawdownFraction,
-        (runningPeak - point.balanceUsd) / runningPeak,
-      );
+      maxDrawdownFraction = Math.max(maxDrawdownFraction, (runningPeak - equity) / runningPeak);
     }
   }
 
@@ -142,7 +164,9 @@ export function computeVitals(
     seedUsd,
     netPnlUsd: netWorthUsd - seedUsd,
     tradingPnlUsd: netWorthUsd - seedUsd + fictionalBurnUsd,
+    tradingEquityUsd,
     peakUsd,
+    peakTradingEquityUsd,
     maxDrawdownFraction,
     burnPerHourUsd,
     cashRunwayHours: runway(cashUsd),

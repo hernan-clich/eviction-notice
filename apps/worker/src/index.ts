@@ -228,7 +228,9 @@ async function main(): Promise<void> {
         // runway math and its desperation. Falls back to rent-only burn + cash.
         let burnRatePerHourUsd = config.RENT_PER_HOUR_USD;
         let netWorthUsd = balanceAfterRent;
-        let peakNetWorthUsd = Math.max(balanceAfterRent, config.SEED_USD);
+        // Trading equity (real wallet) drives the drawdown/DQ — see computeVitals.
+        let tradingEquityUsd = balanceAfterRent;
+        let peakTradingEquityUsd = Math.max(balanceAfterRent, config.SEED_USD);
         let drawdownBreached = false;
         try {
           const [txs, agentState, snapshots] = await Promise.all([
@@ -241,8 +243,10 @@ async function main(): Promise<void> {
             burnRatePerHourUsd = vitals.burnPerHourUsd;
           }
           netWorthUsd = vitals.netWorthUsd;
-          peakNetWorthUsd = vitals.peakUsd;
-          // Sticky: once the worst drawdown ever crossed the cap, the DQ is permanent.
+          tradingEquityUsd = vitals.tradingEquityUsd;
+          peakTradingEquityUsd = vitals.peakTradingEquityUsd;
+          // Sticky + on the REAL wallet: once trading equity's worst peak-to-trough ever
+          // crossed the cap, the DQ is permanent. Fictional rent can't trip it.
           drawdownBreached = vitals.maxDrawdownFraction >= config.MAX_DRAWDOWN_FRACTION;
         } catch (error: unknown) {
           log.warn('vitals calc failed — using rent-only burn + cash net worth', {
@@ -257,7 +261,8 @@ async function main(): Promise<void> {
           balanceUsd: balanceAfterRent,
           burnRatePerHourUsd,
           netWorthUsd,
-          peakNetWorthUsd,
+          tradingEquityUsd,
+          peakTradingEquityUsd,
           drawdownBreached,
           mustTrade,
         });
