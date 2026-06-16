@@ -340,6 +340,12 @@ export async function runInnerTick(
       if (!quote) {
         return `No live price for ${parsed.data.token}; cannot open.`;
       }
+      // Re-validate on the RESOLVED symbol: an ambiguous ticker can resolve to a
+      // different coin than the eligible one — which would trade an ineligible token
+      // (and a different on-chain contract) with real funds and score nothing.
+      if (!isEligibleToken(quote.symbol)) {
+        return `${parsed.data.token} resolved to "${quote.symbol}", which is not in the eligible universe — that trade wouldn't count. Pick a clearly eligible token (prefer the liquid majors).`;
+      }
       // Execute (or simulate) the swap first — a live failure must not leave a
       // phantom position. baseAmount = USDT spent ≈ sizeUsd.
       const swap = await executeSwap(
@@ -350,6 +356,17 @@ export async function runInnerTick(
       // real token received → effective entry price (slippage is in the price, not
       // a separate USDT fee; gas is paid in BNB, outside this economy). Paper: the
       // requested size at the quote price with a modeled friction.
+      // Live safety: real funds just moved, so we must book the REAL fill. If the swap
+      // executed (not simulated) but the amounts didn't parse, refuse to fabricate a
+      // paper fill — fail loud instead of corrupting the ledger with fiction.
+      if (
+        !swap.simulated &&
+        (swap.outAmount === null || swap.outAmount <= 0 || swap.inAmount === null)
+      ) {
+        throw new Error(
+          `live open swap returned unparseable amounts (in=${String(swap.inAmount)}, out=${String(swap.outAmount)}, tx=${String(swap.txHash)}) — not booking a phantom fill; needs manual reconciliation`,
+        );
+      }
       // `fill` carries the real on-chain numbers (non-null by construction) or is
       // null in paper mode — no assertions, the narrowing is genuine.
       const fill =

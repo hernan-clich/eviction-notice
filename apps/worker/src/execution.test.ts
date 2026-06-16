@@ -117,13 +117,10 @@ describe('executeSwap', () => {
     expect(run).not.toHaveBeenCalled();
   });
 
-  it('live mode requires a wallet password', async () => {
-    await expect(
-      executeSwap(
-        { config: cfg({ EXECUTION_MODE: 'live' }) },
-        { side: 'open', token: 'AAVE', baseAmount: 12 },
-      ),
-    ).rejects.toThrow(/TWAK_WALLET_PASSWORD/);
+  it('live mode requires a wallet password — rejected at config load', () => {
+    // The cross-field guard in loadConfig now fails fast at boot, so a live config
+    // without a signing password can never even be constructed.
+    expect(() => cfg({ EXECUTION_MODE: 'live' })).toThrow(/TWAK_WALLET_PASSWORD/);
   });
 
   it('live open resolves addresses, preflights, and swaps USDT → token', async () => {

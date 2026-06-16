@@ -95,5 +95,21 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
     const issues = parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`);
     throw new Error(`Invalid worker configuration:\n  ${issues.join('\n  ')}`);
   }
-  return parsed.data;
+  const config = parsed.data;
+
+  // Cross-field guards so a misconfigured live deploy fails fast at boot, rather than
+  // silently running broken (or paying from the zero address) mid-competition.
+  const problems: string[] = [];
+  if (config.EXECUTION_MODE === 'live' && !config.TWAK_WALLET_PASSWORD) {
+    problems.push('EXECUTION_MODE=live requires TWAK_WALLET_PASSWORD to sign swaps.');
+  }
+  if (config.X402_SETTLEMENT === 'permit2' && /^0x0{40}$/i.test(config.X402_PAYER)) {
+    problems.push(
+      'X402_SETTLEMENT=permit2 requires a real X402_PAYER, not the zero-address placeholder.',
+    );
+  }
+  if (problems.length > 0) {
+    throw new Error(`Invalid worker configuration:\n  ${problems.join('\n  ')}`);
+  }
+  return config;
 }
