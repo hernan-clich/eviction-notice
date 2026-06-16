@@ -256,7 +256,9 @@ export function VitalSigns({ vitals }: { vitals: Vitals }) {
     <section className="flex flex-col gap-4">
       <div>
         <h1 className="font-display text-xl tracking-[0.25em]">EVICTION&nbsp;NOTICE</h1>
-        <div className="text-muted text-xs">autonomous agent · earning its keep</div>
+        <div className="text-muted text-[10px] tracking-[0.2em] uppercase">
+          autonomous agent · earning its keep
+        </div>
       </div>
 
       <StatusLadder current={current} hex={v.hex} />
