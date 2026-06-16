@@ -35,7 +35,7 @@ export function DashboardView({
   const chart = (
     <div>
       <div className="font-display text-muted mb-3 text-[10px] tracking-[0.25em] uppercase">
-        Net worth · lifetime
+        Net worth
       </div>
       <Sparkline series={vitals.series} color={sparklineColor} seedUsd={vitals.seedUsd} />
     </div>
