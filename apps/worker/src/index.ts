@@ -207,7 +207,7 @@ async function main(): Promise<void> {
       kind: 'rent',
       amount: -rent,
       reason: 'rent',
-      reasoning: `Life-support rent @ $${config.RENT_PER_HOUR_USD.toFixed(2)}/h.`,
+      reasoning: `Rent @ $${config.RENT_PER_HOUR_USD.toFixed(2)}/h to keep the lease.`,
     });
 
     const balanceAfterRent = await fetchBalance(client, config.AGENT_ID);
