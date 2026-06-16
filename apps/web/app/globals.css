@@ -12,6 +12,9 @@
   --color-phosphor: #4ef0a0;
   --color-amber: #f5c451;
   --color-alarm: #ff5468;
+  /* The fictional eviction burn (rent) — a cool slate, distinct from real-cost red
+   * and from the cyan BscScan links, so "rent meter" reads as not-real-money. */
+  --color-rent: #7d8ad6;
 }
 
 :root {

@@ -23,15 +23,22 @@ function txLink(meta: Transaction['meta']): TxRef | null {
 }
 
 const INFLOW = new Set(['seed', 'trade_close']);
-const OUTFLOW = new Set(['rent', 'data_call', 'x402_fee', 'trade_open']);
+// Real on-chain spend (USDT/gas) — coded red. Rent is fictional (its own colour) and
+// data_call is now free + informational (grey), so neither belongs here.
+const REAL_COST = new Set(['x402_fee', 'trade_open']);
 
 function tone(reason: string): { color: string; chip: string } {
   if (INFLOW.has(reason)) {
     return { color: '#4ef0a0', chip: 'border-phosphor/40 text-phosphor' };
   }
-  if (OUTFLOW.has(reason)) {
+  // Rent is the fictional eviction burn, not real money lost — its own slate colour.
+  if (reason === 'rent') {
+    return { color: '#7d8ad6', chip: 'border-rent/40 text-rent' };
+  }
+  if (REAL_COST.has(reason)) {
     return { color: '#ff5468', chip: 'border-alarm/40 text-alarm' };
   }
+  // data_call, decision — informational, no money moved.
   return { color: '#6a7570', chip: 'border-line text-muted' };
 }
 
