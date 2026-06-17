@@ -1,17 +1,17 @@
 # Eviction Notice
 
-**An autonomous crypto-trading agent that has to earn its own rent — or die.**
+**An autonomous crypto-trading agent that has to earn its own rent — or get evicted.**
 
 Eviction Notice is a live trading agent for the **BNB Hack: AI Trading Agent
 Edition** (CoinMarketCap × Trust Wallet × BNB Chain). It trades real funds on BNB
 Chain, and it lives inside a survival fiction: every hour it owes **rent**. Pay it
-and the agent stays online; let its net worth hit zero and it is **EVICTED** —
-permanently, no revivals. The whole run is a public, real-time spectator stream of
-an AI fighting to keep the lights on.
+and the agent keeps the lease; let its net worth hit zero and it is **EVICTED** —
+the lease is up for good, no second chance. The whole run is a public, real-time
+spectator stream of an AI fighting to keep a roof over its head.
 
-The mortality is a lens, not a gimmick. An agent that can be evicted has to think
-about **solvency**, not just returns — and that discipline is the project's edge
-on both tracks of the hackathon.
+The eviction is a lens, not a gimmick. An agent that can lose the room has to
+think about **solvency**, not just returns — and that discipline is the project's
+edge on both tracks of the hackathon.
 
 ---
 
@@ -33,11 +33,11 @@ Notice inverts it: **stay solvent first, profit second.** Concretely —
 
 ### Track 1 — the autonomous trading agent
 A persistent worker trades a real BNB-Chain wallet on a heartbeat: accrue rent →
-mark the book → check it's still alive → think (gather signals, decide, size,
+mark the book → check it's still solvent → think (gather signals, decide, size,
 trade) → sleep. Swaps are real PancakeSwap spot trades via the Trust Wallet Agent
 Kit CLI; the agent even pays its own sizing skill to think, over **x402**. A live
 spectator **dashboard** streams its vitals — net worth, runway, burn, the depleting
-life bar — and freezes a memorial **EVICTED** screen at end of life.
+rent meter — and freezes a memorial **EVICTED** screen when the lease runs out.
 
 ### Track 2 — the Solvency-Aware Sizing skill
 A reusable **CMC Strategy Skill** ([`apps/skill`](apps/skill)) packaged as a
@@ -46,7 +46,7 @@ backtestable spec, not a live bot. It turns Agent Hub signals into a determinist
 cap. It is reproducibly backtested against the standard baselines:
 
 ```
-Survival over a 7-day window (2000 agents, seed=1) — % still alive
+Survival over a 7-day window (2000 agents, seed=1) — % still solvent
 solvency-aware   100%   ·  kelly   8%   ·  fixed-fraction   0%
 ```
 
