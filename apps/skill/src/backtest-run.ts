@@ -4,7 +4,7 @@ import { runBacktest, type BacktestResult } from './backtest.ts';
 function render(result: BacktestResult): string {
   const lines: string[] = [];
   lines.push(
-    `Survival curves — ${result.agents} agents over ${result.days} days (% alive at day end)\n`,
+    `Survival curves — ${result.agents} agents over ${result.days} days (% still solvent at day end)\n`,
   );
 
   const header = [

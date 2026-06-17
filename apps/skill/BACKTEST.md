@@ -12,7 +12,7 @@ pnpm --filter skill backtest
 `src/backtest.ts` runs a **population of agents** — identical seed capital and
 burn rate, different sizing brains — over seeded Monte-Carlo market paths, and
 measures the only outcome that matters for a solvency-constrained agent: **how
-many are still alive at the end of day N.**
+many are still solvent at the end of day N.**
 
 - **Same path per agent for every strategy**, so differences are *sizing*, not luck.
 - **No lookahead** — each tick sizes on the state available at that tick.
@@ -31,7 +31,7 @@ A 7-day window, 2000 agents, `seed=1`, `$20` seed, `$0.07/h` burn, 30% drawdown 
 (the defaults in `src/backtest-run.ts`):
 
 ```
-Survival curves — 2000 agents over 7 days (% alive at day end)
+Survival curves — 2000 agents over 7 days (% still solvent at day end)
 strategy            d1    d2    d3    d4    d5    d6    d7
 solvency-aware    100%  100%  100%  100%  100%  100%  100%
 kelly              93%   67%   42%   28%   19%   13%    8%

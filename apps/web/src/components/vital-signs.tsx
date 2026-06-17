@@ -209,7 +209,7 @@ function BoxScore({ vitals }: { vitals: Vitals }) {
           DQ&nbsp;{formatPct(DRAWDOWN_CAP, 0)}
         </span>
       </span>
-      <ScoreItem label="alive" value={`${vitals.daysSurvived.toFixed(2)}d`} />
+      <ScoreItem label="housed" value={`${vitals.daysSurvived.toFixed(2)}d`} />
       <ScoreItem label="trades" value={String(vitals.tradeCount)} />
     </div>
   );
