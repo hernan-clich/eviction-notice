@@ -100,7 +100,7 @@ DQ'd), the cap protects nothing and is voided — size by available cash alone.
 
 `src/backtest.ts` runs a population of agents — identical seed + burn, different
 sizing brains — over seeded Monte-Carlo market paths and asks the only question
-that matters: **how many are still alive at day N?** Every strategy sees the *same*
+that matters: **how many are still solvent at day N?** Every strategy sees the *same*
 path per agent, so differences are sizing, not luck. Drawdown is measured on
 trading equity (rent added back) so the burn metabolism alone never trips the DQ —
 only real trading losses do.
