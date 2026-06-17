@@ -1,0 +1,184 @@
+{
+  "name": "Solvency-Aware Sizing",
+  "slug": "solvency-aware-sizing",
+  "version": "1.0.0",
+  "track": "BNB Hack Track 2 — Strategy Skills",
+  "description": "A survival-optimal position-sizing strategy skill: turns CoinMarketCap Agent Hub signals into a deterministic size-or-skip decision that maximises how long an agent stays solvent under a burn rate and a max-drawdown DQ cap — not expected return. Reproducibly backtested against Kelly and fixed-fraction baselines.",
+  "backtestable": true,
+  "deterministic": true,
+  "liveTrading": false,
+  "aiCanOverrideEngine": false,
+  "dataSources": [
+    {
+      "name": "CoinMarketCap AI Agent Hub (MCP)",
+      "type": "agent_hub_signals",
+      "endpoint": "https://mcp.coinmarketcap.com/mcp",
+      "tools": [
+        "get_technical_analysis",
+        "get_market_regime",
+        "get_trending",
+        "get_global_metrics_latest",
+        "get_quotes"
+      ],
+      "usedFor": "Deriving the edge and volatility inputs (RSI/MACD/MA momentum, realised vol) and the risk-on/risk-off regime gate.",
+      "derivation": "src/signals.ts — deriveSignals() maps these signals to (edge, volatility) deterministically, in code (no model judgment); signalsFromHub() pulls the tools and derives in one call."
+    }
+  ],
+  "inputSchema": {
+    "type": "object",
+    "required": [
+      "balanceUsd",
+      "peakBalanceUsd",
+      "burnRatePerHourUsd",
+      "edge",
+      "volatility",
+      "gasPerSwapUsd"
+    ],
+    "properties": {
+      "balanceUsd": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "description": "Cash available to deploy (USD)."
+      },
+      "peakBalanceUsd": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "description": "Cash high-water mark — fallback drawdown peak for cash-only callers."
+      },
+      "netWorthUsd": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "description": "Portfolio net worth (cash + open positions). The DQ drawdown is measured on this. Defaults to balanceUsd."
+      },
+      "peakNetWorthUsd": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "description": "All-time net-worth high-water mark — the drawdown peak (ratchets up only). Defaults to peakBalanceUsd."
+      },
+      "burnRatePerHourUsd": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Cost of being alive (USD/hour): rent + expected data burn."
+      },
+      "edge": {
+        "type": "number",
+        "description": "Expected fractional return on the position, derived from Agent Hub signals (e.g. 0.02 = +2%)."
+      },
+      "volatility": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "description": "Fractional downside risk over the hold, from the TA payload (e.g. 0.05 = 5%)."
+      },
+      "gasPerSwapUsd": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Live gas cost of a single swap (USD)."
+      },
+      "swapFeeRate": {
+        "type": "number",
+        "minimum": 0,
+        "default": 0.0025,
+        "description": "Swap fee per side (PancakeSwap V2 = 0.25%)."
+      },
+      "slippage": {
+        "type": "number",
+        "minimum": 0,
+        "default": 0.001,
+        "description": "Expected round-trip slippage (fractional)."
+      },
+      "maxDrawdownFraction": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 1,
+        "default": 0.3,
+        "description": "Max-drawdown DQ gate (the competition's ~30%)."
+      },
+      "maxPositionFraction": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 1,
+        "default": 0.75,
+        "description": "Never deploy more than this fraction of balance in one position."
+      },
+      "minPositionUsd": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "default": 5,
+        "description": "Smallest viable position (below this, gas is pure friction)."
+      },
+      "cashReserveHours": {
+        "type": "number",
+        "minimum": 0,
+        "default": 0,
+        "description": "Hours of burn to keep unspent (prevents going all-in)."
+      },
+      "edgeMargin": {
+        "type": "number",
+        "minimum": 0,
+        "default": 0.005,
+        "description": "Required margin of edge over friction before trading."
+      },
+      "desperation": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "description": "Survival pressure: 0 comfortable, 1 at death's door. Frees the rent reserve and lowers the edge bar as runway shrinks."
+      },
+      "drawdownBreached": {
+        "type": "boolean",
+        "default": false,
+        "description": "The DQ cap is already permanently breached → cap is voided, trade for recovery bounded by cash."
+      },
+      "mustTrade": {
+        "type": "boolean",
+        "default": false,
+        "description": "Daily-floor override: force the least-harmful qualifying trade (≥1 trade/day rule)."
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "required": ["decision", "sizeUsd", "roundTripFrictionFraction", "reason"],
+    "properties": {
+      "decision": { "type": "string", "enum": ["trade", "skip"] },
+      "sizeUsd": {
+        "type": "number",
+        "minimum": 0,
+        "description": "USD to deploy (0 when skipping)."
+      },
+      "roundTripFrictionFraction": {
+        "type": "number",
+        "description": "Round-trip friction as a fraction of the evaluated size."
+      },
+      "reason": {
+        "type": "string",
+        "description": "Human-legible rationale: the edge, the friction it had to clear, and which rule drove the call."
+      }
+    }
+  },
+  "backtest": {
+    "doc": "./BACKTEST.md",
+    "command": "pnpm --filter skill backtest",
+    "engine": "src/backtest.ts (seeded Monte-Carlo, no lookahead)",
+    "headline": "Over a 7-day window (2000 agents, seed=1): solvency-aware 100% survive vs kelly 8% vs fixed-fraction 0%."
+  },
+  "examples": [
+    "./examples/trade-clean-edge.json",
+    "./examples/skip-thin-edge.json",
+    "./examples/skip-at-drawdown-cap.json",
+    "./examples/trade-desperate-relaxed-bar.json",
+    "./examples/signal-derivation-end-to-end.json"
+  ],
+  "safetyScope": {
+    "tradeExecution": false,
+    "walletConnection": false,
+    "autonomousTrading": false,
+    "financialAdvice": false,
+    "notes": [
+      "Pure, deterministic function: same inputs → same decision. No I/O, no randomness.",
+      "Sizes an already-chosen candidate trade; it does not pick tokens or execute orders.",
+      "Every numeric claim is reproducible from the scripts in this repo — verify, don't trust."
+    ]
+  }
+}
