@@ -67,10 +67,19 @@ services:
         value: '22'
       - key: EXECUTION_MODE
         value: live
+      # Judged-run posture: maximise total return, stay deployed, never breach the
+      # drawdown cap (#67/#77). Codified here so a fresh provision can't silently
+      # fall back to 'survival' — it must be 'compete' for the scored window.
+      - key: AGENT_MODE
+        value: compete
       - key: AGENT_ID
         value: agent-0
+      # Judged-run seed: $20 clears the BNB-Chain friction wall (~1.78% round-trip at
+      # $5-scale positions → ~0.78% at $20-scale); past ~$20 the ~0.60% PancakeSwap
+      # fee + slippage floor dominates, so bigger seed buys little. Fund the wallet to
+      # match before birth.
       - key: SEED_USD
-        value: '5'
+        value: '20'
       - key: RENT_PER_HOUR_USD
         value: '0.07'
       - key: TICK_INTERVAL_MS
@@ -82,11 +91,15 @@ services:
       - key: TWAK_SLIPPAGE_PCT
         value: '1'
       # Real x402: the agent pays the skill over x402 via `twak x402 request`,
-      # settled on BSC (#15). The burner is already Permit2-approved.
+      # settled on BSC (#15). The payer wallet must be Permit2-approved.
       - key: X402_SETTLEMENT
         value: permit2
+      # The agent's own wallet address. Set in the dashboard at provision time so it
+      # pairs with the wallet secrets below (TWAK_WALLET_JSON_B64 / password) — the
+      # judged run uses a fresh wallet, not the test burner. Must be the real,
+      # Permit2-approved address (the permit2 guard rejects the zero placeholder).
       - key: X402_PAYER
-        value: '0xEdf33971BEed3Ede63D85B7ae3dDE8D18d21BE4b' # the funded burner
+        sync: false
       # Secrets — set in the Render dashboard (never committed):
       - key: SUPABASE_URL
         sync: false
