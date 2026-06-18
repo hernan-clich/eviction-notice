@@ -17,6 +17,11 @@ const envSchema = z.object({
   TICK_INTERVAL_MS: z.coerce.number().int().positive().default(1_800_000),
   // 0 = run forever. > 0 stops after N ticks (local verification).
   MAX_TICKS: z.coerce.number().int().nonnegative().default(0),
+  // Stand-by gate (ISO 8601). If set and in the future, the worker boots but HOLDS —
+  // unborn, no rent, no trades — until this instant, then auto-activates (births +
+  // begins the loop). Lets us arm the judged run early and have it start hands-off at
+  // window open; the dashboard shows the pre-life state meanwhile. Unset = start now.
+  TRADING_STARTS_AT: z.string().datetime({ offset: true }).optional(),
   // CoinMarketCap — optional so the heartbeat boots without it; the data client
   // requires it at point of use. Cost is the simulated per-call data burn ($/think).
   CMC_API_KEY: z.string().min(1).optional(),

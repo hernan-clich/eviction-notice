@@ -181,7 +181,37 @@ async function checkGasTank(): Promise<void> {
   }
 }
 
+// How often to log a heartbeat while standing by for the trading window.
+const STANDBY_POLL_MS = 900_000; // 15 min
+
+/**
+ * Stand-by gate: if TRADING_STARTS_AT is set and still in the future, hold here —
+ * the worker is deployed and connected but UNBORN (no seed, no rent, no trades) so
+ * the dashboard shows the pre-life state and the wallet stays trade-free until the
+ * window. At the start instant it falls through and the run activates normally.
+ * Interruptible: a stop signal wakes it. Unset → returns immediately (start now).
+ */
+async function awaitTradingWindow(): Promise<void> {
+  if (!config.TRADING_STARTS_AT) return;
+  const startMs = Date.parse(config.TRADING_STARTS_AT);
+  while (running && Date.now() < startMs) {
+    log.info('standing by — trading window not open yet', {
+      startsAt: config.TRADING_STARTS_AT,
+      hoursRemaining: ((startMs - Date.now()) / 3_600_000).toFixed(1),
+    });
+    await sleep(Math.min(startMs - Date.now(), STANDBY_POLL_MS));
+  }
+  if (running) {
+    log.info('trading window open — activating', { startsAt: config.TRADING_STARTS_AT });
+  }
+}
+
 async function main(): Promise<void> {
+  await awaitTradingWindow();
+  if (!running) {
+    log.info('stopped during stand-by — never activated');
+    return;
+  }
   const { seeded } = await ensureBorn(client, config);
   const balance = await fetchBalance(client, config.AGENT_ID);
   log.info('worker online', {
