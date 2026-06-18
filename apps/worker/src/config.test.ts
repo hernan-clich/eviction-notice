@@ -30,4 +30,16 @@ describe('loadConfig', () => {
   it('rejects a non-URL Supabase URL', () => {
     expect(() => loadConfig({ ...minimalEnv, SUPABASE_URL: 'not-a-url' })).toThrow();
   });
+
+  it('accepts an ISO TRADING_STARTS_AT and leaves it unset by default', () => {
+    expect(loadConfig(minimalEnv).TRADING_STARTS_AT).toBeUndefined();
+    const config = loadConfig({ ...minimalEnv, TRADING_STARTS_AT: '2026-06-22T00:00:00Z' });
+    expect(config.TRADING_STARTS_AT).toBe('2026-06-22T00:00:00Z');
+  });
+
+  it('rejects a non-ISO TRADING_STARTS_AT (a typo would never activate)', () => {
+    expect(() => loadConfig({ ...minimalEnv, TRADING_STARTS_AT: 'june 22' })).toThrow(
+      /Invalid worker configuration/,
+    );
+  });
 });
