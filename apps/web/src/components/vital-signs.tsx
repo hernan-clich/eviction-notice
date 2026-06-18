@@ -220,7 +220,7 @@ function AssetRichWarning({ vitals }: { vitals: Vitals }) {
   const pct = Math.round(lockedFractionOf(vitals) * 100);
   return (
     <p className="border-amber/40 bg-amber/10 text-amber rounded border px-3 py-2 text-xs leading-snug">
-      ⚠ Asset-rich, cash-poor - {pct}% locked in {positionLabel(vitals)}; may be forced to liquidate
+      ⚠ Asset-rich, cash-poor: {pct}% locked in {positionLabel(vitals)}; may be forced to liquidate
       to make rent.
     </p>
   );

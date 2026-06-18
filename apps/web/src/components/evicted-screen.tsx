@@ -165,7 +165,7 @@ export function EvictedScreen({
           className="font-display mt-2 text-center text-[11px] tracking-[0.35em] uppercase"
           style={{ color: ROSE }}
         >
-          - locked out -
+          · locked out ·
         </div>
       </div>
 

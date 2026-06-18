@@ -88,7 +88,7 @@ function TxLink({ link }: { link: TxRef }) {
     return (
       <span
         className="text-muted ml-2 inline-flex items-center gap-1.5 align-baseline text-xs not-italic"
-        title="Simulated - no on-chain transaction (real tx lands with live execution)"
+        title="Simulated, no on-chain transaction (real tx lands with live execution)"
       >
         <span
           className="font-display text-muted/80 rounded-sm border-current px-1 text-[9px] tracking-widest uppercase"

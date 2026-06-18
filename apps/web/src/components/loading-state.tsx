@@ -84,7 +84,7 @@ export function LoadingState({
             >
               <span className="text-muted/40">›</span>
               {error ? (
-                <span className="text-amber/80">couldn’t reach the unit - retrying…</span>
+                <span className="text-amber/80">couldn’t reach the unit, retrying…</span>
               ) : (
                 <>
                   <span className="text-ink">knocking on the door</span>
