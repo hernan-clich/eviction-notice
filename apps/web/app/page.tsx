@@ -125,12 +125,14 @@ export default function Dashboard() {
     }
   }, [status]);
 
-  // Any transient unknown — the first load, or an error before any data arrived —
-  // falls back to the colourless "knocking" state, never the populated shell (which
-  // would render as a false death). Once real data lands, it resolves into the live
-  // dashboard or the memorial.
+  // The colourless "knocking" state covers every "no agent yet" case, never the
+  // populated shell (empty defaults render as a false death — $0, EVICTED, flatline):
+  //   - the first load hasn't resolved, or errored before any data arrived; and
+  //   - the agent isn't born yet — the pre-birth / stand-by window, when it's armed
+  //     and deployed but the trading window hasn't opened (no agent row, no ledger).
+  // An evicted agent always has a non-null agentState, so this can't mask a real death.
   const noData = agentState === null && transactions.length === 0;
-  if (!loaded || (loadError !== null && noData)) {
+  if (!loaded || noData) {
     return <LoadingState error={loaded ? loadError : null} />;
   }
 
