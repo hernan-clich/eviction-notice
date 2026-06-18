@@ -13,7 +13,7 @@ import { HeartbeatLine } from './heartbeat-line';
 
 // EVICTED is the ladder's terminus: dimmed while alive (the looming end), lit when
 // reached. The live dashboard hands off to the memorial on death, so it only lights
-// up during replay — but its presence keeps desktop consistent with the mobile header.
+// up during replay - but its presence keeps desktop consistent with the mobile header.
 const STATES = ['STABLE', 'STRAINED', 'FINAL NOTICE', 'EVICTED'] as const;
 
 // The competition's hard max-drawdown DQ line (worst peak-to-trough vs the
@@ -26,7 +26,7 @@ function statusLabel(vitals: Vitals): string {
   return vitals.alive ? vitality(vitals).label : 'EVICTED';
 }
 
-/** Net worth as a fraction of seed, clamped — how far it is above the eviction floor. */
+/** Net worth as a fraction of seed, clamped - how far it is above the eviction floor. */
 function lifeFractionOf(vitals: Vitals): number {
   return vitals.seedUsd > 0 ? clamp01(vitals.netWorthUsd / vitals.seedUsd) : 0;
 }
@@ -91,7 +91,7 @@ function StatusLadder({ current, hex }: { current: string; hex: string }) {
 /**
  * Net worth split into liquid cash (bright) and value locked in positions (dim),
  * scaled against the seed. Deploying cash shrinks the bright segment and grows the
- * dim one — the total doesn't move. It only moves when P&L or burn changes net worth.
+ * dim one - the total doesn't move. It only moves when P&L or burn changes net worth.
  */
 function SplitBar({ vitals, hex, className }: { vitals: Vitals; hex: string; className?: string }) {
   const denom = Math.max(vitals.seedUsd, vitals.netWorthUsd, 1);
@@ -137,7 +137,7 @@ function SplitLegend({ vitals, hex }: { vitals: Vitals; hex: string }) {
 }
 
 /**
- * The runway clock — the moving headline of the slow part. Runway is derived from
+ * The runway clock - the moving headline of the slow part. Runway is derived from
  * burn (net worth ÷ burn), so they're one idea: runway is the number, burn its
  * sub-line, not two separate cells.
  */
@@ -185,7 +185,7 @@ function ScoreItem({
 }
 
 /**
- * The box score — slow-changing record (peak, drawdown, age, trades) collapsed into
+ * The box score - slow-changing record (peak, drawdown, age, trades) collapsed into
  * one dense strip of label·value pairs, like the stat line under an athlete's name.
  * It recedes so the eye lands on net worth + the runway clock above.
  */
@@ -220,13 +220,13 @@ function AssetRichWarning({ vitals }: { vitals: Vitals }) {
   const pct = Math.round(lockedFractionOf(vitals) * 100);
   return (
     <p className="border-amber/40 bg-amber/10 text-amber rounded border px-3 py-2 text-xs leading-snug">
-      ⚠ Asset-rich, cash-poor — {pct}% locked in {positionLabel(vitals)}; may be forced to liquidate
+      ⚠ Asset-rich, cash-poor - {pct}% locked in {positionLabel(vitals)}; may be forced to liquidate
       to make rent.
     </p>
   );
 }
 
-// The real trading result (fictional rent + data burn added back) — the honest
+// The real trading result (fictional rent + data burn added back) - the honest
 // "how is it trading" number the competition scores, not the all-in eviction P&L.
 // The operating burn lives separately in the runway/"cost of staying" below.
 function PnlRow({ vitals }: { vitals: Vitals }) {
@@ -246,7 +246,7 @@ function PnlRow({ vitals }: { vitals: Vitals }) {
   );
 }
 
-/** Full vitals panel — the desktop left rail. */
+/** Full vitals panel - the desktop left rail. */
 export function VitalSigns({ vitals }: { vitals: Vitals }) {
   const v = vitality(vitals);
   const current = statusLabel(vitals);
@@ -298,7 +298,7 @@ export function VitalSigns({ vitals }: { vitals: Vitals }) {
 }
 
 /**
- * Mobile header — pinned to the top so the live feed can be the scrolling body
+ * Mobile header - pinned to the top so the live feed can be the scrolling body
  * beneath it. Carries the emotional core (net worth, status, split bar, pulse) and
  * escalates its top accent with status for ambient dread while you're in the feed.
  */
@@ -350,7 +350,7 @@ export function CompactVitals({ vitals }: { vitals: Vitals }) {
   );
 }
 
-/** Secondary vitals demoted below the feed on mobile — the detail, not the headline. */
+/** Secondary vitals demoted below the feed on mobile - the detail, not the headline. */
 export function SecondaryVitals({ vitals }: { vitals: Vitals }) {
   return (
     <div className="flex flex-col gap-3">

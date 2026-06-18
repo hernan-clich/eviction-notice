@@ -28,7 +28,7 @@ export default function Dashboard() {
   const [agentState, setAgentState] = useState<AgentState | null>(null);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  // The first load hasn't resolved yet — show the colourless "knocking" state, never
+  // The first load hasn't resolved yet - show the colourless "knocking" state, never
   // the dashboard shell (empty defaults render as a false death in this app).
   const [loaded, setLoaded] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -49,7 +49,7 @@ export default function Dashboard() {
         setTransactions(data.transactions);
         setAgentState(data.agentState);
         setSnapshots(data.snapshots);
-        setLoadError(null); // recovered — clear any stale error from a dropped connection
+        setLoadError(null); // recovered - clear any stale error from a dropped connection
       } catch (error) {
         if (active) setLoadError(error instanceof Error ? error.message : String(error));
       } finally {
@@ -76,7 +76,7 @@ export default function Dashboard() {
     subscribe();
 
     // Supabase Realtime drops its socket when the tab is backgrounded, the machine
-    // sleeps, or the network changes — and it does NOT replay rows missed while
+    // sleeps, or the network changes - and it does NOT replay rows missed while
     // disconnected, so the feed silently goes stale until a manual refresh. When the
     // tab comes back to life, refetch to catch up AND rebuild the channel on a fresh
     // socket. Debounced because focus/online/visible often fire together on wake.
@@ -112,7 +112,7 @@ export default function Dashboard() {
 
   const vitals = computeVitals(transactions, agentState, nowMs, snapshots);
 
-  // `?preview=death` forces the death beat regardless of lifecycle — the only way
+  // `?preview=death` forces the death beat regardless of lifecycle - the only way
   // to watch it without staging a real live crossover (and handy for the demo).
   useEffect(() => {
     if (new URLSearchParams(globalThis.location.search).get('preview') === 'death') {
@@ -137,9 +137,9 @@ export default function Dashboard() {
   }, [status]);
 
   // The colourless "knocking" state covers every "no agent yet" case, never the
-  // populated shell (empty defaults render as a false death — $0, EVICTED, flatline):
+  // populated shell (empty defaults render as a false death - $0, EVICTED, flatline):
   //   - the first load hasn't resolved, or errored before any data arrived; and
-  //   - the agent isn't born yet — the pre-birth / stand-by window, when it's armed
+  //   - the agent isn't born yet - the pre-birth / stand-by window, when it's armed
   //     and deployed but the trading window hasn't opened (no agent row, no ledger).
   // An evicted agent always has a non-null agentState, so this can't mask a real death.
   const noData = agentState === null && transactions.length === 0;

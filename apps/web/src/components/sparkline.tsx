@@ -44,7 +44,7 @@ export function Sparkline({
   }
 
   // The SVG stretches non-uniformly (preserveAspectRatio="none"), so an SVG <circle>
-  // renders as an ellipse. Place the endpoint dot in screen space instead — a div
+  // renders as an ellipse. Place the endpoint dot in screen space instead - a div
   // positioned at the last point's percentage coords stays a perfect circle.
   const dotLeftPct = lastPoint ? (lastPoint[0] / WIDTH) * 100 : null;
   const dotTopPct = lastPoint ? (lastPoint[1] / HEIGHT) * 100 : null;

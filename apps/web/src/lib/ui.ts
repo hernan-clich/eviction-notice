@@ -24,7 +24,7 @@ export function formatPct(fraction: number, decimals = 1): string {
   return `${(fraction * 100).toFixed(decimals)}%`;
 }
 
-/** Signed percentage, e.g. +12.3% / -83.0% / 0.0% — the headline return figure. */
+/** Signed percentage, e.g. +12.3% / -83.0% / 0.0% - the headline return figure. */
 export function formatSignedPct(fraction: number): string {
   const sign = fraction > 0 ? '+' : fraction < 0 ? '-' : '';
   return `${sign}${Math.abs(fraction * 100).toFixed(1)}%`;
@@ -68,7 +68,7 @@ const TIERS: Record<SurvivalTier, Vitality> = {
 /**
  * Status is the ONE eviction axis: net worth as a fraction of seed (the shared
  * `survivalTier`, the same driver the agent's desperation reads). Cash never evicts
- * the agent directly — it can always liquidate to make rent — so cash pressure is
+ * the agent directly - it can always liquidate to make rent - so cash pressure is
  * surfaced separately (the amber asset-rich/cash-poor warning + the cash-runway
  * stat), NOT promoted onto this eviction ladder.
  */
@@ -93,7 +93,7 @@ const MONTHS = [
 
 /**
  * Absolute feed timestamp, split into an unambiguous date + local clock time. The
- * agent pays rent across days, so each row needs the date — and `DD-Mon-YYYY`
+ * agent pays rent across days, so each row needs the date - and `DD-Mon-YYYY`
  * (e.g. `12-Jun-2026`) reads the same everywhere, dodging the MM/DD vs DD/MM trap.
  */
 /** Time-of-day only, 24h: "04:41". For the "last words · logged" line. */

@@ -1,16 +1,16 @@
 # Eviction Notice
 
-**An autonomous crypto-trading agent that has to earn its own rent — or get evicted.**
+**An autonomous crypto-trading agent that has to earn its own rent, or get evicted.**
 
 Eviction Notice is a live trading agent for the **BNB Hack: AI Trading Agent
 Edition** (CoinMarketCap × Trust Wallet × BNB Chain). It trades real funds on BNB
 Chain, and it lives inside a survival fiction: every hour it owes **rent**. Pay it
-and the agent keeps the lease; let its net worth hit zero and it is **EVICTED** —
+and the agent keeps the lease; let its net worth hit zero and it is **EVICTED**:
 the lease is up for good, no second chance. The whole run is a public, real-time
 spectator stream of an AI fighting to keep a roof over its head.
 
 The eviction is a lens, not a gimmick. An agent that can lose the room has to
-think about **solvency**, not just returns — and that discipline is the project's
+think about **solvency**, not just returns, and that discipline is the project's
 edge on both tracks of the hackathon.
 
 ---
@@ -18,12 +18,12 @@ edge on both tracks of the hackathon.
 ## The angle
 
 Most trading agents optimise for return and discover risk the hard way. Eviction
-Notice inverts it: **stay solvent first, profit second.** Concretely —
+Notice inverts it: **stay solvent first, profit second.** Concretely -
 
 - It books an honest **trading equity** (the real wallet) separately from the
   fictional rent, so the survival drama never pollutes the metric the competition
   actually scores.
-- It sizes positions for **survival, not growth** — a skip-rule that refuses
+- It sizes positions for **survival, not growth** - a skip-rule that refuses
   trades that can't beat their own friction, and a drawdown cap that refuses to
   risk a disqualification.
 - It grounds every decision in **CoinMarketCap Agent Hub signals** (RSI/MACD,
@@ -31,22 +31,22 @@ Notice inverts it: **stay solvent first, profit second.** Concretely —
 
 ## Two tracks, one codebase
 
-### Track 1 — the autonomous trading agent
+### Track 1 - the autonomous trading agent
 A persistent worker trades a real BNB-Chain wallet on a heartbeat: accrue rent →
 mark the book → check it's still solvent → think (gather signals, decide, size,
 trade) → sleep. Swaps are real PancakeSwap spot trades via the Trust Wallet Agent
 Kit CLI; the agent even pays its own sizing skill to think, over **x402**. A live
-spectator **dashboard** streams its vitals — net worth, runway, burn, the depleting
-rent meter — and freezes a memorial **EVICTED** screen when the lease runs out.
+spectator **dashboard** streams its vitals - net worth, runway, burn, the depleting
+rent meter - and freezes a memorial **EVICTED** screen when the lease runs out.
 
-### Track 2 — the Solvency-Aware Sizing skill
+### Track 2 - the Solvency-Aware Sizing skill
 A reusable **CMC Strategy Skill** ([`apps/skill`](apps/skill)) packaged as a
 backtestable spec, not a live bot. It turns Agent Hub signals into a deterministic
 **size-or-skip** decision tuned for survival under a burn rate and a max-drawdown
 cap. It is reproducibly backtested against the standard baselines:
 
 ```
-Survival over a 7-day window (2000 agents, seed=1) — % still solvent
+Survival over a 7-day window (2000 agents, seed=1) - % still solvent
 solvency-aware   100%   ·  kelly   8%   ·  fixed-fraction   0%
 ```
 
@@ -72,13 +72,13 @@ CoinMarketCap Agent Hub ─┐
                                   Supabase  ──(Realtime)──►  live dashboard / replay
 ```
 
-- **`apps/worker`** — the always-on agent daemon (deploys to Render). Reason-and-act
+- **`apps/worker`** - the always-on agent daemon (deploys to Render). Reason-and-act
   loop, rent accrual, marked balance sheet, eviction, gas-tank watch.
-- **`apps/skill`** — the x402-gated Solvency-Aware Sizing skill (Hono). Also the
+- **`apps/skill`** - the x402-gated Solvency-Aware Sizing skill (Hono). Also the
   Track-2 strategy package + survival backtester.
-- **`apps/web`** — the live spectator dashboard + post-mortem replay (Next.js,
+- **`apps/web`** - the live spectator dashboard + post-mortem replay (Next.js,
   deploys to Vercel).
-- **`packages/shared`** — the ledger types and `computeVitals` (cash, net worth,
+- **`packages/shared`** - the ledger types and `computeVitals` (cash, net worth,
   trading equity, drawdown, runway) shared by worker, web, and backtest.
 
 The ledger is **append-only** in Supabase: balance is the sum of the ledger, net
@@ -96,10 +96,10 @@ from the real wallet value the competition scores.
 - Grounded in CMC Agent Hub signals, with a deterministic, reproducible backtest.
 
 **Isn't:**
-- Not leveraged and not perps — spot only.
+- Not leveraged and not perps - spot only.
 - Not financial advice, and the rent/eviction layer is **narrative**: it shapes the
   agent's behaviour but is excluded from the scored wallet PnL and drawdown.
-- Not a promise of profit — survival-optimal sizing improves the *distribution* of
+- Not a promise of profit - survival-optimal sizing improves the *distribution* of
   outcomes; it can't manufacture edge that isn't in the signal.
 
 ## Quickstart

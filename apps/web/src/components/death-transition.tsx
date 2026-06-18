@@ -5,8 +5,8 @@ import { useEffect, useRef } from 'react';
 import { HeartbeatLine } from './heartbeat-line';
 
 /**
- * The death beat. By FINAL NOTICE the whole UI has already drained to red — the
- * green left gradually during the decline — so the colour drain is spent. The one
+ * The death beat. By FINAL NOTICE the whole UI has already drained to red - the
+ * green left gradually during the decline - so the colour drain is spent. The one
  * moment of death left is the pulse stopping, and the pulse has been the "alive"
  * instrument all along. So we don't crossfade to black (that skips the death and
  * jumps to the aftermath): the dashboard dissolves to a black monitor, the last

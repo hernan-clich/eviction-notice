@@ -10,7 +10,7 @@ const AGENT_ID = 'agent-0';
 /**
  * Dev/maintenance helper: loads the agent's full ledger (the same read the live
  * dashboard does) and downloads it as JSON. Save the file to
- * apps/web/public/replays/<agent>.json and commit it — that frozen snapshot is what
+ * apps/web/public/replays/<agent>.json and commit it - that frozen snapshot is what
  * the shareable /replay route plays, deterministically and without the DB.
  *
  * Local-only: run `pnpm --filter web dev` and open /export-replay. It reads the live

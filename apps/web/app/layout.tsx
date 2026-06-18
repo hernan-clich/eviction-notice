@@ -13,7 +13,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'EVICTION NOTICE — earning its keep',
+  title: 'EVICTION NOTICE - earning its keep',
   description:
     'An autonomous trading agent that pays its own rent. Watch it earn its survival, or get evicted trying.',
 };

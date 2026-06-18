@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { ReplayView } from '@/components/replay-view';
 import { staticReplaySource, type LedgerData } from '@/lib/ledger-source';
 
-// The committed, frozen recording. Deterministic + DB-independent — the shareable
+// The committed, frozen recording. Deterministic + DB-independent - the shareable
 // life. (Parameterize by agent later; one canonical run is enough for now.)
 const REPLAY_URL = '/replays/agent-0.json';
 
