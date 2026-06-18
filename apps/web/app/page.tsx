@@ -12,6 +12,17 @@ import { realtimeLedgerSource } from '@/lib/ledger-source';
 
 const AGENT_ID = 'agent-0';
 
+// The trading-window open instant (same value as the worker's TRADING_STARTS_AT).
+// Set on Vercel so the stand-by screen can show the move-in date + countdown while
+// the agent is armed-but-unborn. Unset/invalid → the pre-life screen falls back to
+// the plain "knocking" loading beat.
+const STANDBY_UNTIL_MS = (() => {
+  const raw = process.env['NEXT_PUBLIC_TRADING_STARTS_AT'];
+  if (!raw) return null;
+  const ms = Date.parse(raw);
+  return Number.isFinite(ms) ? ms : null;
+})();
+
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [agentState, setAgentState] = useState<AgentState | null>(null);
@@ -133,7 +144,19 @@ export default function Dashboard() {
   // An evicted agent always has a non-null agentState, so this can't mask a real death.
   const noData = agentState === null && transactions.length === 0;
   if (!loaded || noData) {
-    return <LoadingState error={loaded ? loadError : null} />;
+    // Stand-by (vacant unit, known move-in) only once we've loaded to an empty state
+    // with a future window time; otherwise it's a plain load → "knocking".
+    const standbyUntilMs =
+      loaded && noData && STANDBY_UNTIL_MS !== null && STANDBY_UNTIL_MS > nowMs
+        ? STANDBY_UNTIL_MS
+        : null;
+    return (
+      <LoadingState
+        error={loaded ? loadError : null}
+        standbyUntilMs={standbyUntilMs}
+        nowMs={nowMs}
+      />
+    );
   }
 
   if (phase === 'evicted') {
