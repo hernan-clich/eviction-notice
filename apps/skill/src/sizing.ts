@@ -124,7 +124,7 @@ export function decideSizing(input: SizingInput): SizingDecision {
       decision: 'skip',
       sizeUsd: 0,
       roundTripFrictionFraction: roundTripFrictionFraction(cfg.minPositionUsd, frictionParams),
-      reason: `At the ${pct(cfg.maxDrawdownFraction)} drawdown cap — skipping to avoid disqualification.`,
+      reason: `At the ${pct(cfg.maxDrawdownFraction)} drawdown cap, skipping to avoid disqualification.`,
     };
   }
 
@@ -195,9 +195,9 @@ export function decideSizing(input: SizingInput): SizingDecision {
   // Took it on a sub-margin edge only because desperation lowered the bar.
   const onRelaxedBar = cfg.edge < friction + cfg.edgeMargin;
   const reason = cfg.drawdownBreached
-    ? `Drawdown cap already breached — off the leash: deploying ${usd(round2(size))} to claw back and survive.`
+    ? `Drawdown cap already breached, off the leash: deploying ${usd(round2(size))} to claw back and survive.`
     : onRelaxedBar
-      ? `Desperate (${desperatePct}%): taking ${usd(round2(size))} on a thin ${pct(cfg.edge)} edge vs ${pct(friction)} friction — folding means eviction.`
+      ? `Desperate (${desperatePct}%): taking ${usd(round2(size))} on a thin ${pct(cfg.edge)} edge vs ${pct(friction)} friction, folding means eviction.`
       : `Trading ${usd(round2(size))}: ${pct(cfg.edge)} edge clears ${pct(friction)} friction with margin.`;
 
   return {

@@ -37,9 +37,9 @@ solvency-aware    100%  100%  100%  100%  100%  100%  100%
 kelly              93%   67%   42%   28%   19%   13%    8%
 fixed-fraction     34%    0%    0%    0%    0%    0%    0%
 
-solvency-aware   ██████████████████████████████ 100% survived · median 7.0d
-kelly            ███                             8% survived · median 2.7d
-fixed-fraction                                   0% survived · median 0.9d
+solvency-aware   ██████████████████████████████ 100% survived the window · median 7.0d
+kelly            ███                            8% survived the window · median 2.7d
+fixed-fraction                                  0% survived the window · median 0.9d
 ```
 
 **Read it plainly:** over the full window, every solvency-aware agent survives;

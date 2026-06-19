@@ -39,7 +39,7 @@ function requirementsFor(config: SkillServerConfig): PaymentRequirements {
     network: config.network,
     maxAmountRequired: config.priceAtomic,
     resource: '/size',
-    description: 'Solvency-Aware Sizing — one survival-optimal position-sizing decision.',
+    description: 'Solvency-Aware Sizing: one survival-optimal position-sizing decision.',
     mimeType: 'application/json',
     payTo: config.payTo,
     maxTimeoutSeconds: config.maxTimeoutSeconds ?? 60,
@@ -98,7 +98,7 @@ function canonicalRequirementsFor(
     payTo: config.payTo,
     maxTimeoutSeconds: config.maxTimeoutSeconds ?? 60,
     resource,
-    description: 'Solvency-Aware Sizing — one survival-optimal position-sizing decision.',
+    description: 'Solvency-Aware Sizing: one survival-optimal position-sizing decision.',
     mimeType: 'application/json',
     extra: { assetTransferMethod: 'permit2', name: 'USDT', version: '1' },
   };
