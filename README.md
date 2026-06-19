@@ -127,4 +127,4 @@ worker defaults to **paper** execution so it runs without funds or keys.
 
 ---
 
-_Live dashboard: add the Vercel URL here before submission._
+_Live dashboard: [eviction-notice-web.vercel.app](https://eviction-notice-web.vercel.app)_

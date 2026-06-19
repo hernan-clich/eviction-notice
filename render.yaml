@@ -6,7 +6,7 @@
 #              signs real BSC swaps via TWAK; render-start.sh provisions the wallet
 #              from secrets on boot. Only ONE worker may run per agent_id at a time.
 #
-# Secrets (sync: false) are set in the Render dashboard, never committed. See docs/deploy.md.
+# Secrets (sync: false) are set in the Render dashboard, never committed.
 services:
   - type: web
     name: eviction-notice-skill
@@ -80,12 +80,30 @@ services:
       # match before birth.
       - key: SEED_USD
         value: '20'
+      # Rent is COSMETIC in compete mode: eviction is on real trading equity, not
+      # net worth, and desperation is forced to 0 — so rent only erodes the displayed
+      # net worth. Keep it light so the dashboard headline tracks real performance.
       - key: RENT_PER_HOUR_USD
-        value: '0.07'
+        value: '0.02'
+      # 1h cadence: suits "trade less, ride winners", cuts noise, and halves the
+      # weekly think-cost vs 30 min. Still easily clears the >=1-trade/day rule.
       - key: TICK_INTERVAL_MS
-        value: '1800000' # 30 min
+        value: '3600000' # 1 hour
       - key: MAX_TICKS
         value: '0' # run forever
+      # Internal DQ guard set TIGHTER than the competition's ~30%, so the agent
+      # de-risks before the real line (buffer vs marking lag / slippage). Breaching
+      # = permanent DQ regardless of returns, so the buffer is cheap insurance.
+      - key: MAX_DRAWDOWN_FRACTION
+        value: '0.25'
+      # Force a trade if none in this window — safety margin under 24h so a forced
+      # trade can't drift across a calendar-day boundary and miss the daily rule.
+      - key: TRADE_FLOOR_MS
+        value: '72000000' # 20 hours
+      # Pin the model explicitly (don't ride the code default): cheap + reliable for
+      # the unattended week; ~$2-3 of credit over the run at 1h ticks.
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-4-5
       - key: BSC_NETWORK
         value: mainnet
       - key: TWAK_SLIPPAGE_PCT
