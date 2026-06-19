@@ -6,7 +6,7 @@
 #              signs real BSC swaps via TWAK; render-start.sh provisions the wallet
 #              from secrets on boot. Only ONE worker may run per agent_id at a time.
 #
-# Secrets (sync: false) are set in the Render dashboard, never committed. See docs/deploy.md.
+# Secrets (sync: false) are set in the Render dashboard, never committed.
 services:
   - type: web
     name: eviction-notice-skill
