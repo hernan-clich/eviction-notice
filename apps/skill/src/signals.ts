@@ -121,7 +121,7 @@ export function deriveSignals(
 
   const rationale =
     edge <= 0
-      ? `No long edge: RSI ${ta.rsi14.toFixed(0)} shows no confirmed upward momentum — hold.`
+      ? `No long edge: RSI ${ta.rsi14.toFixed(0)} shows no confirmed upward momentum. Hold.`
       : `Edge ${pct(edge)}: RSI ${ta.rsi14.toFixed(0)} momentum${
           macdConfirms ? ', MACD up' : ''
         }${trendConfirms ? ', above MA' : ''}, regime ×${regimeMult.toFixed(2)} (F&G ${regime.fearGreed.toFixed(0)}); vol ${pct(volatility)}.`;
@@ -216,7 +216,7 @@ export async function signalsFromHub(
   ]);
   const ta = parseTechnicalAnalysis(taRaw);
   if (ta === null) {
-    throw new Error('could not parse Agent Hub technical analysis — refusing to size on a guess');
+    throw new Error('could not parse Agent Hub technical analysis, refusing to size on a guess');
   }
   return deriveSignals(ta, parseMarketRegime(regimeRaw), options);
 }
