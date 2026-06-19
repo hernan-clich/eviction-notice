@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 /**
- * A tiny, dependency-free markdown renderer for the agent's reasoning — handles
+ * A tiny, dependency-free markdown renderer for the agent's reasoning - handles
  * the subset Claude actually emits (**bold**, *italic*, `code`, "- " bullets,
  * GFM pipe tables, line breaks). Kept deliberately small to preserve the
  * terminal aesthetic.

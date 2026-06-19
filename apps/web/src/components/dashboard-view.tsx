@@ -10,7 +10,7 @@ import { CompactVitals, SecondaryVitals, VitalSigns } from './vital-signs';
 /**
  * The dashboard layout, source-agnostic: hand it derived vitals + the feed rows and
  * it renders. The live page wires Supabase Realtime to it; the replay wires a clock
- * over the recorded ledger to the very same view — so "the replay is the dashboard,
+ * over the recorded ledger to the very same view - so "the replay is the dashboard,
  * reanimated" is literally true, not a parallel screen.
  */
 export function DashboardView({
@@ -24,7 +24,7 @@ export function DashboardView({
   transactions: readonly Transaction[];
   banner?: ReactNode;
   feedLabel?: string;
-  /** Fill the parent (a bounded, scrollable frame) instead of the viewport — used by
+  /** Fill the parent (a bounded, scrollable frame) instead of the viewport - used by
    *  the replay, which pins a transport below and scrolls the dashboard between. */
   embedded?: boolean;
 }) {

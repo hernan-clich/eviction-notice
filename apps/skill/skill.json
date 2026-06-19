@@ -2,8 +2,8 @@
   "name": "Solvency-Aware Sizing",
   "slug": "solvency-aware-sizing",
   "version": "1.0.0",
-  "track": "BNB Hack Track 2 — Strategy Skills",
-  "description": "A survival-optimal position-sizing strategy skill: turns CoinMarketCap Agent Hub signals into a deterministic size-or-skip decision that maximises how long an agent stays solvent under a burn rate and a max-drawdown DQ cap — not expected return. Reproducibly backtested against Kelly and fixed-fraction baselines.",
+  "track": "BNB Hack Track 2: Strategy Skills",
+  "description": "A survival-optimal position-sizing strategy skill: turns CoinMarketCap Agent Hub signals into a deterministic size-or-skip decision that maximises how long an agent stays solvent under a burn rate and a max-drawdown DQ cap, not expected return. Reproducibly backtested against Kelly and fixed-fraction baselines.",
   "backtestable": true,
   "deterministic": true,
   "liveTrading": false,
@@ -21,7 +21,7 @@
         "get_quotes"
       ],
       "usedFor": "Deriving the edge and volatility inputs (RSI/MACD/MA momentum, realised vol) and the risk-on/risk-off regime gate.",
-      "derivation": "src/signals.ts — deriveSignals() maps these signals to (edge, volatility) deterministically, in code (no model judgment); signalsFromHub() pulls the tools and derives in one call."
+      "derivation": "src/signals.ts: deriveSignals() maps these signals to (edge, volatility) deterministically, in code (no model judgment); signalsFromHub() pulls the tools and derives in one call."
     }
   ],
   "inputSchema": {
@@ -43,7 +43,7 @@
       "peakBalanceUsd": {
         "type": "number",
         "exclusiveMinimum": 0,
-        "description": "Cash high-water mark — fallback drawdown peak for cash-only callers."
+        "description": "Cash high-water mark: fallback drawdown peak for cash-only callers."
       },
       "netWorthUsd": {
         "type": "number",
@@ -53,7 +53,7 @@
       "peakNetWorthUsd": {
         "type": "number",
         "exclusiveMinimum": 0,
-        "description": "All-time net-worth high-water mark — the drawdown peak (ratchets up only). Defaults to peakBalanceUsd."
+        "description": "All-time net-worth high-water mark: the drawdown peak (ratchets up only). Defaults to peakBalanceUsd."
       },
       "burnRatePerHourUsd": {
         "type": "number",
@@ -178,7 +178,7 @@
     "notes": [
       "Pure, deterministic function: same inputs → same decision. No I/O, no randomness.",
       "Sizes an already-chosen candidate trade; it does not pick tokens or execute orders.",
-      "Every numeric claim is reproducible from the scripts in this repo — verify, don't trust."
+      "Every numeric claim is reproducible from the scripts in this repo: verify, don't trust."
     ]
   }
 }

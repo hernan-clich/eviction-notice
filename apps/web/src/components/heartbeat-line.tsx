@@ -2,7 +2,7 @@
  * The agent's financial pulse. For a digital creature money is blood and cash flow
  * is the heartbeat, so the only honest vital sign is the balance: a healthy agent
  * beats often and tall, and as it bleeds out the trace goes sparse, shallow, and slow
- * — approaching a flat line as it nears eviction. Driven, not decorative.
+ * - approaching a flat line as it nears eviction. Driven, not decorative.
  */
 
 // One PQRST blip as relative (dx, dyUnit) steps; dyUnit is scaled by amplitude.
@@ -62,7 +62,7 @@ export function HeartbeatLine({
   color: string;
   health?: number;
   /** The death beat: one last blip scrolls off to the left, then a flat line follows
-   *  it in and holds — so the pulse visibly leaves before the line goes flat. */
+   *  it in and holds - so the pulse visibly leaves before the line goes flat. */
   dying?: boolean;
   className?: string;
 }) {

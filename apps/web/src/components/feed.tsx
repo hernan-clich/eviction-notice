@@ -23,7 +23,7 @@ function txLink(meta: Transaction['meta']): TxRef | null {
 }
 
 const INFLOW = new Set(['seed', 'trade_close']);
-// Real on-chain spend (USDT/gas) — coded red. Rent is fictional (its own colour) and
+// Real on-chain spend (USDT/gas) - coded red. Rent is fictional (its own colour) and
 // data_call is now free + informational (grey), so neither belongs here.
 const REAL_COST = new Set(['x402_fee', 'trade_open']);
 
@@ -31,14 +31,14 @@ function tone(reason: string): { color: string; chip: string } {
   if (INFLOW.has(reason)) {
     return { color: '#4ef0a0', chip: 'border-phosphor/40 text-phosphor' };
   }
-  // Rent is the fictional eviction burn, not real money lost — its own slate colour.
+  // Rent is the fictional eviction burn, not real money lost - its own slate colour.
   if (reason === 'rent') {
     return { color: '#7d8ad6', chip: 'border-rent/40 text-rent' };
   }
   if (REAL_COST.has(reason)) {
     return { color: '#ff5468', chip: 'border-alarm/40 text-alarm' };
   }
-  // data_call, decision — informational, no money moved.
+  // data_call, decision - informational, no money moved.
   return { color: '#6a7570', chip: 'border-line text-muted' };
 }
 
@@ -49,14 +49,14 @@ function metaNumber(meta: Transaction['meta'], key: string): number | null {
 }
 
 /**
- * What the trade row should actually show. The ledger amount is gross cash flow —
- * a +$14.77 close looks like a win even when the round trip lost money — so trades
+ * What the trade row should actually show. The ledger amount is gross cash flow -
+ * a +$14.77 close looks like a win even when the round trip lost money - so trades
  * report their honest number instead: friction paid to open, realised P&L to close.
  */
 function displayAmount(tx: Transaction): { value: number; color: string; tag?: string } | null {
   if (tx.reason === 'trade_open') {
     // Friction = swap fee + slippage paid to open. Live execution reconciles to
-    // ~zero, so a "+$0.00 friction" row is just noise — drop it when there's none.
+    // ~zero, so a "+$0.00 friction" row is just noise - drop it when there's none.
     const friction = metaNumber(tx.meta, 'frictionUsd');
     if (friction === null || friction === 0) return null;
     return { value: -friction, color: '#ff5468', tag: 'friction' };
@@ -82,13 +82,13 @@ function cleanReasoning(text: string): string {
 }
 
 function TxLink({ link }: { link: TxRef }) {
-  // Simulated txs aren't on-chain — render the hash as non-clickable so it never
+  // Simulated txs aren't on-chain - render the hash as non-clickable so it never
   // dead-links to a 404 explorer page. Only real txs get a clickable BscScan link.
   if (link.simulated) {
     return (
       <span
         className="text-muted ml-2 inline-flex items-center gap-1.5 align-baseline text-xs not-italic"
-        title="Simulated — no on-chain transaction (real tx lands with live execution)"
+        title="Simulated, no on-chain transaction (real tx lands with live execution)"
       >
         <span
           className="font-display text-muted/80 rounded-sm border-current px-1 text-[9px] tracking-widest uppercase"

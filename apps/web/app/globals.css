@@ -12,7 +12,7 @@
   --color-phosphor: #4ef0a0;
   --color-amber: #f5c451;
   --color-alarm: #ff5468;
-  /* The fictional eviction burn (rent) — a cool slate, distinct from real-cost red
+  /* The fictional eviction burn (rent) - a cool slate, distinct from real-cost red
    * and from the cyan BscScan links, so "rent meter" reads as not-real-money. */
   --color-rent: #7d8ad6;
 }
@@ -21,7 +21,7 @@
   color-scheme: dark;
 }
 
-/* Tailwind v4's Preflight no longer sets buttons to a pointer cursor — restore it
+/* Tailwind v4's Preflight no longer sets buttons to a pointer cursor - restore it
  * app-wide so every actionable control reads as clickable. */
 button:not(:disabled) {
   cursor: pointer;
@@ -77,7 +77,7 @@ button:not(:disabled) {
   }
 }
 
-/* The EVICTED stamp slamming down like a notice nailed to a door — overshoot, settle. */
+/* The EVICTED stamp slamming down like a notice nailed to a door - overshoot, settle. */
 @keyframes stamp-in {
   0% {
     opacity: 0;
@@ -93,7 +93,7 @@ button:not(:disabled) {
   }
 }
 
-/* Terminal cursor blink — the "knocking on the door" loading beat. */
+/* Terminal cursor blink - the "knocking on the door" loading beat. */
 @keyframes blink {
   0%,
   100% {
@@ -104,7 +104,7 @@ button:not(:disabled) {
   }
 }
 
-/* Plain opacity fade — the dashboard dissolving to the black death monitor. */
+/* Plain opacity fade - the dashboard dissolving to the black death monitor. */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -114,7 +114,7 @@ button:not(:disabled) {
   }
 }
 
-/* Slow, reverent fade-up for the ceremony — each block staggers in behind the stamp. */
+/* Slow, reverent fade-up for the ceremony - each block staggers in behind the stamp. */
 @keyframes mourn-in {
   from {
     opacity: 0;

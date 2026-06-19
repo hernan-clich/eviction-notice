@@ -21,7 +21,7 @@ import {
 import { Feed } from './feed';
 import { ListDetailsIcon, RefreshIcon } from './icons';
 
-// The eviction red — a deep, blooded red, distinct from the live alarm pink
+// The eviction red - a deep, blooded red, distinct from the live alarm pink
 // (#ff5468). Every prior screen earned its phosphor green; this one has none. The
 // absence of the colour it had while alive is what reads as the lease having ended.
 const ROSE = '#e0493e';
@@ -66,7 +66,7 @@ export function EvictedScreen({
   const epitaph = memorialEpitaph(memorial);
   const note = memorial.lastWords ? lastWordsEssence(memorial.lastWords) : null;
 
-  // One source for the record — rendered as a 5-across strip on desktop and an
+  // One source for the record - rendered as a 5-across strip on desktop and an
   // itemized list on mobile (a 5-wide strip can't survive ~380px).
   const stats: { label: string; value: string }[] = [
     { label: 'Tenancy', value: formatLifespanShort(memorial.tenancyMs) },
@@ -111,7 +111,7 @@ export function EvictedScreen({
         Notice of Eviction · Case No. {String(caseNo).padStart(4, '0')}
       </div>
 
-      {/* The stamp — slammed down like a notice nailed to the door */}
+      {/* The stamp - slammed down like a notice nailed to the door */}
       <div className="flex flex-col items-center gap-3">
         <div
           className="animate-[stamp-in_0.55s_cubic-bezier(0.2,1.4,0.4,1)_both] px-5 py-2.5 sm:px-8 sm:py-3"
@@ -145,17 +145,17 @@ export function EvictedScreen({
         </div>
         <div className="text-muted text-xs">
           {memorial.movedInMs === null
-            ? 'Moved in —'
+            ? 'Moved in -'
             : `Moved in ${formatDateTimeShort(memorial.movedInMs)}`}{' '}
           ·{' '}
           {memorial.evictedMs === null
-            ? 'Evicted —'
+            ? 'Evicted -'
             : `Evicted ${formatDateTimeShort(memorial.evictedMs)}`}{' '}
           · tenancy {formatLifespanLong(memorial.tenancyMs)}
         </div>
       </div>
 
-      {/* The line stops — a somber rule, no medical word on it */}
+      {/* The line stops - a somber rule, no medical word on it */}
       <div
         className="animate-[mourn-in_0.8s_ease-out_both] w-full"
         style={{ animationDelay: '1.3s' }}
@@ -165,11 +165,11 @@ export function EvictedScreen({
           className="font-display mt-2 text-center text-[11px] tracking-[0.35em] uppercase"
           style={{ color: ROSE }}
         >
-          — locked out —
+          · locked out ·
         </div>
       </div>
 
-      {/* Computed epitaph — the narrator's voice. Kept upright (the note below is the
+      {/* Computed epitaph - the narrator's voice. Kept upright (the note below is the
           agent's own italic words) so the two voices read as distinct, not one blur. */}
       <p
         className="text-ink animate-[mourn-in_0.8s_ease-out_both] max-w-md text-lg leading-relaxed tracking-wide"
@@ -178,7 +178,7 @@ export function EvictedScreen({
         {epitaph}
       </p>
 
-      {/* The note it left — the agent's own final entry, cut to the line that lands */}
+      {/* The note it left - the agent's own final entry, cut to the line that lands */}
       {note ? (
         <div
           className="animate-[mourn-in_0.8s_ease-out_both] mt-3 w-full"
@@ -197,7 +197,7 @@ export function EvictedScreen({
         </div>
       ) : null}
 
-      {/* The record — one SELECT against the lifetime ledger. Desktop: a 5-across
+      {/* The record - one SELECT against the lifetime ledger. Desktop: a 5-across
           strip. Mobile: itemized lines (label left, value right), which also suits
           the eviction-document framing. */}
       <div
@@ -221,9 +221,9 @@ export function EvictedScreen({
         </div>
       </div>
 
-      {/* CTAs — a clear hierarchy on every breakpoint: Replay is the primary action
+      {/* CTAs - a clear hierarchy on every breakpoint: Replay is the primary action
           (a solid-outline button, comfortable tap target), the ledger a quiet
-          secondary link. No red — that stays the eviction's alone; "primary" comes
+          secondary link. No red - that stays the eviction's alone; "primary" comes
           from weight, in the bright ink against the ash. */}
       <div
         className="animate-[mourn-in_0.8s_ease-out_both] mx-auto mt-6 flex w-full max-w-xs flex-col items-stretch gap-4"

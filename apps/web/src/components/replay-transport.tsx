@@ -23,7 +23,7 @@ const SPEEDS: ReplaySpeed[] = [1, 2, 4];
  * The transport IS the life: the lifetime net-worth curve doubles as the scrubber.
  * Colour traces the status history (green→amber→red, so the escalations read without
  * labels), the played portion is solid and the future ghosted, and you grab anywhere
- * to seek. The whole shape of the run — quick rise to peak, long red bleed to zero —
+ * to seek. The whole shape of the run - quick rise to peak, long red bleed to zero -
  * is legible at a glance.
  */
 export function ReplayTransport({
@@ -65,7 +65,7 @@ export function ReplayTransport({
   const playheadX = xAt(clockMs);
   const playheadPct = (playheadX / W) * 100;
 
-  // Net worth at the playhead (interpolated) — for the handle dot's height.
+  // Net worth at the playhead (interpolated) - for the handle dot's height.
   let headY = pts[0]?.y ?? H - PADY;
   for (let i = 1; i < pts.length; i += 1) {
     const a = pts[i - 1]!;
@@ -95,18 +95,18 @@ export function ReplayTransport({
   return (
     <div className="bg-bg/95 border-line shrink-0 border-t backdrop-blur">
       <div className="mx-auto max-w-5xl px-4 py-3 sm:px-6 sm:py-4">
-        {/* It's a memory, not a revival — the badge keeps the recording honest. */}
+        {/* It's a memory, not a revival - the badge keeps the recording honest. */}
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <span className="font-display flex items-center gap-2 text-[11px] tracking-[0.3em]">
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: ROSE }} />
             <span style={{ color: ROSE }}>REPLAY</span>
           </span>
           <div className="flex items-center gap-4">
-            {/* The verbose title is desktop-only — on mobile it crowds the badge + Close. */}
+            {/* The verbose title is desktop-only - on mobile it crowds the badge + Close. */}
             <span className="font-display text-muted hidden text-[11px] tracking-[0.2em] uppercase sm:inline">
               The life of Eviction Notice · No.&nbsp;{caseNo}
             </span>
-            {/* Exit even when paused — a paused replay must never be a dead end. */}
+            {/* Exit even when paused - a paused replay must never be a dead end. */}
             <button
               type="button"
               onClick={onExit}
@@ -236,7 +236,7 @@ export function ReplayTransport({
           </span>
         </div>
 
-        {/* controls — one row on desktop; on narrow phones the timestamp drops to its
+        {/* controls - one row on desktop; on narrow phones the timestamp drops to its
             own line (order + basis-full) so the speed buttons never get pushed off. */}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <button

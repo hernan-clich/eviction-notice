@@ -18,6 +18,6 @@
     "decision": "trade",
     "sizeUsd": 2.25,
     "roundTripFrictionFraction": 0.014888888888888889,
-    "reason": "Desperate (90%): taking $2.25 on a thin 1.20% edge vs 1.49% friction — folding means eviction."
+    "reason": "Desperate (90%): taking $2.25 on a thin 1.20% edge vs 1.49% friction, folding means eviction."
   }
 }

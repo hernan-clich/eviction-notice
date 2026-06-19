@@ -1,12 +1,12 @@
 /**
- * The pre-life screen — shown whenever there's no tenant in the unit yet. Two beats,
+ * The pre-life screen - shown whenever there's no tenant in the unit yet. Two beats,
  * because the reasons differ:
  *
  *   - LOADING ("knocking on the door"): the first fetch hasn't resolved. Transient,
  *     value-less, just establishing contact.
  *   - STAND-BY (a vacant unit with a known move-in): the agent is armed and deployed
  *     but the trading window hasn't opened. We KNOW no one's home and we KNOW when
- *     they arrive, so we say so — a vacancy with a lease start date + a live countdown.
+ *     they arrive, so we say so - a vacancy with a lease start date + a live countdown.
  *
  * Either way it's deliberately colourless and value-less (no green, no red, no
  * numbers-as-money, no pulse), because in this app an empty dashboard shell reads as
@@ -16,7 +16,7 @@
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-/** "22 Jun 2026 · 00:00 UTC" — the absolute move-in, in UTC. */
+/** "22 Jun 2026 · 00:00 UTC" - the absolute move-in, in UTC. */
 function formatMoveIn(ms: number): string {
   const d = new Date(ms);
   const dd = String(d.getUTCDate()).padStart(2, '0');
@@ -26,7 +26,7 @@ function formatMoveIn(ms: number): string {
   return `${dd} ${mon} ${d.getUTCFullYear()} · ${hh}:${mm} UTC`;
 }
 
-/** "3d 14h 22m" — coarse on purpose (no ticking seconds); calm, not a stopwatch. */
+/** "3d 14h 22m" - coarse on purpose (no ticking seconds); calm, not a stopwatch. */
 function formatCountdown(ms: number): string {
   const total = Math.max(0, ms);
   const d = Math.floor(total / 86_400_000);
@@ -84,7 +84,7 @@ export function LoadingState({
             >
               <span className="text-muted/40">›</span>
               {error ? (
-                <span className="text-amber/80">couldn’t reach the unit — retrying…</span>
+                <span className="text-amber/80">couldn’t reach the unit, retrying…</span>
               ) : (
                 <>
                   <span className="text-ink">knocking on the door</span>
@@ -97,7 +97,7 @@ export function LoadingState({
           <>
             <div className="animate-[fade-in_0.4s_ease-out_both] flex gap-2">
               <span className="text-muted/40">›</span>
-              <span>the unit is vacant — no tenant on the premises</span>
+              <span>the unit is vacant, no tenant on the premises</span>
             </div>
             <div
               className="animate-[fade-in_0.4s_ease-out_both] flex items-center gap-2"

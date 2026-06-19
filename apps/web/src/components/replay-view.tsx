@@ -22,10 +22,10 @@ function caseNumber(agentId: string): number {
 
 /**
  * The replay: the live dashboard, reanimated from the recorded ledger on a compressed
- * event-stepped clock. Slice the ledger at the clock and re-derive vitals each frame —
+ * event-stepped clock. Slice the ledger at the clock and re-derive vitals each frame -
  * balance moves, status climbs, the pulse weakens, the feed re-streams its thoughts.
  * At the end it simply rests on the final frame (paused, playhead at eviction) so the
- * viewer can read the last decisions and explore freely — no auto death beat yanking
+ * viewer can read the last decisions and explore freely - no auto death beat yanking
  * them away. The death transition belongs to the live witnessing; here the user is in
  * control and exits via Close (or replays from the top).
  */
@@ -66,7 +66,7 @@ export function ReplayView({
     [ordered, recording.snapshots, bornMs, evictedMs],
   );
 
-  // The whole life's vitals — for the transport curve (full series, peak, seed).
+  // The whole life's vitals - for the transport curve (full series, peak, seed).
   const fullVitals = useMemo(
     () => computeVitals(ordered, recording.agentState, evictedMs, recording.snapshots),
     [ordered, recording.agentState, evictedMs, recording.snapshots],

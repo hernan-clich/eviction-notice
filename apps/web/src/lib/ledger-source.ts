@@ -25,7 +25,7 @@ export interface LedgerHandlers {
  * Abstracts where ledger data comes from, so the same UI serves both live and
  * replay. The live dashboard uses `realtimeLedgerSource` (Supabase Realtime);
  * the Phase 6 portfolio afterlife will add a source that plays a static JSON on a
- * compressed clock — no component changes required.
+ * compressed clock - no component changes required.
  */
 export interface LedgerSource {
   load: (agentId: string) => Promise<LedgerData>;
@@ -35,7 +35,7 @@ export interface LedgerSource {
 /**
  * Plays a frozen run from a committed static JSON (shape: a serialized `LedgerData`,
  * produced by /export-replay). The deterministic, DB-independent source behind the
- * shareable `/replay` route — same `LedgerSource` seam, so it feeds the identical
+ * shareable `/replay` route - same `LedgerSource` seam, so it feeds the identical
  * replay UI. A recording never streams, so `subscribe` is a no-op.
  */
 export function staticReplaySource(jsonUrl: string): LedgerSource {
@@ -57,7 +57,7 @@ export function staticReplaySource(jsonUrl: string): LedgerSource {
       };
     },
     subscribe() {
-      // A recording never streams — no subscription, nothing to tear down.
+      // A recording never streams - no subscription, nothing to tear down.
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       return () => {};
     },
@@ -66,7 +66,7 @@ export function staticReplaySource(jsonUrl: string): LedgerSource {
 
 // Bumped per subscription so a rebuilt channel never collides with one whose
 // removal is still in flight (we re-subscribe on focus/reconnect to recover a
-// dropped socket — tearing down and recreating the channel).
+// dropped socket - tearing down and recreating the channel).
 let channelSeq = 0;
 
 export const realtimeLedgerSource: LedgerSource = {

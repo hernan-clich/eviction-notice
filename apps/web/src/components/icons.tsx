@@ -1,5 +1,5 @@
 /**
- * Inlined icons from Tabler Icons (https://tabler.io/icons, MIT licensed) — the
+ * Inlined icons from Tabler Icons (https://tabler.io/icons, MIT licensed) - the
  * exact `refresh` and `list-details` glyphs, as raw SVG so we pull in no webfont
  * or dependency. Stroke geometry is verbatim; size is a prop. `currentColor`
  * inherits the surrounding text colour.
