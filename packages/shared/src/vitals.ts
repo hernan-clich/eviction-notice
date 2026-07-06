@@ -78,6 +78,13 @@ export function computeVitals(
   let burnUsd = 0; // cost of existing: rent + data + x402
   let fictionalBurnUsd = 0; // rent + data only — invented costs, not real wallet spend
   let tradeCount = 0;
+  // Rent is the dominant, deliberately-set recurring cost. Track its running total and
+  // the two most recent ticks so the burn rate can reflect the CURRENT rent (from the
+  // latest tick's interval) instead of averaging a rent change away over the tenancy.
+  let rentTotalUsd = 0;
+  let lastRentUsd: number | null = null;
+  let lastRentTsMs: number | null = null;
+  let prevRentTsMs: number | null = null;
   // Cumulative fictional burn over time — used to reconstruct real trading equity for
   // the drawdown/DQ metric (so rent can't trip the competition's 30% line).
   const ficTimeline: { tsMs: number; cum: number }[] = [];
@@ -91,6 +98,12 @@ export function computeVitals(
     }
     if (tx.reason === 'rent' || tx.reason === 'data_call' || tx.reason === 'x402_fee') {
       burnUsd += -tx.amount;
+    }
+    if (tx.reason === 'rent') {
+      rentTotalUsd += -tx.amount;
+      prevRentTsMs = lastRentTsMs;
+      lastRentTsMs = tsMs;
+      lastRentUsd = -tx.amount;
     }
     if (tx.reason === 'rent' || tx.reason === 'data_call') {
       fictionalBurnUsd += -tx.amount;
@@ -156,11 +169,20 @@ export function computeVitals(
     : (cashSeries[0]?.tsMs ?? nowMs);
   const endMs = agentState?.died_at ? Date.parse(agentState.died_at) : nowMs;
   const elapsedMs = Math.max(endMs - bornMs, 0);
-  // Burn rate over at least a 1-hour window, so a newborn's first few cents of rent
-  // aren't annualized into a huge $/h (which would falsely crater the cash runway).
-  // It converges to the true rate as the agent ages past the window.
+  // Burn rate the runway and the agent's desperation read from. Rent is a known,
+  // deliberately-set recurring cost, so measure its CURRENT level from the latest rent
+  // tick over the interval to the tick before it: a rent change then shows up at once,
+  // rather than being diluted by weeks of the old rate. Variable costs (data + x402)
+  // are sporadic, so average those across the life. Until there are two rent ticks to
+  // measure an interval, fall back to the lifetime all-in average, which also keeps a
+  // newborn's first few cents from annualizing into a huge $/h.
   const burnHours = Math.max(elapsedMs, HOUR_MS) / HOUR_MS;
-  const burnPerHourUsd = burnUsd / burnHours;
+  const rentIntervalHours =
+    lastRentTsMs !== null && prevRentTsMs !== null ? (lastRentTsMs - prevRentTsMs) / HOUR_MS : 0;
+  const burnPerHourUsd =
+    lastRentUsd !== null && rentIntervalHours > 0
+      ? lastRentUsd / rentIntervalHours + (burnUsd - rentTotalUsd) / burnHours
+      : burnUsd / burnHours;
   const runway = (value: number): number =>
     burnPerHourUsd > 0 ? value / burnPerHourUsd : Number.POSITIVE_INFINITY;
 

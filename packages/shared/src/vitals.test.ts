@@ -185,6 +185,40 @@ describe('computeVitals', () => {
     expect(v.cashRunwayHours).toBeGreaterThan(100); // ~$4.955 / 0.045 ≈ 110h, not ~2h
   });
 
+  it('reflects a rent hike immediately, not the lifetime average', () => {
+    const born: AgentState = {
+      agent_id: 'agent-0',
+      born_at: '2026-06-22T00:00:00Z',
+      died_at: null,
+      status: 'alive',
+    };
+    // Ten hourly ticks at the old $0.02, then one at the new $0.10. The lifetime
+    // average would be barely above $0.02; the runway must instead read the CURRENT
+    // $0.10 measured over the last tick's 1h interval.
+    const transactions: Transaction[] = [
+      tx({ kind: 'income', amount: 20, reason: 'seed', ts: '2026-06-22T00:00:00Z' }),
+    ];
+    for (let h = 1; h <= 10; h++) {
+      transactions.push(
+        tx({
+          kind: 'rent',
+          amount: -0.02,
+          reason: 'rent',
+          ts: `2026-06-22T${String(h).padStart(2, '0')}:00:00Z`,
+        }),
+      );
+    }
+    transactions.push(
+      tx({ kind: 'rent', amount: -0.1, reason: 'rent', ts: '2026-06-22T11:00:00Z' }),
+    );
+    const now = Date.parse('2026-06-22T11:00:00Z');
+    const v = computeVitals(transactions, born, now);
+
+    expect(v.burnPerHourUsd).toBeCloseTo(0.1, 6); // current rent, not the ~$0.024 average
+    // net worth 20 - (10 x 0.02) - 0.10 = 19.70; runway = 19.70 / 0.10 = 197h, not ~820h.
+    expect(v.cashRunwayHours).toBeCloseTo(197, 0);
+  });
+
   it('reports dead when status is dead, freezing days-survived at died_at', () => {
     const dead: AgentState = {
       agent_id: 'agent-0',
