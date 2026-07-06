@@ -69,31 +69,63 @@ export function staticReplaySource(jsonUrl: string): LedgerSource {
 // dropped socket - tearing down and recreating the channel).
 let channelSeq = 0;
 
+// PostgREST caps any single response at `db-max-rows` (default 1000) and silently
+// drops the overflow — the newest rows, since we order ascending. That froze the feed
+// and clipped the vitals math once the ledger passed 1k rows. Page through with
+// .range() so load() always sees the full history, whatever the cap is set to.
+const PAGE_SIZE = 1000;
+
+async function loadAll<Row>(
+  label: string,
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: Row[] | null; error: { message: string } | null }>,
+): Promise<Row[]> {
+  const rows: Row[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await page(from, from + PAGE_SIZE - 1);
+    if (error) {
+      throw new Error(`${label}: ${error.message}`);
+    }
+    const batch = data ?? [];
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) {
+      break;
+    }
+  }
+  return rows;
+}
+
 export const realtimeLedgerSource: LedgerSource = {
   async load(agentId) {
     const supabase = getSupabase();
-    const [txRes, stateRes, snapRes] = await Promise.all([
-      supabase.from('transactions').select('*').eq('agent_id', agentId).order('id', {
-        ascending: true,
-      }),
+    const [txRows, stateRes, snapRows] = await Promise.all([
+      loadAll('load transactions', (from, to) =>
+        supabase
+          .from('transactions')
+          .select('*')
+          .eq('agent_id', agentId)
+          .order('id', { ascending: true })
+          .range(from, to),
+      ),
       supabase.from('agent_state').select('*').eq('agent_id', agentId).maybeSingle(),
-      supabase.from('snapshots').select('*').eq('agent_id', agentId).order('id', {
-        ascending: true,
-      }),
+      loadAll('load snapshots', (from, to) =>
+        supabase
+          .from('snapshots')
+          .select('*')
+          .eq('agent_id', agentId)
+          .order('id', { ascending: true })
+          .range(from, to),
+      ),
     ]);
-    if (txRes.error) {
-      throw new Error(`load transactions: ${txRes.error.message}`);
-    }
     if (stateRes.error) {
       throw new Error(`load agent_state: ${stateRes.error.message}`);
     }
-    if (snapRes.error) {
-      throw new Error(`load snapshots: ${snapRes.error.message}`);
-    }
     return {
-      transactions: (txRes.data ?? []).map((row) => transactionSchema.parse(row)),
+      transactions: txRows.map((row) => transactionSchema.parse(row)),
       agentState: stateRes.data ? agentStateSchema.parse(stateRes.data) : null,
-      snapshots: (snapRes.data ?? []).map((row) => snapshotSchema.parse(row)),
+      snapshots: snapRows.map((row) => snapshotSchema.parse(row)),
     };
   },
 

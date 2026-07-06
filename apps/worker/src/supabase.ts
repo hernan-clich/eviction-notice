@@ -53,17 +53,49 @@ export async function insertTransaction(
 
 const amountRowSchema = z.object({ amount: z.coerce.number() });
 
-/** Balance = SUM(amount) over the ledger, computed via the shared helper. */
-export async function fetchBalance(client: AppSupabaseClient, agentId: string): Promise<number> {
-  const { data, error } = await client
-    .from('transactions')
-    .select('amount')
-    .eq('agent_id', agentId);
-  if (error) {
-    throw new Error(`fetch balance: ${error.message}`);
+// PostgREST caps every response at `db-max-rows` (Supabase default 1000) and, for
+// an uncapped select, silently drops the rows past the cap — the NEWEST ones, since
+// we order ascending. Summing a balance or reconstructing vitals over that truncated
+// set corrupts the numbers the moment the ledger outgrows the cap (it froze the feed
+// at 1k rows and double-counted net worth once fetchBalance stopped seeing recent
+// trades). So any read that must observe EVERY row pages through with .range() —
+// ordered by id for a stable window — until a short page marks the end. Raising
+// db-max-rows only moves the cliff; pagination removes it.
+const PAGE_SIZE = 1000;
+
+async function fetchAllById(
+  label: string,
+  page: (
+    fromIdx: number,
+    toIdx: number,
+  ) => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>,
+): Promise<unknown[]> {
+  const rows: unknown[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await page(from, from + PAGE_SIZE - 1);
+    if (error) {
+      throw new Error(`${label}: ${error.message}`);
+    }
+    const batch = data ?? [];
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) {
+      break;
+    }
   }
-  const rows = z.array(amountRowSchema).parse(data ?? []);
-  return computeBalance(rows);
+  return rows;
+}
+
+/** Balance = SUM(amount) over the ENTIRE ledger (paged, never row-capped). */
+export async function fetchBalance(client: AppSupabaseClient, agentId: string): Promise<number> {
+  const rows = await fetchAllById('fetch balance', (from, to) =>
+    client
+      .from('transactions')
+      .select('amount')
+      .eq('agent_id', agentId)
+      .order('id', { ascending: true })
+      .range(from, to),
+  );
+  return computeBalance(z.array(amountRowSchema).parse(rows));
 }
 
 const statusRowSchema = z.object({ status: agentStatusSchema });
@@ -88,15 +120,15 @@ export async function fetchTransactions(
   client: AppSupabaseClient,
   agentId: string,
 ): Promise<Transaction[]> {
-  const { data, error } = await client
-    .from('transactions')
-    .select('*')
-    .eq('agent_id', agentId)
-    .order('ts', { ascending: true });
-  if (error) {
-    throw new Error(`fetch transactions: ${error.message}`);
-  }
-  return z.array(transactionSchema).parse(data ?? []);
+  const rows = await fetchAllById('fetch transactions', (from, to) =>
+    client
+      .from('transactions')
+      .select('*')
+      .eq('agent_id', agentId)
+      .order('id', { ascending: true })
+      .range(from, to),
+  );
+  return z.array(transactionSchema).parse(rows);
 }
 
 /** The agent lifecycle row (born_at, status, …) — for vitals. */
@@ -120,15 +152,15 @@ export async function fetchSnapshots(
   client: AppSupabaseClient,
   agentId: string,
 ): Promise<Snapshot[]> {
-  const { data, error } = await client
-    .from('snapshots')
-    .select('*')
-    .eq('agent_id', agentId)
-    .order('id', { ascending: true });
-  if (error) {
-    throw new Error(`fetch snapshots: ${error.message}`);
-  }
-  return z.array(snapshotSchema).parse(data ?? []);
+  const rows = await fetchAllById('fetch snapshots', (from, to) =>
+    client
+      .from('snapshots')
+      .select('*')
+      .eq('agent_id', agentId)
+      .order('id', { ascending: true })
+      .range(from, to),
+  );
+  return z.array(snapshotSchema).parse(rows);
 }
 
 /**
