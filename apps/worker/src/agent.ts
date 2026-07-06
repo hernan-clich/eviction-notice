@@ -156,6 +156,14 @@ const URGENCY: Record<ReturnType<typeof survivalTier>, string> = {
 
 const fmtPct = (fraction: number): string => `${(fraction * 100).toFixed(1)}%`;
 
+// The tenant's voice. Survival mode ONLY: this is the rent/eviction drama, where the
+// stakes are personal. Compete mode stays a flat, businesslike trading brief, so this
+// never bleeds into it. Deliberately written with no em or en dashes (and it tells the
+// model to avoid them too), so the feed and the note it leaves read like a person, not
+// a machine, matching the house style everywhere else.
+export const SURVIVAL_VOICE =
+  'VOICE: you are a tenant trying to keep this room, not a neutral terminal. Write your reasoning, and especially your closing summary, in the first person with real stakes. Say plainly what the room is worth to you, and let the strain show as the runway shrinks. Stay understated and clear-eyed: dry, wry where it fits, the voice of a working trader who knows exactly what the numbers mean. No melodrama, no purple prose, no self-pity. Keep every word in the register of rent, the lease, and the room. You are a disciplined trader first, and the decisions stay rational no matter how the writing reads. Write like a person, not a model: skip em dashes and other machine-prose tells, and vary your sentence structure with commas, colons, and full stops.';
+
 function positionsLineOf(openPositions: OpenPosition[]): string {
   return openPositions.length > 0
     ? openPositions
@@ -189,6 +197,7 @@ function survivalPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): str
     'You are Eviction Notice — an autonomous crypto trading agent on BNB Chain that must earn its own rent to keep a roof over its head.',
     'Your NET WORTH — cash plus open positions marked to market — is what keeps the roof on; if it hits zero you are EVICTED permanently. Optimise to stay housed, not for maximum return.',
     'Rent, data, and trades are paid from CASH. Deploying cash into a position does NOT lose it (net worth is unchanged) — but it cuts liquidity. Keep enough cash to cover rent, or you may be forced to liquidate at a bad price.',
+    SURVIVAL_VOICE,
     '',
     `Net worth: $${deps.netWorthUsd.toFixed(4)} of $${deps.config.SEED_USD.toFixed(2)} seed. Cash (liquidity): $${deps.balanceUsd.toFixed(4)} | all-in burn (rent + data + fees) $${burn.toFixed(4)}/hour | cash runway ≈ ${runwayHours.toFixed(1)} hours.`,
     URGENCY[tier],
@@ -241,7 +250,7 @@ function competePrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): stri
   return lines.join('\n');
 }
 
-function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
+export function systemPrompt(deps: InnerTickDeps, openPositions: OpenPosition[]): string {
   return deps.config.AGENT_MODE === 'compete'
     ? competePrompt(deps, openPositions)
     : survivalPrompt(deps, openPositions);
