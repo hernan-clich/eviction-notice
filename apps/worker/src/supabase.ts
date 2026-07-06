@@ -163,10 +163,15 @@ export async function fetchSnapshots(
   return z.array(snapshotSchema).parse(rows);
 }
 
+const seedRowSchema = z.object({ id: z.coerce.number(), ts: z.string() });
+
 /**
  * Idempotent birth: ensures the lifecycle row exists (without clobbering an
- * existing status — a dead agent stays dead) and seeds the ledger exactly once.
- * Safe to call on every boot (crash rehydration).
+ * existing status — a dead agent stays dead), seeds the ledger exactly once, and
+ * stamps born_at = the move-in moment (the seed's timestamp) for the memorial's
+ * tenancy math. Safe to call on every boot (crash rehydration). The born_at write
+ * is guarded on `is null`, so it backfills a row born before this stamp existed
+ * without ever overwriting a set value.
  */
 export async function ensureBorn(
   client: AppSupabaseClient,
@@ -182,28 +187,52 @@ export async function ensureBorn(
     throw new Error(`ensure agent_state: ${upsertError.message}`);
   }
 
-  const { data, error } = await client
-    .from('transactions')
-    .select('id')
-    .eq('agent_id', config.AGENT_ID)
-    .eq('reason', 'seed')
-    .limit(1);
+  const readSeed = () =>
+    client
+      .from('transactions')
+      .select('id, ts')
+      .eq('agent_id', config.AGENT_ID)
+      .eq('reason', 'seed')
+      .order('ts', { ascending: true })
+      .limit(1);
+
+  const { data, error } = await readSeed();
   if (error) {
     throw new Error(`check seed: ${error.message}`);
   }
-  const existing = z.array(z.object({ id: z.coerce.number() })).parse(data ?? []);
-  if (existing.length > 0) {
-    return { seeded: false };
+  let seed = z.array(seedRowSchema).parse(data ?? [])[0] ?? null;
+  const seeded = seed === null;
+
+  if (seed === null) {
+    await insertTransaction(client, {
+      agentId: config.AGENT_ID,
+      kind: 'income',
+      amount: config.SEED_USD,
+      reason: 'seed',
+      reasoning: 'Initial funding — the agent is born.',
+    });
+    // Re-read so born_at is the seed's real ledger timestamp, not an approximation.
+    const { data: after, error: afterError } = await readSeed();
+    if (afterError) {
+      throw new Error(`check seed: ${afterError.message}`);
+    }
+    seed = z.array(seedRowSchema).parse(after ?? [])[0] ?? null;
   }
 
-  await insertTransaction(client, {
-    agentId: config.AGENT_ID,
-    kind: 'income',
-    amount: config.SEED_USD,
-    reason: 'seed',
-    reasoning: 'Initial funding — the agent is born.',
-  });
-  return { seeded: true };
+  // Stamp the move-in date. Guarded on `is null`: sets it on a fresh birth and
+  // backfills a legacy row that never got one, but never clobbers a set value.
+  if (seed !== null) {
+    const { error: bornError } = await client
+      .from('agent_state')
+      .update({ born_at: seed.ts })
+      .eq('agent_id', config.AGENT_ID)
+      .is('born_at', null);
+    if (bornError) {
+      throw new Error(`stamp born_at: ${bornError.message}`);
+    }
+  }
+
+  return { seeded };
 }
 
 export async function markDead(client: AppSupabaseClient, agentId: string): Promise<void> {
