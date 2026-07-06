@@ -194,7 +194,7 @@ describe('computeVitals', () => {
     };
     // Ten hourly ticks at the old $0.02, then one at the new $0.10. The lifetime
     // average would be barely above $0.02; the runway must instead read the CURRENT
-    // $0.10 measured over the last tick's 1h interval.
+    // $0.10 = latest tick's amount over the median (1h) cadence.
     const transactions: Transaction[] = [
       tx({ kind: 'income', amount: 20, reason: 'seed', ts: '2026-06-22T00:00:00Z' }),
     ];
@@ -217,6 +217,31 @@ describe('computeVitals', () => {
     expect(v.burnPerHourUsd).toBeCloseTo(0.1, 6); // current rent, not the ~$0.024 average
     // net worth 20 - (10 x 0.02) - 0.10 = 19.70; runway = 19.70 / 0.10 = 197h, not ~820h.
     expect(v.cashRunwayHours).toBeCloseTo(197, 0);
+  });
+
+  it('ignores a restart blip that puts two rent ticks seconds apart', () => {
+    // A worker restart writes a rent tick right after the previous run's last one. Reading
+    // the rate off that tiny gap would annualize into an absurd $/h (the bug that showed a
+    // $3.897/h burn and a 2.3h runway). The median cadence must shrug it off.
+    const born: AgentState = {
+      agent_id: 'agent-0',
+      born_at: '2026-06-22T00:00:00Z',
+      died_at: null,
+      status: 'alive',
+    };
+    const transactions: Transaction[] = [
+      tx({ kind: 'income', amount: 20, reason: 'seed', ts: '2026-06-22T00:00:00Z' }),
+      tx({ kind: 'rent', amount: -0.1, reason: 'rent', ts: '2026-06-22T01:00:00Z' }),
+      tx({ kind: 'rent', amount: -0.1, reason: 'rent', ts: '2026-06-22T02:00:00Z' }),
+      tx({ kind: 'rent', amount: -0.1, reason: 'rent', ts: '2026-06-22T03:00:00Z' }),
+      // restart: this tick lands 30 seconds after the last, not an hour.
+      tx({ kind: 'rent', amount: -0.1, reason: 'rent', ts: '2026-06-22T03:00:30Z' }),
+    ];
+    const now = Date.parse('2026-06-22T03:01:00Z');
+    const v = computeVitals(transactions, born, now);
+
+    // Median of {1h, 1h, 30s} = 1h → $0.10/h, NOT $0.10 / 30s ≈ $12/h.
+    expect(v.burnPerHourUsd).toBeCloseTo(0.1, 6);
   });
 
   it('reports dead when status is dead, freezing days-survived at died_at', () => {
