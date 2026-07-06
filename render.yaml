@@ -67,11 +67,11 @@ services:
         value: '22'
       - key: EXECUTION_MODE
         value: live
-      # Judged-run posture: maximise total return, stay deployed, never breach the
-      # drawdown cap (#67/#77). Codified here so a fresh provision can't silently
-      # fall back to 'survival' — it must be 'compete' for the scored window.
+      # Post-competition sendoff: the scored window is over, so we return to
+      # 'survival', the rent/eviction game it was built for. Eviction is back on NET
+      # WORTH, which means the rent below can actually run it out of the room.
       - key: AGENT_MODE
-        value: compete
+        value: survival
       - key: AGENT_ID
         value: agent-0
       # Judged-run seed: $20 clears the BNB-Chain friction wall (~1.78% round-trip at
@@ -80,11 +80,11 @@ services:
       # match before birth.
       - key: SEED_USD
         value: '20'
-      # Rent is COSMETIC in compete mode: eviction is on real trading equity, not
-      # net worth, and desperation is forced to 0 — so rent only erodes the displayed
-      # net worth. Keep it light so the dashboard headline tracks real performance.
+      # Sendoff rent: raised so the runway compresses from weeks to a watchable few
+      # days. In survival mode rent is real, it draws net worth down toward the
+      # eviction line at $0. About $0.10/h on ~$9 net worth is roughly a 3-day descent.
       - key: RENT_PER_HOUR_USD
-        value: '0.02'
+        value: '0.10'
       # 1h cadence: suits "trade less, ride winners", cuts noise, and halves the
       # weekly think-cost vs 30 min. Still easily clears the >=1-trade/day rule.
       - key: TICK_INTERVAL_MS
