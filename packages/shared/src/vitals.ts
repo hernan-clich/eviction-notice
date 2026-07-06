@@ -75,16 +75,15 @@ export function computeVitals(
   const cashSeries: BalancePoint[] = [];
   let cash = 0;
   let seedUsd = 0;
-  let burnUsd = 0; // cost of existing: rent + data + x402
+  let burnUsd = 0; // all-in cost: rent + data + x402 (lifetime; the fallback + variable basis)
   let fictionalBurnUsd = 0; // rent + data only — invented costs, not real wallet spend
   let tradeCount = 0;
-  // Rent is the dominant, deliberately-set recurring cost. Track its running total and
-  // the two most recent ticks so the burn rate can reflect the CURRENT rent (from the
-  // latest tick's interval) instead of averaging a rent change away over the tenancy.
+  // Rent ticks: running total, latest amount, and timestamps — so the burn rate can read
+  // the CURRENT rent from a robust median cadence rather than a lifetime average or a
+  // single fragile gap between the last two ticks.
   let rentTotalUsd = 0;
   let lastRentUsd: number | null = null;
-  let lastRentTsMs: number | null = null;
-  let prevRentTsMs: number | null = null;
+  const rentTsMs: number[] = [];
   // Cumulative fictional burn over time — used to reconstruct real trading equity for
   // the drawdown/DQ metric (so rent can't trip the competition's 30% line).
   const ficTimeline: { tsMs: number; cum: number }[] = [];
@@ -101,9 +100,8 @@ export function computeVitals(
     }
     if (tx.reason === 'rent') {
       rentTotalUsd += -tx.amount;
-      prevRentTsMs = lastRentTsMs;
-      lastRentTsMs = tsMs;
       lastRentUsd = -tx.amount;
+      rentTsMs.push(tsMs);
     }
     if (tx.reason === 'rent' || tx.reason === 'data_call') {
       fictionalBurnUsd += -tx.amount;
@@ -169,20 +167,36 @@ export function computeVitals(
     : (cashSeries[0]?.tsMs ?? nowMs);
   const endMs = agentState?.died_at ? Date.parse(agentState.died_at) : nowMs;
   const elapsedMs = Math.max(endMs - bornMs, 0);
-  // Burn rate the runway and the agent's desperation read from. Rent is a known,
-  // deliberately-set recurring cost, so measure its CURRENT level from the latest rent
-  // tick over the interval to the tick before it: a rent change then shows up at once,
-  // rather than being diluted by weeks of the old rate. Variable costs (data + x402)
-  // are sporadic, so average those across the life. Until there are two rent ticks to
-  // measure an interval, fall back to the lifetime all-in average, which also keeps a
-  // newborn's first few cents from annualizing into a huge $/h.
+  // Burn rate the runway and the agent's desperation read from. Rent dominates and is a
+  // deliberately-set recurring cost, so read its CURRENT level: the latest tick's amount
+  // over the MEDIAN interval of recent ticks. Median, not the last gap, so a worker
+  // restart placing two ticks seconds apart cannot annualize into an absurd rate; and not
+  // a lifetime average, so a rent change shows within a tick or two. Variable costs (data
+  // + x402) are sporadic, averaged over the life. Until there are enough ticks to trust
+  // the cadence, fall back to the lifetime all-in average, which also keeps a newborn's
+  // first few cents from annualizing into a huge $/h.
   const burnHours = Math.max(elapsedMs, HOUR_MS) / HOUR_MS;
-  const rentIntervalHours =
-    lastRentTsMs !== null && prevRentTsMs !== null ? (lastRentTsMs - prevRentTsMs) / HOUR_MS : 0;
-  const burnPerHourUsd =
-    lastRentUsd !== null && rentIntervalHours > 0
-      ? lastRentUsd / rentIntervalHours + (burnUsd - rentTotalUsd) / burnHours
-      : burnUsd / burnHours;
+  const recentRentTsMs = rentTsMs.slice(-21);
+  const intervalsMs: number[] = [];
+  for (let i = 1; i < recentRentTsMs.length; i += 1) {
+    const prev = recentRentTsMs[i - 1];
+    const curr = recentRentTsMs[i];
+    if (prev !== undefined && curr !== undefined) intervalsMs.push(curr - prev);
+  }
+  let burnPerHourUsd: number;
+  if (lastRentUsd !== null && intervalsMs.length >= 3) {
+    const sorted = [...intervalsMs].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    const medianMs =
+      sorted.length % 2 === 1
+        ? (sorted[mid] ?? 0)
+        : ((sorted[mid - 1] ?? 0) + (sorted[mid] ?? 0)) / 2;
+    const rentPerHourUsd = medianMs > 0 ? lastRentUsd / (medianMs / HOUR_MS) : 0;
+    const variablePerHourUsd = (burnUsd - rentTotalUsd) / burnHours;
+    burnPerHourUsd = rentPerHourUsd + variablePerHourUsd;
+  } else {
+    burnPerHourUsd = burnUsd / burnHours;
+  }
   const runway = (value: number): number =>
     burnPerHourUsd > 0 ? value / burnPerHourUsd : Number.POSITIVE_INFINITY;
 
