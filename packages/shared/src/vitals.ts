@@ -13,7 +13,7 @@ const DAY_MS = 86_400_000;
 
 export interface BalancePoint {
   tsMs: number;
-  /** Plotted value over time — net worth once snapshots exist, else cash. */
+  /** Net worth over time — snapshots when marked, else reconstructed cash + cost basis. */
   balanceUsd: number;
 }
 
@@ -73,6 +73,12 @@ export function computeVitals(
   const ordered = [...transactions].sort((a, b) => a.id - b.id);
 
   const cashSeries: BalancePoint[] = [];
+  // Net worth reconstructed from the ledger alone: cash plus the cost basis of
+  // positions open at each point. Snapshots mark positions to market a few seconds
+  // later, but until they land (or when they're sparse) this keeps the NET WORTH chart
+  // showing net worth - flat across a trade_open - instead of diving with cash.
+  const reconSeries: BalancePoint[] = [];
+  const openCostByPos = new Map<number, number>();
   let cash = 0;
   let seedUsd = 0;
   let burnUsd = 0; // all-in cost: rent + data + x402 (lifetime; the fallback + variable basis)
@@ -110,6 +116,17 @@ export function computeVitals(
     if (tx.reason === 'trade_open') {
       tradeCount += 1;
     }
+    // Track open-position cost basis so the reconstructed point is cash + deployed.
+    const posId = typeof tx.meta?.['positionId'] === 'number' ? tx.meta['positionId'] : null;
+    if (posId !== null && tx.reason === 'trade_open') {
+      const sizeUsd = typeof tx.meta?.['sizeUsd'] === 'number' ? tx.meta['sizeUsd'] : -tx.amount;
+      openCostByPos.set(posId, sizeUsd);
+    } else if (posId !== null && tx.reason === 'trade_close') {
+      openCostByPos.delete(posId);
+    }
+    let openCost = 0;
+    for (const v of openCostByPos.values()) openCost += v;
+    reconSeries.push({ tsMs, balanceUsd: cash + openCost });
   }
   const cashUsd = cash;
 
@@ -156,13 +173,23 @@ export function computeVitals(
     ...bridged.map((p) => ({ token: p.token, valueUsd: p.valueUsd })),
   ];
 
-  // Sorted by tsMs (not just id) so the trading-equity two-pointer below is robust to
-  // any id/timestamp skew — a clock step, a backfill, or a multi-source #28 replay.
-  const series: BalancePoint[] = (
-    orderedSnaps.length > 0
-      ? orderedSnaps.map((s) => ({ tsMs: Date.parse(s.ts), balanceUsd: s.net_worth_usd }))
-      : [...cashSeries]
-  ).sort((a, b) => a.tsMs - b.tsMs);
+  // The NET WORTH chart plots net worth over time. Snapshots are the marked-to-market
+  // truth, but they lag birth and each trade_open by a few seconds and can be sparse
+  // early - a bare snapshot series would dive with cash, blank out at a single point,
+  // then pop in. Stitch the reconstruction (cash + open-position cost basis, one point
+  // per transaction, flat across a trade) in front of the first snapshot, then hand off
+  // to snapshots once they exist. Continuous from birth, always ≥2 points once there's
+  // any history, never plotting cash in a chart labelled net worth. Sorted by tsMs (not
+  // id) so the trading-equity two-pointer below is robust to id/timestamp skew.
+  const snapSeries = orderedSnaps.map((s) => ({
+    tsMs: Date.parse(s.ts),
+    balanceUsd: s.net_worth_usd,
+  }));
+  const firstSnapMs = snapSeries[0]?.tsMs ?? Number.POSITIVE_INFINITY;
+  const series: BalancePoint[] = [
+    ...reconSeries.filter((p) => p.tsMs < firstSnapMs),
+    ...snapSeries,
+  ].sort((a, b) => a.tsMs - b.tsMs);
 
   // peakUsd is the net-worth high-water mark (a narrative stat). But DRAWDOWN and the
   // DQ are measured on the REAL wallet — trading equity = net worth with the fictional

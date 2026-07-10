@@ -79,8 +79,11 @@ describe('computeVitals', () => {
     expect(v.netPnlUsd).toBe(1); // net worth − seed
     expect(v.positions).toHaveLength(1);
     expect(v.positions[0]?.token).toBe('AAVE');
-    expect(v.series).toHaveLength(2); // net-worth series comes from snapshots
-    expect(v.series.at(-1)?.balanceUsd).toBe(21);
+    // Net worth over time: the reconstruction anchors the birth point ($20 seed), then
+    // the two snapshots take over — continuous from birth, no cash dive, no blank frame.
+    expect(v.series).toHaveLength(3);
+    expect(v.series[0]?.balanceUsd).toBe(20); // birth, from the reconstruction
+    expect(v.series.at(-1)?.balanceUsd).toBe(21); // latest snapshot
   });
 
   it('bridges a trade_open that has no marking snapshot yet (no phantom net-worth dip)', () => {
@@ -135,6 +138,44 @@ describe('computeVitals', () => {
     expect(v2.positionValueUsd).toBe(11.8); // marked to market, not 11.8 + 12
     expect(v2.netWorthUsd).toBe(19.8);
     expect(v2.positions).toHaveLength(1);
+  });
+
+  it('keeps the net-worth series flat across a trade_open the snapshot has not caught up to', () => {
+    // The NET WORTH chart must plot net worth, not cash: deploying into a position
+    // must not read as a crash, and a single early snapshot must not blank the line.
+    const transactions: Transaction[] = [
+      tx({ kind: 'income', amount: 20, reason: 'seed', ts: bornAt }),
+      tx({
+        kind: 'expense',
+        amount: -12,
+        reason: 'trade_open',
+        ts: '2026-06-22T01:00:00Z',
+        meta: { token: 'TRX', sizeUsd: 12, positionId: 7 },
+      }),
+    ];
+
+    // No snapshot yet: the series is reconstructed from the ledger and stays ~flat
+    // (cash + deployed cost basis), never diving to the $8 cash figure.
+    const preSnap = computeVitals(transactions, state, now);
+    expect(preSnap.series.length).toBeGreaterThanOrEqual(2); // a line is drawn, not blank
+    expect(Math.min(...preSnap.series.map((p) => p.balanceUsd))).toBeCloseTo(20, 6);
+
+    // A single snapshot that predates nothing new still yields a continuous line
+    // (reconstruction before it + the snapshot), never a one-point blank.
+    const oneSnap: Snapshot[] = [
+      {
+        id: 1,
+        agent_id: 'agent-0',
+        ts: '2026-06-22T02:00:00Z',
+        cash_usd: 8,
+        position_value_usd: 11.9,
+        net_worth_usd: 19.9,
+        positions: [{ token: 'TRX', sizeUsd: 12, entryPx: 0.33, markPx: 0.327, valueUsd: 11.9 }],
+      },
+    ];
+    const withSnap = computeVitals(transactions, state, now, oneSnap);
+    expect(withSnap.series.length).toBeGreaterThanOrEqual(2);
+    expect(Math.min(...withSnap.series.map((p) => p.balanceUsd))).toBeGreaterThan(19); // no dive
   });
 
   it('tracks the worst peak-to-trough drawdown over the lifetime (the DQ metric)', () => {
