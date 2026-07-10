@@ -171,3 +171,21 @@ export const realtimeLedgerSource: LedgerSource = {
     };
   },
 };
+
+/** The committed recording the static source plays when the DB is gone. */
+export const REPLAY_JSON_URL = '/replays/agent-0.json';
+
+/**
+ * Pick the ledger source from config, the one switch between a live agent and the
+ * permanent memorial. When the Supabase env vars are present we read the live DB (and
+ * stream updates); when they are absent - the post-teardown state - we fall back to the
+ * frozen static recording. Reviving the DB is purely an ops change: restore the
+ * NEXT_PUBLIC_SUPABASE_* vars and redeploy, no code edit. Same seam either way, so the
+ * dashboard/memorial UI is identical; the static source's subscribe is just a no-op.
+ */
+export function selectLedgerSource(): LedgerSource {
+  const hasDb =
+    !!process.env['NEXT_PUBLIC_SUPABASE_URL'] &&
+    !!process.env['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY'];
+  return hasDb ? realtimeLedgerSource : staticReplaySource(REPLAY_JSON_URL);
+}
