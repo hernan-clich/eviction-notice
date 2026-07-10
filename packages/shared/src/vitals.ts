@@ -117,11 +117,44 @@ export function computeVitals(
   // Before any snapshot exists, net worth degrades gracefully to cash.
   const orderedSnaps = [...snapshots].sort((a, b) => a.id - b.id);
   const latest = orderedSnaps.at(-1) ?? null;
-  const positionValueUsd = latest ? latest.position_value_usd : 0;
-  const netWorthUsd = latest ? latest.net_worth_usd : cashUsd;
-  const positions: PositionMark[] = latest?.positions
-    ? latest.positions.map((p) => ({ token: p.token, valueUsd: p.valueUsd }))
-    : [];
+
+  // A trade_open lands a few seconds before the snapshot that marks it: the cash is
+  // already spent but the latest snapshot still predates the position. Slicing the
+  // ledger at any instant in that gap (live tick, or a replay frame) would otherwise
+  // show the cash gone with no position to show for it - a phantom net-worth dip and
+  // an empty "deployed" bar that pops in a frame later. Bridge the gap: carry any
+  // trade_open newer than the latest snapshot at its cost basis until the mark arrives.
+  // Net worth stays continuous (cash converts to position, the total doesn't move).
+  const latestSnapMs = latest ? Date.parse(latest.ts) : Number.NEGATIVE_INFINITY;
+  const unmarked = new Map<number, { token: string; valueUsd: number }>();
+  for (const tx of ordered) {
+    if (Date.parse(tx.ts) <= latestSnapMs) continue;
+    const posId = typeof tx.meta?.['positionId'] === 'number' ? tx.meta['positionId'] : null;
+    if (posId === null) continue;
+    if (tx.reason === 'trade_open') {
+      const token = typeof tx.meta?.['token'] === 'string' ? tx.meta['token'] : 'position';
+      const sizeUsd = typeof tx.meta?.['sizeUsd'] === 'number' ? tx.meta['sizeUsd'] : -tx.amount;
+      unmarked.set(posId, { token, valueUsd: sizeUsd });
+    } else if (tx.reason === 'trade_close') {
+      unmarked.delete(posId);
+    }
+  }
+  const bridged = [...unmarked.values()];
+  const bridgedValueUsd = bridged.reduce((sum, p) => sum + p.valueUsd, 0);
+
+  const snapPositionValueUsd = latest ? latest.position_value_usd : 0;
+  const snapNetWorthUsd = latest ? latest.net_worth_usd : cashUsd;
+  const positionValueUsd = snapPositionValueUsd + bridgedValueUsd;
+  // With no bridge the snapshot's net worth is authoritative (keeps the series and the
+  // live dashboard exactly as before). While bridging, the snapshot predates the
+  // deployed cash, so rebuild net worth from the live ledger cash (which already
+  // reflects the spend) plus both marked and bridged positions - no stale double-count.
+  const netWorthUsd =
+    bridgedValueUsd > 0 ? cashUsd + snapPositionValueUsd + bridgedValueUsd : snapNetWorthUsd;
+  const positions: PositionMark[] = [
+    ...(latest?.positions ?? []).map((p) => ({ token: p.token, valueUsd: p.valueUsd })),
+    ...bridged.map((p) => ({ token: p.token, valueUsd: p.valueUsd })),
+  ];
 
   // Sorted by tsMs (not just id) so the trading-equity two-pointer below is robust to
   // any id/timestamp skew — a clock step, a backfill, or a multi-source #28 replay.

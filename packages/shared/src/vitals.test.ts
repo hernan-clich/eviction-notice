@@ -83,6 +83,60 @@ describe('computeVitals', () => {
     expect(v.series.at(-1)?.balanceUsd).toBe(21);
   });
 
+  it('bridges a trade_open that has no marking snapshot yet (no phantom net-worth dip)', () => {
+    // The open lands seconds before the snapshot that marks it. A slice in that gap
+    // sees the cash spent but no position — bridge it at cost basis so the deployed
+    // bar shows immediately and net worth stays continuous.
+    const open = tx({
+      kind: 'expense',
+      amount: -12,
+      reason: 'trade_open',
+      ts: '2026-06-22T13:00:04Z',
+      meta: { token: 'TRX', sizeUsd: 12, positionId: 21 },
+    });
+    const transactions: Transaction[] = [
+      tx({ kind: 'income', amount: 20, reason: 'seed', ts: bornAt }),
+      open,
+    ];
+    // Latest snapshot predates the open (still $20 cash, no position).
+    const snapshots: Snapshot[] = [
+      {
+        id: 1,
+        agent_id: 'agent-0',
+        ts: '2026-06-22T13:00:00Z',
+        cash_usd: 20,
+        position_value_usd: 0,
+        net_worth_usd: 20,
+        positions: [],
+      },
+    ];
+    const v = computeVitals(transactions, state, now, snapshots);
+
+    expect(v.cashUsd).toBeCloseTo(8, 6); // 20 − 12 deployed
+    expect(v.positionValueUsd).toBe(12); // bridged at cost basis
+    expect(v.netWorthUsd).toBe(20); // cash + bridged position — no dip
+    expect(v.positions).toHaveLength(1);
+    expect(v.positions[0]?.token).toBe('TRX');
+
+    // Once the marking snapshot arrives it takes over — no double-count.
+    const marked: Snapshot[] = [
+      ...snapshots,
+      {
+        id: 2,
+        agent_id: 'agent-0',
+        ts: '2026-06-22T13:00:08Z',
+        cash_usd: 8,
+        position_value_usd: 11.8,
+        net_worth_usd: 19.8,
+        positions: [{ token: 'TRX', sizeUsd: 12, entryPx: 0.33, markPx: 0.325, valueUsd: 11.8 }],
+      },
+    ];
+    const v2 = computeVitals(transactions, state, now, marked);
+    expect(v2.positionValueUsd).toBe(11.8); // marked to market, not 11.8 + 12
+    expect(v2.netWorthUsd).toBe(19.8);
+    expect(v2.positions).toHaveLength(1);
+  });
+
   it('tracks the worst peak-to-trough drawdown over the lifetime (the DQ metric)', () => {
     const transactions: Transaction[] = [
       tx({ kind: 'income', amount: 20, reason: 'seed', ts: bornAt }),
