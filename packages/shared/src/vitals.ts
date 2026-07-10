@@ -13,7 +13,7 @@ const DAY_MS = 86_400_000;
 
 export interface BalancePoint {
   tsMs: number;
-  /** Plotted value over time — net worth once snapshots exist, else cash. */
+  /** Net worth over time — snapshots when marked, else reconstructed cash + cost basis. */
   balanceUsd: number;
 }
 
@@ -73,6 +73,12 @@ export function computeVitals(
   const ordered = [...transactions].sort((a, b) => a.id - b.id);
 
   const cashSeries: BalancePoint[] = [];
+  // Net worth reconstructed from the ledger alone: cash plus the cost basis of
+  // positions open at each point. Snapshots mark positions to market a few seconds
+  // later, but until they land (or when they're sparse) this keeps the NET WORTH chart
+  // showing net worth - flat across a trade_open - instead of diving with cash.
+  const reconSeries: BalancePoint[] = [];
+  const openCostByPos = new Map<number, number>();
   let cash = 0;
   let seedUsd = 0;
   let burnUsd = 0; // all-in cost: rent + data + x402 (lifetime; the fallback + variable basis)
@@ -110,6 +116,17 @@ export function computeVitals(
     if (tx.reason === 'trade_open') {
       tradeCount += 1;
     }
+    // Track open-position cost basis so the reconstructed point is cash + deployed.
+    const posId = typeof tx.meta?.['positionId'] === 'number' ? tx.meta['positionId'] : null;
+    if (posId !== null && tx.reason === 'trade_open') {
+      const sizeUsd = typeof tx.meta?.['sizeUsd'] === 'number' ? tx.meta['sizeUsd'] : -tx.amount;
+      openCostByPos.set(posId, sizeUsd);
+    } else if (posId !== null && tx.reason === 'trade_close') {
+      openCostByPos.delete(posId);
+    }
+    let openCost = 0;
+    for (const v of openCostByPos.values()) openCost += v;
+    reconSeries.push({ tsMs, balanceUsd: cash + openCost });
   }
   const cashUsd = cash;
 
@@ -117,19 +134,62 @@ export function computeVitals(
   // Before any snapshot exists, net worth degrades gracefully to cash.
   const orderedSnaps = [...snapshots].sort((a, b) => a.id - b.id);
   const latest = orderedSnaps.at(-1) ?? null;
-  const positionValueUsd = latest ? latest.position_value_usd : 0;
-  const netWorthUsd = latest ? latest.net_worth_usd : cashUsd;
-  const positions: PositionMark[] = latest?.positions
-    ? latest.positions.map((p) => ({ token: p.token, valueUsd: p.valueUsd }))
-    : [];
 
-  // Sorted by tsMs (not just id) so the trading-equity two-pointer below is robust to
-  // any id/timestamp skew — a clock step, a backfill, or a multi-source #28 replay.
-  const series: BalancePoint[] = (
-    orderedSnaps.length > 0
-      ? orderedSnaps.map((s) => ({ tsMs: Date.parse(s.ts), balanceUsd: s.net_worth_usd }))
-      : [...cashSeries]
-  ).sort((a, b) => a.tsMs - b.tsMs);
+  // A trade_open lands a few seconds before the snapshot that marks it: the cash is
+  // already spent but the latest snapshot still predates the position. Slicing the
+  // ledger at any instant in that gap (live tick, or a replay frame) would otherwise
+  // show the cash gone with no position to show for it - a phantom net-worth dip and
+  // an empty "deployed" bar that pops in a frame later. Bridge the gap: carry any
+  // trade_open newer than the latest snapshot at its cost basis until the mark arrives.
+  // Net worth stays continuous (cash converts to position, the total doesn't move).
+  const latestSnapMs = latest ? Date.parse(latest.ts) : Number.NEGATIVE_INFINITY;
+  const unmarked = new Map<number, { token: string; valueUsd: number }>();
+  for (const tx of ordered) {
+    if (Date.parse(tx.ts) <= latestSnapMs) continue;
+    const posId = typeof tx.meta?.['positionId'] === 'number' ? tx.meta['positionId'] : null;
+    if (posId === null) continue;
+    if (tx.reason === 'trade_open') {
+      const token = typeof tx.meta?.['token'] === 'string' ? tx.meta['token'] : 'position';
+      const sizeUsd = typeof tx.meta?.['sizeUsd'] === 'number' ? tx.meta['sizeUsd'] : -tx.amount;
+      unmarked.set(posId, { token, valueUsd: sizeUsd });
+    } else if (tx.reason === 'trade_close') {
+      unmarked.delete(posId);
+    }
+  }
+  const bridged = [...unmarked.values()];
+  const bridgedValueUsd = bridged.reduce((sum, p) => sum + p.valueUsd, 0);
+
+  const snapPositionValueUsd = latest ? latest.position_value_usd : 0;
+  const snapNetWorthUsd = latest ? latest.net_worth_usd : cashUsd;
+  const positionValueUsd = snapPositionValueUsd + bridgedValueUsd;
+  // With no bridge the snapshot's net worth is authoritative (keeps the series and the
+  // live dashboard exactly as before). While bridging, the snapshot predates the
+  // deployed cash, so rebuild net worth from the live ledger cash (which already
+  // reflects the spend) plus both marked and bridged positions - no stale double-count.
+  const netWorthUsd =
+    bridgedValueUsd > 0 ? cashUsd + snapPositionValueUsd + bridgedValueUsd : snapNetWorthUsd;
+  const positions: PositionMark[] = [
+    ...(latest?.positions ?? []).map((p) => ({ token: p.token, valueUsd: p.valueUsd })),
+    ...bridged.map((p) => ({ token: p.token, valueUsd: p.valueUsd })),
+  ];
+
+  // The NET WORTH chart plots net worth over time. Snapshots are the marked-to-market
+  // truth, but they lag birth and each trade_open by a few seconds and can be sparse
+  // early - a bare snapshot series would dive with cash, blank out at a single point,
+  // then pop in. Stitch the reconstruction (cash + open-position cost basis, one point
+  // per transaction, flat across a trade) in front of the first snapshot, then hand off
+  // to snapshots once they exist. Continuous from birth, always ≥2 points once there's
+  // any history, never plotting cash in a chart labelled net worth. Sorted by tsMs (not
+  // id) so the trading-equity two-pointer below is robust to id/timestamp skew.
+  const snapSeries = orderedSnaps.map((s) => ({
+    tsMs: Date.parse(s.ts),
+    balanceUsd: s.net_worth_usd,
+  }));
+  const firstSnapMs = snapSeries[0]?.tsMs ?? Number.POSITIVE_INFINITY;
+  const series: BalancePoint[] = [
+    ...reconSeries.filter((p) => p.tsMs < firstSnapMs),
+    ...snapSeries,
+  ].sort((a, b) => a.tsMs - b.tsMs);
 
   // peakUsd is the net-worth high-water mark (a narrative stat). But DRAWDOWN and the
   // DQ are measured on the REAL wallet — trading equity = net worth with the fictional
