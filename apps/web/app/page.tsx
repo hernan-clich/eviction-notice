@@ -159,19 +159,8 @@ export default function Dashboard() {
     );
   }
 
-  if (phase === 'evicted') {
-    return (
-      <div className="crt">
-        <EvictedScreen
-          vitals={vitals}
-          transactions={transactions}
-          agentState={agentState}
-          onReplay={() => setPhase('replay')}
-        />
-      </div>
-    );
-  }
-
+  // Replay is an explicit choice from the memorial - it always wins, checked before the
+  // evicted branch so the cold-load guard below can't trap the viewer on the memorial.
   if (phase === 'replay') {
     return (
       <div className="crt">
@@ -180,6 +169,27 @@ export default function Dashboard() {
           snapshots={snapshots}
           agentState={agentState}
           onExit={() => setPhase('evicted')}
+        />
+      </div>
+    );
+  }
+
+  // Cold-load into an already-dead agent: land on the memorial in the SAME render that
+  // reveals the data. The phase effect that sets 'evicted' runs only after this render
+  // commits, so gating solely on `phase` would paint one frame of the live dashboard
+  // (loaded, but phase still 'live') before flipping - a jarring flash of a $0/EVICTED
+  // shell. Deriving it here closes that gap. We only take this path when we never saw
+  // the agent alive this session, so a witnessed live->death still plays the beat below.
+  const evictedOnLoad = status === 'dead' && !sawAliveRef.current && !previewRef.current;
+
+  if (phase === 'evicted' || evictedOnLoad) {
+    return (
+      <div className="crt">
+        <EvictedScreen
+          vitals={vitals}
+          transactions={transactions}
+          agentState={agentState}
+          onReplay={() => setPhase('replay')}
         />
       </div>
     );
