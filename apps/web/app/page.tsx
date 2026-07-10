@@ -8,7 +8,7 @@ import { DeathTransition } from '@/components/death-transition';
 import { EvictedScreen } from '@/components/evicted-screen';
 import { LoadingState } from '@/components/loading-state';
 import { ReplayView } from '@/components/replay-view';
-import { realtimeLedgerSource } from '@/lib/ledger-source';
+import { selectLedgerSource } from '@/lib/ledger-source';
 
 const AGENT_ID = 'agent-0';
 
@@ -41,10 +41,14 @@ export default function Dashboard() {
   useEffect(() => {
     let active = true;
     let unsubscribe: (() => void) | null = null;
+    // Chosen once per mount from config: the live DB source, or the static memorial
+    // when the Supabase env vars are absent (post-teardown). `subscribe` on the static
+    // source is a no-op, so the streaming plumbing below simply idles in that mode.
+    const source = selectLedgerSource();
 
     const load = async () => {
       try {
-        const data = await realtimeLedgerSource.load(AGENT_ID);
+        const data = await source.load(AGENT_ID);
         if (!active) return;
         setTransactions(data.transactions);
         setAgentState(data.agentState);
@@ -59,7 +63,7 @@ export default function Dashboard() {
 
     const subscribe = () => {
       unsubscribe?.();
-      unsubscribe = realtimeLedgerSource.subscribe(AGENT_ID, {
+      unsubscribe = source.subscribe(AGENT_ID, {
         onTransaction: (tx) => {
           setTransactions((prev) => (prev.some((t) => t.id === tx.id) ? prev : [...prev, tx]));
         },
